@@ -47,7 +47,7 @@
 				voting: false
 			}
 		},
-		version = '0.1.30',
+		version = '0.1.30 T_P',
 		serverConfig: any = {},
 		reports: any = [];
 
