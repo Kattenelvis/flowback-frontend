@@ -11,8 +11,6 @@
 	import ThreadThumbnail from './Thread.svelte';
 	import type { Thread } from '$lib/Group/interface';
 
-	export let isAdmin = true;
-
 	let threads: Thread[] = [],
 		prev = '',
 		next = '',
@@ -42,48 +40,6 @@
 	const handleSearch = () => {
 		searched = true;
 		getThreads();
-	};
-
-	//Launches whenever the user clicks upvote or downvote on a thread
-	const threadVote = async (thread: Thread, clicked: 'down' | 'up') => {
-		let vote: null | false | true = null;
-
-		if (thread.user_vote === false && clicked === 'down') vote = null;
-		else if (clicked === 'down') vote = false;
-		else if (thread.user_vote === true && clicked === 'up') vote = null;
-		else if (clicked === 'up') vote = true;
-
-		const { res, json } = await fetchRequest('POST', `group/thread/${thread.id}/vote`, { vote });
-
-		if (!res.ok) {
-			poppup = { message: 'Could not vote on thread', success: false };
-			return;
-		}
-
-		//TODO: Make this more efficient by not having to reload threads.
-		getThreads();
-	};
-
-	//When adminn presses the pin tack symbol, pin the thread
-	const pinThread = async (thread: Thread) => {
-		const { json, res } = await fetchRequest('POST', `group/thread/${thread.id}/update`, {
-			pinned: !thread.pinned
-		});
-		if (!res.ok) return;
-
-		thread.pinned = !thread.pinned;
-		threads = threads;
-	};
-
-	const getWorkGroupList = async () => {
-		const { res, json } = await fetchRequest('GET', `group/${$page.params.groupId}/list`);
-
-		if (!res.ok) {
-			poppup = { message: 'Failed to get workgroups', success: false };
-			return;
-		}
-
-		workGroups = json.results;
 	};
 
 	onMount(() => {
@@ -121,9 +77,7 @@
 		</div>
 	{/if}
 	{#each threads as thread}
-		{@const workGroup = workGroups.find((group) => group.id === thread.work_group)?.name}
-
-		<ThreadThumbnail {thread} {isAdmin} {workGroup} />
+		<ThreadThumbnail {thread} />
 	{/each}
 	<Pagination bind:prev bind:next bind:iterable={threads} />
 </div>

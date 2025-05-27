@@ -2,7 +2,7 @@
 	import { type Message, type Message1, type PreviewMessage } from './interfaces';
 	import Button from '$lib/Generic/Button.svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import type { User } from '$lib/User/interfaces';
+	import { userStore } from '$lib/User/interfaces';
 	import { formatDate } from '$lib/Generic/DateFormatter';
 	import { _ } from 'svelte-i18n';
 	import { browser } from '$app/environment';
@@ -21,7 +21,6 @@
 
 	export let selectedChat: number | null,
 		selectedChatChannelId: number | null,
-		user: User,
 		selectedPage: 'direct' | 'group',
 		previewDirect: PreviewMessage[] = [],
 		previewGroup: PreviewMessage[] = [],
@@ -72,8 +71,8 @@
 		let previewMessage = (selectedPage === 'group' ? previewGroup : previewDirect).find(
 			(p) =>
 				(selectedPage === 'direct' &&
-					((p.user_id === user.id && p.target_id === selectedChat) ||
-						(p.target_id === user.id && p.user_id === selectedChat))) ||
+					((p.user_id === $userStore?.id && p.target_id === selectedChat) ||
+						(p.target_id === $userStore?.id && p.user_id === selectedChat))) ||
 				(selectedPage === 'group' && p.group_id === selectedChat)
 		);
 		if (previewMessage) {
@@ -87,9 +86,9 @@
 				created_at: new Date().toString(),
 				timestamp: new Date().toString(),
 				notified: false,
-				profile_image: user.profile_image || '',
-				user_id: user.id,
-				user: { id: user.id, username: user.username, profile_image: user.profile_image, banner_image: '' },
+				profile_image: $userStore?.profile_image || '',
+				user_id: $userStore?.id,
+				user: { id: $userStore?.id, username: $userStore?.username, profile_image: $userStore?.profile_image, banner_image: '' },
 				channel_id: selectedChatChannelId,
 				...(selectedPage === 'direct' ? { target_id: selectedChat } : { group_id: selectedChat })
 			};
@@ -109,7 +108,7 @@
 		messages.push({
 			id: Date.now(),
 			message,
-			user: { username: user.username, id: user.id, profile_image: user.profile_image || '' },
+			user: { username: $userStore?.username, id: $userStore?.id, profile_image: $userStore?.profile_image || '' },
 			created_at: new Date().toString(),
 			active: true,
 			channel_id: selectedChatChannelId,
@@ -159,9 +158,9 @@
 				id: message.id,
 				message: message.message,
 				user: {
-					id: message.user.id,
-					username: message.user.username,
-					profile_image: message.user.profile_image
+					id: message.user?.id,
+					username: message.user?.username,
+					profile_image: message.user?.profile_image
 				},
 				created_at: message.created_at.toString(),
 				active: true,
@@ -185,11 +184,11 @@
 					created_at: message.created_at.toString(),
 					timestamp: new Date().toString(),
 					notified: true,
-					profile_image: message.user.profile_image,
-					user_id: message.user.id,
+					profile_image: message.user?.profile_image,
+					user_id: message.user?.id,
 					user: message.user,
 					channel_id: message.channel_id,
-					...(message.channel_origin_name === 'group' ? { group_id: message.channel_id } : { target_id: message.user.id })
+					...(message.channel_origin_name === 'group' ? { group_id: message.channel_id } : { target_id: message.user?.id })
 				};
 				preview.push(previewMessage);
 			} else {
@@ -204,7 +203,7 @@
 	// Subscribe to incoming messages
 	const receiveMessage = () => {
 		const unsubscribe = messageStore.subscribe((message: Message1) => {
-			if (!message || message.user.id === user.id) return;
+			if (!message || message.user?.id === $userStore?.id) return;
 			if (message.channel_origin_name === 'group') {
 				handleReceiveMessage(previewGroup, message);
 				previewGroup = previewGroup;
@@ -255,7 +254,7 @@
 	$: (selectedPage || selectedChatChannelId) && getRecentMessages();
 	$: (selectedPage || selectedChatChannelId) && getChannelParticipants();
 	$: isLookingAtOlderMessages = !!newerMessages;
-	$: if (user) socket = Socket.createSocket(user.id);
+	$: if ($userStore) socket = Socket.createSocket($userStore?.id);
 	$: messages &&
 		browser &&
 		setTimeout(() => {
@@ -283,7 +282,7 @@
 				{#if message.type === 'info'}
 					<li class="px-4 py-2 max-w-[80%] text-center">{message.message}</li>
 				{:else}
-					{@const sentByUser = message.user.id.toString() === localStorage.getItem('userId')}
+					{@const sentByUser = message.user?.id.toString() === localStorage.getItem('userId')}
 					<li class="px-4 py-2 max-w-[80%]" class:ml-auto={sentByUser}>
 						<span>{message.user?.username}</span>
 						<p
@@ -363,8 +362,8 @@
 				{#each participants as participant (participant.id)}
 					<ProfilePicture
 						displayName
-						username={participant.user.username}
-						profilePicture={participant.user.profile_image}
+						username={participant.$userStore?.username}
+						profilePicture={participant.$userStore?.profile_image}
 					/>
 				{/each}
 			</ul>

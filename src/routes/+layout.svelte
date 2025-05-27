@@ -19,6 +19,7 @@
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { workGroupsStore } from '$lib/Group/WorkingGroups/interface';
 	import LogBackInModal from '$lib/Generic/LogBackInModal.svelte';
+	import { userStore } from '$lib/User/interfaces';
 
 	export const prerender = true;
 
@@ -149,6 +150,12 @@
 		userGroupInfo.set(json.results[0]);
 	};
 
+	const setUserInfo = async () => {
+		const { res, json } = await fetchRequest('GET', `users?id=${localStorage.getItem('userId')}`);
+		if (!res.ok) return;
+		userStore.set(json.results[0]);
+	};
+
 	beforeNavigate(() => {
 		scrolledY = $page.params.pollId;
 	});
@@ -166,6 +173,7 @@
 
 		checkSessionExpiration();
 		setUserGroupInfo();
+		setUserInfo();
 	});
 
 	//Initialize Translation, which should happen before any lifecycle hooks.

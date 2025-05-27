@@ -2,23 +2,17 @@
 	import { page } from '$app/stores';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import ChatIcon from '$lib/assets/Chat_fill.svg';
-	import { goto } from '$app/navigation';
 	import type { poppup } from '$lib/Generic/Poppup';
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
 	import Fa from 'svelte-fa';
 	import { faThumbTack, faThumbsUp, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 	import { _ } from 'svelte-i18n';
 	import NewDescription from '$lib/Poll/NewDescription.svelte';
-	import type { WorkGroup } from '$lib/Group/WorkingGroups/interface';
-	import type { Thread } from '$lib/Group/interface';
+	import { userGroupInfo, type Thread } from '$lib/Group/interface';
 	import MultipleChoices from '$lib/Generic/MultipleChoices.svelte';
-	import { onMount } from 'svelte';
-	import Modal from '$lib/Generic/Modal.svelte';
-	import Button from '$lib/Generic/Button.svelte';
 	import ReportThreadModal from './ReportThreadModal.svelte';
 
-	export let isAdmin = true,
-		thread: Thread;
+	export let thread: Thread;
 	let threads: Thread[] = [],
 		reportThreadModalShow = false,
 		choicesOpen = false,
@@ -92,8 +86,8 @@
 				id={thread?.id}
 				labels={['comment']}
 			/>
-			{#if isAdmin || thread?.pinned}
-				<button class:cursor-pointer={isAdmin} on:click={() => pinThread(thread)}>
+			{#if $userGroupInfo.is_admin || thread?.pinned}
+				<button class:cursor-pointer={$userGroupInfo.is_admin} on:click={() => pinThread(thread)}>
 					<Fa
 						size="1.2x"
 						icon={faThumbTack}

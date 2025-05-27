@@ -3,8 +3,6 @@
 	import Preview from './Preview.svelte';
 	import { onMount } from 'svelte';
 	import type { GroupMembers, Message, PreviewMessage } from './interfaces';
-	import { fetchRequest } from '$lib/FetchRequest';
-	import type { User } from '$lib/User/interfaces';
 	import { _ } from 'svelte-i18n';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
@@ -19,7 +17,6 @@
 
 	let messages: Message[] = [],
 		chatOpen = env.PUBLIC_MODE === 'DEV' ? false : false,
-		user: User,
 		selectedPage: 'direct' | 'group' = 'direct',
 		selectedChat: number | null,
 		previewDirect: PreviewMessage[] = [],
@@ -57,7 +54,7 @@
 				message.notified = false;
 				previewDirect = [...previewDirect];
 			}
-		// Clear notification for group messages
+			// Clear notification for group messages
 		} else if (page === 'group') {
 			let message = previewGroup.find((message) => message.channel_id === chatterId);
 			if (message) {
@@ -69,8 +66,6 @@
 	};
 
 	onMount(async () => {
-		// Fetch user data on component mount
-		await getUser();
 		// Adjust chat window margin based on header height
 		correctMarginRelativeToHeader();
 		window.addEventListener('resize', correctMarginRelativeToHeader);
@@ -104,13 +99,6 @@
 	const correctMarginRelativeToHeader = () => {
 		const _headerHeight = document.querySelector('#header')?.clientHeight;
 		if (_headerHeight && chatDiv) chatDiv.style.marginTop = `${_headerHeight.toString()}px`;
-	};
-
-	// Fetch current user data
-	const getUser = async () => {
-		const { res, json } = await fetchRequest('GET', 'user');
-		if (!res.ok) return;
-		user = json;
 	};
 
 	// Automatically select the first chat when the chat window opens
@@ -199,7 +187,6 @@
 					bind:previewDirect
 					bind:previewGroup
 					bind:isLookingAtOlderMessages
-					{user}
 				/>
 			{/if}
 		</div>

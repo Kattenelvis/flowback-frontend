@@ -35,9 +35,9 @@
 	import Timeline from './NewDesign/Timeline.svelte';
 	import ReportPollModal from './ReportPollModal.svelte';
 	import type { Permission, Permissions } from '$lib/Group/Permissions/interface';
+	import { userGroupInfo, type Thread } from '$lib/Group/interface';
 
-	export let poll: poll,
-		isAdmin = false;
+	export let poll: poll;
 
 	let onHoverGroup = false,
 		phase: Phase,
@@ -99,8 +99,6 @@
 		}
 
 		permissions = await getPermissionsFast(Number(poll.group_id));
-		userIsOwner = await getUserIsOwner(poll?.group_id);
-
 		darkModeStore.subscribe((dark) => (darkMode = dark));
 	});
 
@@ -154,8 +152,8 @@
 						Class="text-black dark:text-darkmodeText"
 						ClassOpen="right-0"
 					/>
-					{#if isAdmin || poll?.pinned}
-						<button class:cursor-pointer={isAdmin} on:click={pinPoll}>
+					{#if $userGroupInfo.is_admin || poll?.pinned}
+						<button class:cursor-pointer={$userGroupInfo.is_admin} on:click={pinPoll}>
 							<Fa
 								size="1.2x"
 								icon={faThumbtack}
@@ -170,7 +168,7 @@
 						labels={phase === 'result' ||
 						phase === 'prediction_vote' ||
 						!poll?.allow_fast_forward ||
-						(!permissions?.poll_fast_forward && !userIsOwner)
+						(!permissions?.poll_fast_forward && !$userGroupInfo.is_admin)
 							? [$_('Delete Poll'), $_('Report Poll')]
 							: [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]}
 						functions={[
@@ -207,8 +205,8 @@
 						Class="text-black dark:text-darkmodeText"
 						ClassOpen="right-0"
 					/>
-					{#if isAdmin || poll?.pinned}
-						<button class:cursor-pointer={isAdmin} on:click={pinPoll}>
+					{#if $userGroupInfo.is_admin || poll?.pinned}
+						<button class:cursor-pointer={$userGroupInfo.is_admin} on:click={pinPoll}>
 							<Fa
 								size="1.2x"
 								icon={faThumbtack}
@@ -223,7 +221,7 @@
 						labels={phase === 'result' ||
 						phase === 'prediction_vote' ||
 						!poll?.allow_fast_forward ||
-						(!permissions?.poll_fast_forward && !userIsOwner)
+						(!permissions?.poll_fast_forward && !$userGroupInfo.is_admin)
 							? [$_('Delete Poll'), $_('Report Poll')]
 							: [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]}
 						functions={[
@@ -250,8 +248,12 @@
 				<HeaderIcon Class="!p-0 !cursor-default" icon={faAnglesRight} text={'Fast Forward'} />
 			{:else}
 				<div
+					role="button"
+					tabindex="0"
 					on:mouseover={() => (hovering = true)}
 					on:mouseleave={() => (hovering = false)}
+					on:focus={() => (hovering = true)}
+					on:blur={() => (hovering = false)}
 					class="relative w-4 h-4"
 				>
 					<Fa style="position:absolute" icon={faAnglesRight} />

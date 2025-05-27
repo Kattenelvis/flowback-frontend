@@ -26,8 +26,6 @@
 
 	let sideHeaderOpen = false,
 		profileImage: string | null = DefaultPFP,
-		isAdmin = false,
-		ledgerExists = true,
 		selectedHref = '';
 
 	onMount(() => {
@@ -64,22 +62,6 @@
 		if (res.ok && json.profile_image) profileImage = json.profile_image;
 
 		localStorage.setItem('pfp-link', json.profile_image);
-
-		if (env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE') getIsAdmin(json?.id);
-	};
-
-	const getIsAdmin = async (userId: number) => {
-		const { res, json } = await fetchRequest('GET', 'group/list');
-		if (!res.ok) return;
-		const group: Group = json?.results[0];
-		{
-			const { res, json } = await fetchRequest('GET', `group/${group.id}/users`);
-			if (!res.ok) return;
-
-			const admins = json?.results.filter((user: GroupUser) => user.is_admin === true);
-
-			if (admins.find((admin: GroupUser) => admin.user.id === userId)) isAdmin = true;
-		}
 	};
 
 	const clearProfileImage = () => {

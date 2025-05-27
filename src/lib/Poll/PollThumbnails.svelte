@@ -27,10 +27,9 @@
 			public: false,
 			order_by: 'start_date_desc',
 			tag: null,
-			workgroup: null,
+			workgroup: null
 		},
 		loading = false,
-		isAdmin = false,
 		next = '',
 		prev = '',
 		poppup: poppup;
@@ -64,7 +63,7 @@
 
 		if (filter.tag) API += `&tag_id=${filter.tag}`;
 
-		if (filter.workgroup) API += `&work_group_ids=${filter.workgroup}`
+		if (filter.workgroup) API += `&work_group_ids=${filter.workgroup}`;
 
 		return API;
 	};
@@ -122,8 +121,6 @@
 	onMount(async () => {
 		await getPolls();
 		sharedThreadPollFixing();
-		//TODO: Part of refactoring with svelte stores includes this
-		if ($page.params.groupId) isAdmin = (await getUserIsOwner($page.params.groupId)) || false;
 	});
 </script>
 
@@ -148,7 +145,7 @@
 				{#key polls}
 					{#if polls && polls?.length > 0}
 						{#each polls as poll}
-							<PollThumbnail {poll} {isAdmin} />
+							<PollThumbnail {poll} />
 						{/each}
 					{:else if !loading}
 						<div class="bg-white rounded shadow p-8 dark:bg-darkobject">

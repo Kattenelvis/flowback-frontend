@@ -8,7 +8,6 @@
 	import type { DelegateMinimal, Thread } from '$lib/Group/interface';
 	import type { WorkGroup } from '$lib/Group/WorkingGroups/interface';
 	import type { poppup } from '$lib/Generic/Poppup';
-	import { getUserIsOwner } from '$lib/Group/functions';
 	import { env } from '$env/dynamic/public';
 	import { ThreadsApi } from '$lib/api/threads';
 	import PollThumbnail from './PollThumbnail.svelte';
@@ -35,7 +34,6 @@
 	let threads: Thread[] = [];
 	let workGroups: WorkGroup[] = [];
 	let loading = false;
-	let isAdmin = false;
 	let next = '';
 	let prev = '';
 	let poppup: poppup;
@@ -46,7 +44,7 @@
 		public: false,
 		order_by: 'start_date_desc',
 		tag: null,
-		workgroup: null,
+		workgroup: null
 	};
 
 	let showThreads = true;
@@ -132,21 +130,18 @@
 	function matchesFilter(post: Post): boolean {
 		// Find the corresponding thread (only needed for workgroup filtering on threads)
 		const thread =
-		post.related_model === 'group_thread'
-			? threads.find((t) => t.id === post.id)
-			: null;
+			post.related_model === 'group_thread' ? threads.find((t) => t.id === post.id) : null;
 
 		// Check search filter (applies to both polls and threads, case-insensitive search on title)
 		const matchesSearch =
-		!filter.search ||
-		post.title?.toLowerCase().includes(filter.search.toLowerCase());
+			!filter.search || post.title?.toLowerCase().includes(filter.search.toLowerCase());
 
 		// Check workgroup filter (only for threads, skipped if both showThreads and showPolls are true)
 		const matchesWorkgroup =
-		post.related_model !== 'group_thread' || // Skip workgroup filter for polls
-		(showThreads && showPolls) || // Skip workgroup filter if both showThreads and showPolls are true
-		!filter.workgroup || // If no workgroup filter, show all threads
-		(thread && thread.work_group?.id === Number(filter.workgroup)); // Match thread workgroup
+			post.related_model !== 'group_thread' || // Skip workgroup filter for polls
+			(showThreads && showPolls) || // Skip workgroup filter if both showThreads and showPolls are true
+			!filter.workgroup || // If no workgroup filter, show all threads
+			(thread && thread.work_group?.id === Number(filter.workgroup)); // Match thread workgroup
 
 		return matchesSearch && matchesWorkgroup;
 	}
@@ -158,10 +153,6 @@
 			await fetchWorkGroups();
 		} else {
 			await fetchRelatedContent();
-		}
-
-		if ($page.params.groupId) {
-			isAdmin = (await getUserIsOwner($page.params.groupId)) || false;
 		}
 	});
 </script>
@@ -188,11 +179,10 @@
 				{#each posts as post}
 					{#if post.related_model === 'group_thread' && showThreads && matchesFilter(post)}
 						<ThreadThumbnail
-							{isAdmin}
 							thread={threads.find((thread) => thread.id === post.id) || threads[0]}
 						/>
 					{:else if post.related_model === 'poll' && showPolls && matchesFilter(post)}
-						<PollThumbnail poll={polls.find((poll) => poll.id === post.id) || polls[0]} {isAdmin} />
+						<PollThumbnail poll={polls.find((poll) => poll.id === post.id) || polls[0]} />
 					{/if}
 				{/each}
 			{:else if !loading}

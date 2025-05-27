@@ -1,3 +1,5 @@
+import { writable } from 'svelte/store';
+
 export interface User {
 	banner_image: string;
 	bio: string;
@@ -25,3 +27,5 @@ export interface GroupUser {
 	user: User;
 	group_id: number;
 }
+
+export const userStore = writable<User | null>(null);
