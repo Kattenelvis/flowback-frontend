@@ -159,8 +159,7 @@
 </div>
 
 <Loader bind:loading>
-	{#if $userGroupInfo.is_admin}
-		&& invites?.length > 0}
+	{#if $userGroupInfo.is_admin && invites?.length > 0}
 		<div class="flex flex-col gap-4 mt-4">
 			{#key invites}
 				{#each invites as invite}
