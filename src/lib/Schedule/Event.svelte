@@ -43,6 +43,28 @@
 	const currentDate = new Date();
 	const groupId = $page.params.groupId || '1';
 
+	onMount(async () => {
+		const today = new Date();
+		let tomorrow = new Date();
+		tomorrow.setDate(today.getDate());
+		advancedTimeSettingsDates = [today, tomorrow];
+		if (type === 'group') {
+			await fetchMembers();
+		}
+		window.addEventListener('click', handleOutsideClick);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('click', handleOutsideClick);
+		restoreBackgroundScroll();
+	});
+
+	$: if (showEvent || showCreateScheduleEvent || showEditScheduleEvent) {
+		preventBackgroundScroll();
+	} else {
+		restoreBackgroundScroll();
+	}
+
 	const getDate = (year: number, month: number, x: number, y: number) => {
 		return new Date(year, month, getDay(x, y));
 	};
@@ -152,30 +174,8 @@
 		document.body.style.overflow = '';
 	};
 
-	onMount(async () => {
-		const today = new Date();
-		let tomorrow = new Date();
-		tomorrow.setDate(today.getDate());
-		advancedTimeSettingsDates = [today, tomorrow];
-		if (type === 'group') {
-			await fetchMembers();
-		}
-		window.addEventListener('click', handleOutsideClick);
-	});
-
-	onDestroy(() => {
-		window.removeEventListener('click', handleOutsideClick);
-		restoreBackgroundScroll();
-	});
-
-	$: if (showEvent || showCreateScheduleEvent || showEditScheduleEvent) {
-		preventBackgroundScroll();
-	} else {
-		restoreBackgroundScroll();
-	}
-
 	// Initialize values when opening modals
-	function initializeModalValues() {
+	const initializeModalValues = () => {
 		if (showCreateScheduleEvent) {
 			selectedFrequency = 1;
 			selectedMembers = [];
@@ -216,23 +216,6 @@
 			}
 		} catch (error) {
 			console.error('Error submitting event:', error);
-		}
-	};
-
-	const toggleSelection = (id: number, type: 'members' | 'reminders', event: Event) => {
-		event.stopPropagation();
-		if (type === 'members') {
-			if (selectedMembers.includes(id)) {
-				selectedMembers = selectedMembers.filter((s) => s !== id);
-			} else {
-				selectedMembers = [...selectedMembers, id];
-			}
-		} else if (type === 'reminders') {
-			if (selectedReminders.includes(id)) {
-				selectedReminders = selectedReminders.filter((s) => s !== id);
-			} else {
-				selectedReminders = [...selectedReminders, id];
-			}
 		}
 	};
 </script>
