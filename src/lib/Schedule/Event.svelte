@@ -3,7 +3,6 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import type { scheduledEvent } from '$lib/Schedule/interface';
-	import { setDateToMidnight } from '$lib/Generic/Dates';
 	import { elipsis } from '$lib/Generic/GenericFunctions';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { page } from '$app/stores';
@@ -25,7 +24,6 @@
 		events: scheduledEvent[] = [],
 		selectedEvent: scheduledEvent,
 		workGroups: any[] = [],
-		loading = false,
 		type: 'user' | 'group',
 		scheduleEventCreate: (event: scheduledEvent) => Promise<void>,
 		scheduleEventEdit: (event: scheduledEvent) => Promise<void>,
