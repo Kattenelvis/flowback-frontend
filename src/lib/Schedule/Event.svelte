@@ -1,16 +1,3 @@
-<!-- Helper function to format date for local datetime-local input -->
-<script context="module" lang="ts">
-	function formatDateForLocalInput(date: Date): string {
-		const pad = (num: number) => num.toString().padStart(2, '0');
-		const year = date.getFullYear();
-		const month = pad(date.getMonth() + 1);
-		const day = pad(date.getDate());
-		const hours = pad(date.getHours() || 0);
-		const minutes = pad(date.getMinutes() || 1);
-		return `${year}-${month}-${day}T${hours}:${minutes}`;
-	}
-</script>
-
 <!-- Event.svelte -->
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
@@ -37,10 +24,21 @@
 		year: number,
 		events: scheduledEvent[] = [],
 		selectedEvent: scheduledEvent,
+		workGroups: any[] = [],
+		loading = false,
 		type: 'user' | 'group',
 		scheduleEventCreate: (event: scheduledEvent) => Promise<void>,
 		scheduleEventEdit: (event: scheduledEvent) => Promise<void>,
 		scheduleEventDelete: (eventId: number) => Promise<void>;
+
+	// Members list and selections
+	let members: { id: number; name: string }[] = [],
+		selectedMembers: number[] = [],
+		selectedReminders: number[] = [],
+		// Default to Daily
+		selectedFrequency: number = 1,
+		choicesOpenMembers = false,
+		choicesOpenReminders = false;
 
 	const currentDate = new Date();
 	const groupId = $page.params.groupId || '1';
@@ -98,15 +96,6 @@
 		{ id: 86400, name: '1 day before' }
 	];
 
-	// Members list and selections
-	let members: { id: number; name: string }[] = [];
-	let selectedMembers: number[] = [];
-	let selectedReminders: number[] = [];
-	let selectedFrequency: number = 1; // Default to Daily
-
-	let choicesOpenMembers = false;
-	let choicesOpenReminders = false;
-
 	const getGroupUsers = async () => {
 		let api = `group/${groupId}/users?limit=100`;
 		const { json, res } = await fetchRequest('GET', api);
@@ -123,6 +112,18 @@
 			}));
 		}
 	};
+
+	//Helper function to format date for local datetime-local input -->
+
+	function formatDateForLocalInput(date: Date): string {
+		const pad = (num: number) => num.toString().padStart(2, '0');
+		const year = date.getFullYear();
+		const month = pad(date.getMonth() + 1);
+		const day = pad(date.getDate());
+		const hours = pad(date.getHours() || 0);
+		const minutes = pad(date.getMinutes() || 1);
+		return `${year}-${month}-${day}T${hours}:${minutes}`;
+	}
 
 	const handleOutsideClick = (e: MouseEvent) => {
 		const modal = document.querySelector('.modal-content');
@@ -309,6 +310,9 @@
 <!-- Modal 1: Create Event Modal -->
 {#if showCreateScheduleEvent}
 	<CreateEventModal
+		{selectedEvent}
+		{type}
+		{workGroups}
 		bind:showCreateScheduleEvent
 		on:submit={handleSubmit}
 	/>
@@ -317,6 +321,9 @@
 <!-- Modal 2: Edit Event Modal -->
 {#if showEditScheduleEvent}
 	<EditEventModal
+		{selectedEvent}
+		{type}
+		{workGroups}
 		bind:showEditScheduleEvent
 		on:submit={handleSubmit}
 	/>
@@ -325,7 +332,9 @@
 <!-- Modal 3: View Event Modal -->
 {#if showEvent}
 	<ViewEventModal
-		bind:selectedEvent
+		{selectedEvent}
+		{type}
+		{scheduleEventDelete}
 		bind:showEvent
 		on:edit={() => {
 			showEvent = false;
