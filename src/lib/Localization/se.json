@@ -653,5 +653,7 @@
     "kanbanEntry": {
         "Cancel": "Avbryt"
     },
-    "Successfully saved delegation": "Lyckades spara delegering"
+    "Successfully saved delegation": "Lyckades spara delegering",
+    "Delete Poll": "Ta bort omröstning",
+    "Report Poll": "Rapportera omröstning"
 }

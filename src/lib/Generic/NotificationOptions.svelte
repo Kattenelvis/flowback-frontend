@@ -108,10 +108,10 @@
 
 	{#if notificationOpen && categories}
 		<div class={`z-50 absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm ${ClassOpen}`}>
-			<div class="text-xs p-2">{$_('Manage Subscriptions')}</div>
+			<div class="text-xs p-2 ">{$_('Manage Subscriptions')}</div>
 			{#each categories as category, i}
 				<button
-					class="bg-gray-200 w-full p-2 px-5 flex justify-between items-center transition-all"
+					class="bg-gray-200 dark:bg-gray-700 w-full p-2 px-5 flex justify-between items-center transition-all"
 					class:active:bg-gray-400={hoverEffect}
 					class:dark:active:bg-slate-700={hoverEffect}
 					class:dark:active:bg-slate-900={hoverEffect}
