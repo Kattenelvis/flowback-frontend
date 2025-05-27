@@ -20,6 +20,9 @@
 	import { elipsis } from '$lib/Generic/GenericFunctions';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { page } from '$app/stores';
+	import CreateEventModal from './Modals/CreateEventModal.svelte';
+	import EditEventModal from './Modals/EditEventModal.svelte';
+	import ViewEventModal from './Modals/ViewEventModal.svelte';
 
 	export let Class = '',
 		x: number,
@@ -34,8 +37,6 @@
 		year: number,
 		events: scheduledEvent[] = [],
 		selectedEvent: scheduledEvent,
-		workGroups: any[] = [],
-		loading = false,
 		type: 'user' | 'group',
 		scheduleEventCreate: (event: scheduledEvent) => Promise<void>,
 		scheduleEventEdit: (event: scheduledEvent) => Promise<void>,
@@ -185,7 +186,7 @@
 					? selectedEvent.repeat_frequency
 					: 1;
 			selectedMembers =
-				selectedEvent.assignees?.map((member: any) => {
+				selectedEvent.assignee_ids?.map((member: any) => {
 					return member.id;
 				}) || [];
 			selectedReminders = selectedEvent.reminders || [];
@@ -307,470 +308,31 @@
 
 <!-- Modal 1: Create Event Modal -->
 {#if showCreateScheduleEvent}
-	<div
-		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-		aria-modal="true"
-		role="dialog"
-		on:click={() => (showCreateScheduleEvent = false)}
-	>
-		<div
-			class="bg-white dark:bg-darkobject p-6 rounded-lg w-full max-w-md overflow-y-auto max-h-[90vh] modal-content"
-			on:click|stopPropagation
-		>
-			<h2 class="text-xl mb-4 text-gray-900 dark:text-white">{$_('Create Event')}</h2>
-			<form on:submit|preventDefault={handleSubmit}>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Title')}</label>
-					<input
-						type="text"
-						bind:value={selectedEvent.title}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						required
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Description')}</label>
-					<textarea
-						bind:value={selectedEvent.description}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Start Date')}</label>
-					<input
-						type="datetime-local"
-						bind:value={selectedEvent.start_date}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						required
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('End Date')}</label>
-					<input
-						type="datetime-local"
-						bind:value={selectedEvent.end_date}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						required
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Meeting Link')}</label>
-					<input
-						type="url"
-						bind:value={selectedEvent.meeting_link}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-					/>
-				</div>
-				{#if type === 'group'}
-					<div class="mb-4">
-						<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Work Group')}</label>
-						<select
-							bind:value={selectedEvent.work_group}
-							class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						>
-							<option value={undefined}>None</option>
-							{#each workGroups as group}
-								<option value={group}>{group.name}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="mb-4">
-						<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Frequency')}</label>
-						<select
-							bind:value={selectedFrequency}
-							class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						>
-							{#each frequencyOptions as option}
-								<option value={option.id}>{option.name}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="mb-4 members-clickable-region relative">
-						<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Assign Members')}</label
-						>
-						<button
-							type="button"
-							class="w-full p-2 border rounded flex justify-between items-center text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-							on:click|stopPropagation={() => (choicesOpenMembers = !choicesOpenMembers)}
-						>
-							<span
-								>{selectedMembers.length > 0
-									? `${selectedMembers.length} selected`
-									: 'Select members'}</span
-							>
-							<span>{choicesOpenMembers ? '▲' : '▼'}</span>
-						</button>
-						{#if choicesOpenMembers}
-							<div
-								class="absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm w-full z-[90] border border-gray-300 dark:border-gray-600 rounded max-h-48 overflow-y-auto"
-								on:click|stopPropagation
-							>
-								<div class="text-xs p-2 border-b border-gray-200 dark:border-gray-600">
-									{$_('Select Members')}
-								</div>
-								{#each members as member}
-									<button
-										type="button"
-										on:click|stopPropagation={(e) => toggleSelection(member.id, 'members', e)}
-										class="w-full hover:bg-gray-300 active:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-800 dark:active:bg-slate-900 p-2 px-5 flex justify-between items-center hover:cursor-pointer transition-all"
-										class:bg-secondary={selectedMembers.includes(member.id)}
-										class:text-white={selectedMembers.includes(member.id)}
-									>
-										{member.name}
-										<input
-											type="checkbox"
-											checked={selectedMembers.includes(member.id)}
-											on:change|stopPropagation={(e) => toggleSelection(member.id, 'members', e)}
-											class="ml-2"
-										/>
-									</button>
-								{/each}
-							</div>
-						{/if}
-					</div>
-					{#if !choicesOpenMembers}
-						<div class="mb-4 reminders-clickable-region relative">
-							<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Reminders')}</label>
-							<button
-								type="button"
-								class="w-full p-2 border rounded flex justify-between items-center text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-								on:click|stopPropagation={() => (choicesOpenReminders = !choicesOpenReminders)}
-							>
-								<span
-									>{selectedReminders.length > 0
-										? `${selectedReminders.length} selected`
-										: 'Select reminders'}</span
-								>
-								<span>{choicesOpenReminders ? '▲' : '▼'}</span>
-							</button>
-							{#if choicesOpenReminders}
-								<div
-									class="absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm w-full z-[90] border border-gray-300 dark:border-gray-600 rounded max-h-48 overflow-y-auto"
-									on:click|stopPropagation
-								>
-									<div class="text-xs p-2 border-b border-gray-200 dark:border-gray-600">
-										{$_('Select Reminders')}
-									</div>
-									{#each reminderOptions as reminder}
-										<button
-											type="button"
-											on:click|stopPropagation={(e) => toggleSelection(reminder.id, 'reminders', e)}
-											class="w-full hover:bg-gray-300 active:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-800 dark:active:bg-slate-900 p-2 px-5 flex justify-between items-center hover:cursor-pointer transition-all"
-											class:bg-secondary={selectedReminders.includes(reminder.id)}
-											class:text-white={selectedReminders.includes(reminder.id)}
-										>
-											{reminder.name}
-											<input
-												type="checkbox"
-												checked={selectedReminders.includes(reminder.id)}
-												on:change|stopPropagation={(e) =>
-													toggleSelection(reminder.id, 'reminders', e)}
-												class="ml-2"
-											/>
-										</button>
-									{/each}
-								</div>
-							{/if}
-						</div>
-					{/if}
-				{/if}
-				<div class="flex justify-end gap-2">
-					<button
-						type="button"
-						on:click={() => (showCreateScheduleEvent = false)}
-						class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"
-					>
-						{$_('Cancel')}
-					</button>
-					<button
-						type="submit"
-						class="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary-dark"
-						disabled={loading}
-					>
-						{loading ? $_('Loading...') : $_('Create')}
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
+	<CreateEventModal
+		bind:showCreateScheduleEvent
+		on:submit={handleSubmit}
+	/>
 {/if}
 
 <!-- Modal 2: Edit Event Modal -->
 {#if showEditScheduleEvent}
-	<div
-		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-		aria-modal="true"
-		role="dialog"
-		on:click={() => (showEditScheduleEvent = false)}
-	>
-		<div
-			class="bg-white dark:bg-darkobject p-6 rounded-lg w-full max-w-md overflow-y-auto max-h-[90vh] modal-content"
-			on:click|stopPropagation
-		>
-			<h2 class="text-xl mb-4 text-gray-900 dark:text-white">{$_('Edit Event')}</h2>
-			<form on:submit|preventDefault={handleSubmit}>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Title')}</label>
-					<input
-						type="text"
-						bind:value={selectedEvent.title}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						required
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Description')}</label>
-					<textarea
-						bind:value={selectedEvent.description}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Start Date')}</label>
-					<input
-						type="datetime-local"
-						bind:value={selectedEvent.start_date}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						required
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('End Date')}</label>
-					<input
-						type="datetime-local"
-						bind:value={selectedEvent.end_date}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						required
-					/>
-				</div>
-				<div class="mb-4">
-					<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Meeting Link')}</label>
-					<input
-						type="url"
-						bind:value={selectedEvent.meeting_link}
-						class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-					/>
-				</div>
-				{#if type === 'group'}
-					<div class="mb-4">
-						<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Work Group')}</label>
-						<select
-							bind:value={selectedEvent.work_group}
-							class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-							disabled
-						>
-							<option value={undefined}>None</option>
-							{#each workGroups as group}
-								<option value={group}>{group.name}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="mb-4">
-						<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Frequency')}</label>
-						<select
-							bind:value={selectedFrequency}
-							class="w-full p-2 border rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-						>
-							{#each frequencyOptions as option}
-								<option value={option.id}>{option.name}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="mb-4 members-clickable-region relative">
-						<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Assign Members')}</label
-						>
-						<button
-							type="button"
-							class="w-full p-2 border rounded flex justify-between items-center text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-							on:click|stopPropagation={() => (choicesOpenMembers = !choicesOpenMembers)}
-						>
-							<span
-								>{selectedMembers.length > 0
-									? `${selectedMembers.length} selected`
-									: 'Select members'}</span
-							>
-							<span>{choicesOpenMembers ? '▲' : '▼'}</span>
-						</button>
-						{#if choicesOpenMembers}
-							<div
-								class="absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm w-full z-[90] border border-gray-300 dark:border-gray-600 rounded max-h-48 overflow-y-auto"
-								on:click|stopPropagation
-							>
-								<div class="text-xs p-2 border-b border-gray-200 dark:border-gray-600">
-									{$_('Select Members')}
-								</div>
-								{#each members as member}
-									<button
-										type="button"
-										on:click|stopPropagation={(e) => toggleSelection(member.id, 'members', e)}
-										class="w-full hover:bg-gray-300 active:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-800 dark:active:bg-slate-900 p-2 px-5 flex justify-between items-center hover:cursor-pointer transition-all"
-										class:bg-secondary={selectedMembers.includes(member.id)}
-										class:text-white={selectedMembers.includes(member.id)}
-									>
-										{member.name}
-										<input
-											type="checkbox"
-											checked={selectedMembers.includes(member.id)}
-											on:change|stopPropagation={(e) => toggleSelection(member.id, 'members', e)}
-											class="ml-2"
-										/>
-									</button>
-								{/each}
-							</div>
-						{/if}
-					</div>
-					{#if !choicesOpenMembers}
-						<div class="mb-4 reminders-clickable-region relative reminder-div">
-							<label class="block mb-1 text-gray-700 dark:text-gray-300">{$_('Reminders')}</label>
-							<button
-								type="button"
-								class="w-full p-2 border rounded flex justify-between items-center text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-								on:click|stopPropagation={() => (choicesOpenReminders = !choicesOpenReminders)}
-							>
-								<span
-									>{selectedReminders.length > 0
-										? `${selectedReminders.length} selected`
-										: 'Select reminders'}</span
-								>
-								<span>{choicesOpenReminders ? '▲' : '▼'}</span>
-							</button>
-							{#if choicesOpenReminders}
-								<div
-									class="absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm w-full z-[90] border border-gray-300 dark:border-gray-600 rounded max-h-48 overflow-y-auto"
-									on:click|stopPropagation
-								>
-									<div class="text-xs p-2 border-b border-gray-200 dark:border-gray-600">
-										{$_('Select Reminders')}
-									</div>
-									{#each reminderOptions as reminder}
-										<button
-											type="button"
-											on:click|stopPropagation={(e) => toggleSelection(reminder.id, 'reminders', e)}
-											class="w-full hover:bg-gray-300 active:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-800 dark:active:bg-slate-900 p-2 px-5 flex justify-between items-center hover:cursor-pointer transition-all"
-											class:bg-secondary={selectedReminders.includes(reminder.id)}
-											class:text-white={selectedReminders.includes(reminder.id)}
-										>
-											{reminder.name}
-											<input
-												type="checkbox"
-												checked={selectedReminders.includes(reminder.id)}
-												on:change|stopPropagation={(e) =>
-													toggleSelection(reminder.id, 'reminders', e)}
-												class="ml-2"
-											/>
-										</button>
-									{/each}
-								</div>
-							{/if}
-						</div>
-					{/if}
-				{/if}
-				<div class="flex justify-end gap-2">
-					<button
-						type="button"
-						on:click={() => (showEditScheduleEvent = false)}
-						class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"
-					>
-						{$_('Cancel')}
-					</button>
-					<button
-						type="submit"
-						class="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary-dark"
-						disabled={loading}
-					>
-						{loading ? $_('Loading...') : $_('Update')}
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
+	<EditEventModal
+		bind:showEditScheduleEvent
+		on:submit={handleSubmit}
+	/>
 {/if}
 
 <!-- Modal 3: View Event Modal -->
 {#if showEvent}
-	<div
-		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-		aria-modal="true"
-		role="dialog"
-		on:click={() => (showEvent = false)}
-	>
-		<div
-			class="bg-white dark:bg-darkobject p-6 rounded-lg w-full max-w-md overflow-y-auto max-h-[90vh]"
-            on:click|stopPropagation
-		>
-			<h2 class="text-xl mb-4 text-gray-900 dark:text-white">{selectedEvent.title}</h2>
-			<p>
-				<strong class="text-gray-700 dark:text-gray-300">{$_('Description')}:</strong>
-				{selectedEvent.description || 'N/A'}
-			</p>
-			<p>
-				<strong class="text-gray-700 dark:text-gray-300">{$_('Start')}:</strong>
-				{selectedEvent.start_date}
-			</p>
-			<p>
-				<strong class="text-gray-700 dark:text-gray-300">{$_('End')}:</strong>
-				{selectedEvent.end_date}
-			</p>
-			{#if selectedEvent.meeting_link}
-				<p>
-					<strong class="text-gray-700 dark:text-gray-300">{$_('Meeting Link')}:</strong>
-					<a
-						href={selectedEvent.meeting_link}
-						target="_blank"
-						class="text-blue-500 dark:text-blue-300">{selectedEvent.meeting_link}</a
-					>
-				</p>
-			{/if}
-			{#if type === 'group'}
-				{#if selectedEvent.repeat_frequency !== undefined}
-					<p>
-						<strong class="text-gray-700 dark:text-gray-300">{$_('Frequency')}:</strong>
-						{frequencyOptions.find((opt) => opt.id === selectedEvent.repeat_frequency)?.name ||
-							'N/A'}
-					</p>
-				{/if}
-				{#if selectedEvent.assignee_ids?.length}
-					<p>
-						<strong class="text-gray-700 dark:text-gray-300">{$_('Assigned Members')}:</strong>
-						{selectedEvent.assignee_ids
-							.map((id) => members.find((m) => m.id === id)?.name || `User ${id}`)
-							.join(', ')}
-					</p>
-				{/if}
-				{#if selectedEvent.reminders?.length}
-					<p>
-						<strong class="text-gray-700 dark:text-gray-300">{$_('Reminders')}:</strong>
-						{selectedEvent.reminders
-							.map((time) => reminderOptions.find((r) => r.id === time)?.name || `${time} seconds`)
-							.join(', ')}
-					</p>
-				{/if}
-			{/if}
-			<div class="flex justify-end gap-2 mt-4">
-				<button
-					on:click={() => (showEvent = false)}
-					class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"
-				>
-					{$_('Close')}
-				</button>
-				<button
-					on:click={() => {
-						showEvent = false;
-						showEditScheduleEvent = true;
-					}}
-					class="px-4 py-2 bg-blue-500 dark:bg-blue-700 text-white rounded hover:bg-blue-600 dark:hover:bg-blue-800"
-				>
-					{$_('Edit')}
-				</button>
-				<button
-					on:click={() => scheduleEventDelete(selectedEvent.event_id)}
-					class="px-4 py-2 bg-red-500 dark:bg-red-700 text-white rounded hover:bg-red-600 dark:hover:bg-red-800"
-				>
-					{$_('Delete')}
-				</button>
-			</div>
-		</div>
-	</div>
+	<ViewEventModal
+		bind:selectedEvent
+		bind:showEvent
+		on:edit={() => {
+			showEvent = false;
+			showEditScheduleEvent = true;
+		}}
+		on:delete={() => scheduleEventDelete(selectedEvent.event_id)}
+	/>
 {/if}
 
 <style>

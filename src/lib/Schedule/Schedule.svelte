@@ -391,13 +391,15 @@
     bind:showCreateScheduleEvent
     bind:showEditScheduleEvent
     bind:selectedEvent
-    bind:workGroups
     bind:showEvent
-    bind:loading
     bind:type
     {scheduleEventCreate}
     scheduleEventEdit={scheduleEventUpdate}
     scheduleEventDelete={scheduleEventDelete}
+    x={0}
+    y={0}
+    month={month}
+    year={year}
 />
 
 <Poppup bind:poppup />
