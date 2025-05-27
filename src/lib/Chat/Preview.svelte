@@ -3,7 +3,7 @@
 	import { fetchRequest } from '$lib/FetchRequest';
 	import type { Group } from '$lib/Group/interface';
 	import Tab from '$lib/Generic/Tab.svelte';
-	import type { User } from '$lib/User/interfaces';
+	import { userStore, type User } from '$lib/User/interfaces';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { onMount } from 'svelte';
 	import TextInput from '$lib/Generic/TextInput.svelte';
@@ -17,7 +17,6 @@
 
 	let groups: Group[] = [],
 		directs: any[] = [],
-		user: User,
 		chatSearch = '',
 		workGroupList: WorkGroup[] = [];
 
@@ -48,15 +47,16 @@
 		);
 		if (!res.ok) return [];
 
-		if (selectedPage === 'group')
-			return json.results;
+		if (selectedPage === 'group') return json.results;
 		else {
 			// Process messages to set notified based on last interaction timestamp
 			return json.results.map((message: PreviewMessage) => {
 				const timestampKey = `lastInteraction_${message.channel_id}`;
 				const lastInteraction = localStorage.getItem(timestampKey);
 				// Set notified to true if message is newer than last interaction or no interaction exists
-				message.notified = lastInteraction ? new Date(message.created_at) > new Date(lastInteraction) : false;
+				message.notified = lastInteraction
+					? new Date(message.created_at) > new Date(lastInteraction)
+					: false;
 				// console.log(timestampKey, new Date(message.created_at).toISOString(), new Date(lastInteraction).toISOString());
 				return message;
 			});
@@ -87,7 +87,7 @@
 	const userList = async () => {
 		const { json, res } = await fetchRequest('GET', `users?limit=${chatLimit}`);
 		if (!res.ok) return [];
-		let chatters = json.results.filter((chatter: any) => chatter.id !== user.id);
+		let chatters = json.results.filter((chatter: any) => chatter.id !== $userStore?.id);
 		chatters = await Promise.all(
 			chatters.map(async (chatter: any) => {
 				chatter.channel_id = await getChannelId(chatter.id);
@@ -132,8 +132,12 @@
 	// Sort chats by notification status
 	const sort = (chatter: Group[] | any[], preview: PreviewMessage[]) => {
 		return chatter.sort((a, b) => {
-			let notifiedMsgA = preview.find((notified) => notified.channel_id === (a.chat_id || a.channel_id));
-			let notifiedMsgB = preview.find((notified) => notified.channel_id === (b.chat_id || b.channel_id));
+			let notifiedMsgA = preview.find(
+				(notified) => notified.channel_id === (a.chat_id || a.channel_id)
+			);
+			let notifiedMsgB = preview.find(
+				(notified) => notified.channel_id === (b.chat_id || b.channel_id)
+			);
 			let notifiedA = notifiedMsgA?.notified || false;
 			let notifiedB = notifiedMsgB?.notified || false;
 			if (notifiedA === notifiedB) return 0;
@@ -170,8 +174,6 @@
 
 	onMount(async () => {
 		if (env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE') getWorkGroups();
-		const { json, res } = await fetchRequest('GET', 'user');
-		user = json;
 		await UserChatInviteList();
 		await getChattable();
 		// Initialize preview messages with notification status
@@ -215,10 +217,10 @@
 			displayNames={['Direct', 'Groups']}
 		/>
 		{#if hasUnreadDirect}
-			<span class="absolute top-0 left-0 p-1 rounded-full bg-purple-300" style="left: 50px;"></span>
+			<span class="absolute top-0 left-0 p-1 rounded-full bg-purple-300" style="left: 50px;" />
 		{/if}
 		{#if hasUnreadGroup}
-			<span class="absolute top-0 left-0 p-1 rounded-full bg-blue-300" style="left: 120px;"></span>
+			<span class="absolute top-0 left-0 p-1 rounded-full bg-blue-300" style="left: 120px;" />
 		{/if}
 	</div>
 </div>
@@ -308,10 +310,15 @@
 				class="w-full transition transition-color p-3 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-500 cursor-pointer dark:bg-darkobject dark:hover:bg-darkbackground"
 				class:bg-gray-200={selectedChat === (chatter.channel_id || chatter.chat_id)}
 				class:dark:bg-gray-700={selectedChat === (chatter.channel_id || chatter.chat_id)}
-				on:click={() => clickedChatter(selectedPage === 'direct' ? chatter.channel_id : chatter.chat_id)}
+				on:click={() =>
+					clickedChatter(selectedPage === 'direct' ? chatter.channel_id : chatter.chat_id)}
 			>
 				{#if previewObject?.notified}
-					<div class="p-1 rounded-full" class:bg-blue-300={selectedPage === 'group'} class:bg-purple-300={selectedPage === 'direct'} />
+					<div
+						class="p-1 rounded-full"
+						class:bg-blue-300={selectedPage === 'group'}
+						class:bg-purple-300={selectedPage === 'direct'}
+					/>
 				{/if}
 				<ProfilePicture
 					username={chatter.name || chatter.username}
@@ -365,17 +372,3 @@
 		</Button>
 	{/if}
 </div>
-
-<style>
-	.group-message-bg {
-		background: linear-gradient(90deg, rgba(255, 255, 255, 1) 32%, rgba(180, 210, 255, 1) 76%);
-	}
-
-	.direct-message-bg {
-		background: linear-gradient(90deg, rgb(240, 224, 255) 32%, rgb(255, 255, 255) 76%);
-	}
-
-	.both-message-bg {
-		background: linear-gradient(90deg, rgb(240, 224, 255) 32%, rgba(180, 210, 255, 1) 76%);
-	}
-</style>

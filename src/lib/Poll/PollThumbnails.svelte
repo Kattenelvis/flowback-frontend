@@ -7,7 +7,6 @@
 	import PollFiltering from './PollFiltering.svelte';
 	import type { Filter, poll as Poll } from './interface';
 	import Loader from '$lib/Generic/Loader.svelte';
-	import { getUserIsOwner } from '$lib/Group/functions';
 	import { pollThumbnails as pollThumbnailsLimit } from '../Generic/APILimits.json';
 	import Pagination from '$lib/Generic/Pagination.svelte';
 	import Poppup from '$lib/Generic/Poppup.svelte';

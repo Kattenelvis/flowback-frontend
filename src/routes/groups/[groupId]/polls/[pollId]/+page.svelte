@@ -35,11 +35,9 @@
 		proposalsToPredictionMarket: proposal[] = [],
 		poppup: poppup,
 		displayForm: boolean,
-		comments: Comment[] = [],
-		allComments: Comment[] = [];
+		comments: Comment[] = [];
 
 	onMount(async () => {
-		getGroupUser();
 		await getPollData();
 		phase = getPhase(poll);
 		scrollToSection();
@@ -64,23 +62,6 @@
 		poll = json.results[0];
 		pollType = json.results[0].poll_type;
 		finished = new Date(json.results[0].end_date) < new Date();
-	};
-
-	//TODO: Replace this later with some kind of svelte stores or local storage data
-	const getGroupUser = async () => {
-		if (!$page.params) return;
-
-		const { res, json } = await fetchRequest('GET', `user`);
-		if (res.ok) {
-			const userId = json.id;
-			{
-				const { res, json } = await fetchRequest(
-					'GET',
-					`group/${$page.params.groupId}/users?user_id=${userId}`
-				);
-				if (res.ok) groupUser = json.results[0];
-			}
-		}
 	};
 
 	const scrollToSection = () => {
@@ -116,10 +97,9 @@
 				{poll}
 				bind:phase
 				displayTag={phase !== 'area_vote' && phase !== 'pre_start'}
-				{groupUser}
 			/>
 		{:else}
-			<PollHeader {poll} bind:phase displayTag={false} {groupUser} />
+			<PollHeader {poll} bind:phase displayTag={false} />
 		{/if}
 
 		{#if pollType === 4}

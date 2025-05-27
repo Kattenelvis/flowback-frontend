@@ -10,9 +10,9 @@
 	import { onMount } from 'svelte';
 	import { getPhase, getPhaseUserFriendlyNameWithNumber, nextPhase } from './functions';
 	import DefaultBanner from '$lib/assets/default_banner_group.png';
-	import { elipsis, getPermissionsFast, onThumbnailError } from '$lib/Generic/GenericFunctions';
+	import { getPermissionsFast, onThumbnailError } from '$lib/Generic/GenericFunctions';
 	import Select from '$lib/Generic/Select.svelte';
-	import { getTags, getUserIsOwner } from '$lib/Group/functions';
+	import { getTags } from '$lib/Group/functions';
 	import type { Tag as TagType } from '$lib/Group/interface';
 	import { darkModeStore } from '$lib/Generic/DarkMode';
 	import Button from '$lib/Generic/Button.svelte';
@@ -23,7 +23,6 @@
 	import {
 		faAnglesRight,
 		faThumbtack,
-		faComment,
 		faAlignLeft,
 		faCalendarAlt,
 		faSlash
@@ -34,8 +33,8 @@
 	import ChatIcon from '$lib/assets/Chat_fill.svg';
 	import Timeline from './NewDesign/Timeline.svelte';
 	import ReportPollModal from './ReportPollModal.svelte';
-	import type { Permission, Permissions } from '$lib/Group/Permissions/interface';
-	import { userGroupInfo, type Thread } from '$lib/Group/interface';
+	import type { Permissions } from '$lib/Group/Permissions/interface';
+	import { userGroupInfo } from '$lib/Group/interface';
 
 	export let poll: poll;
 
@@ -53,8 +52,7 @@
 		reportPollModalShow = false,
 		hovering = false,
 		showGroupInfo = !(env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE') && !$page.params.groupId,
-		permissions: Permissions,
-		userIsOwner: boolean;
+		permissions: Permissions;
 
 	//When adminn presses the pin tack symbol, pin the poll
 	const pinPoll = async () => {

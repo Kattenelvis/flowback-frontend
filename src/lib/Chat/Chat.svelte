@@ -15,8 +15,7 @@
 	import CreateChatGroup from '$lib/Chat/CreateChatGroup.svelte';
 	import { updateUserData } from './functions';
 
-	let messages: Message[] = [],
-		chatOpen = env.PUBLIC_MODE === 'DEV' ? false : false,
+	let chatOpen = env.PUBLIC_MODE === 'DEV' ? false : false,
 		selectedPage: 'direct' | 'group' = 'direct',
 		selectedChat: number | null,
 		previewDirect: PreviewMessage[] = [],

@@ -11,6 +11,7 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import TextInput from '$lib/Generic/TextInput.svelte';
 	import Select from '$lib/Generic/Select.svelte';
+	import { userStore } from '$lib/User/interfaces';
 
 	export let history: null | number,
 		groupId = 0;
@@ -43,13 +44,6 @@
 		);
 
 		delegatePool = json.results[0];
-	};
-
-	const getUserInfo = async () => {
-		const { res, json } = await fetchRequest('GET', `users?id=${$page.url.searchParams.get('id')}`);
-
-		if (!res.ok) return {};
-		user = json.results[0];
 	};
 	
 	const sortVoteHistory = () => {
@@ -103,7 +97,6 @@
 	onMount(async () => {
 		await getDelegateInfo();
 		await getDelegateHistory();
-		await getUserInfo();
 
 		let query = new URLSearchParams($page.url.searchParams.toString());
 		query.set('history_id', delegatePool.id.toString());
@@ -115,7 +108,7 @@
 	<div class="w-screen bg-[#faf5ff] dark:bg-darkbackground pt-4">
 		<div class="w-full max-w-screen-md mx-auto p-4 bg-white dark:bg-darkobject rounded shadow mb-4">
 			<span class="font-semibold text-sm text-gray-700 dark:text-darkmodeText pb-2">
-				{$_('Delegate history for')} {user?.username}
+				{$_('Delegate history for')} {$userStore?.username}
 			</span>
 			<form
 				class="w-full dark:bg-darkobject dark:text-darkmodeText flex flex-1 items-end gap-4"

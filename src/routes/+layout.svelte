@@ -151,6 +151,12 @@
 	};
 
 	const setUserInfo = async () => {
+		if (
+			localStorage.getItem('userId') === null ||
+			Number(localStorage.getItem('userId')) === $userStore?.id
+		)
+			return;
+			
 		const { res, json } = await fetchRequest('GET', `users?id=${localStorage.getItem('userId')}`);
 		if (!res.ok) return;
 		userStore.set(json.results[0]);

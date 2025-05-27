@@ -14,10 +14,10 @@
 	import TransactionFilter from '$lib/Ledger/TransactionFilter.svelte';
 	import formatDate from '$lib/Ledger/formatDate';
 	import { generateAndDownloadHTML } from '$lib/Ledger/HTML';
-	import type { User } from '$lib/User/interfaces';
 	import Pagination from '$lib/Generic/Pagination.svelte';
 	import Poppup from '$lib/Generic/Poppup.svelte';
 	import type { poppup } from '$lib/Generic/Poppup';
+	import { userStore } from '$lib/User/interfaces';
 
 	let loading: boolean = true,
 		transactions: TransactionType[] = [],
@@ -45,13 +45,11 @@
 			date_before: null,
 			description: null
 		},
-		user: User,
 		limit = 20;
 
 	onMount(async () => {
 		loading = true;
 		await getAccounts();
-		await getUserInfo();
 		await getTransactions();
 		await calculateTotalBalance();
 		loading = false;
@@ -114,7 +112,7 @@
 		prev = json.previous;
 
 		transactions = json.results.filter(
-			(transaction: Transaction) => transaction.account.created_by.id === user?.id
+			(transaction: Transaction) => transaction.account.created_by.id === $userStore?.id
 		);
 		// loading = false;
 	};
@@ -267,12 +265,6 @@
     `;
 	};
 
-	export const getUserInfo = async () => {
-		const { res, json } = await fetchRequest('GET', `users?id=${localStorage.getItem('userId')}`);
-		if (!res.ok) return {};
-		user = json.results[0];
-	};
-
 	$: transactions && calculateTotalBalance();
 </script>
 
@@ -305,7 +297,7 @@
 									//@ts-ignore
 									acc.checked = false;
 								});
-							}}>{$_("Clear Filter")}</Button
+							}}>{$_('Clear Filter')}</Button
 						>
 					{/if}
 					<TransactionFilter bind:filter {handleSearch} bind:accounts />
@@ -318,15 +310,16 @@
 							newTransaction = true;
 						}}>Add Transaction</Button
 					>
-					<Button onClick={() => (show_account = true)}>{$_("Create Account")}</Button>
-					<Button onClick={() => (showDeleteAccount = true)}>{$_("Delete An Account")}</Button>
+					<Button onClick={() => (show_account = true)}>{$_('Create Account')}</Button>
+					<Button onClick={() => (showDeleteAccount = true)}>{$_('Delete An Account')}</Button>
 					<Button onClick={() => generateAndDownloadHTML(generateHTMLContent)}
-						>{$_("Generate Printable HTML file")} {filter.date_before !== null || filter.date_after !== null
+						>{$_('Generate Printable HTML file')}
+						{filter.date_before !== null || filter.date_after !== null
 							? 'between selected dates'
 							: ''}</Button
 					>
 					<div class="mt-4 flex gap-2">
-						{$_("Show on page")}:
+						{$_('Show on page')}:
 						<Select
 							labels={['20', '50', '100', 'All']}
 							values={[20, 50, 100, 10000]}
@@ -493,6 +486,6 @@
 		</div>
 	</div>
 	<div slot="footer">
-		<Button onClick={deleteAccount} buttonStyle="warning">{$_("Delete Account")}</Button>
+		<Button onClick={deleteAccount} buttonStyle="warning">{$_('Delete Account')}</Button>
 	</div>
 </Modal>
