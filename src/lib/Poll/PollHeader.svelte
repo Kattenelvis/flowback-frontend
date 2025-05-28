@@ -6,7 +6,7 @@
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
 	import { faAlignLeft } from '@fortawesome/free-solid-svg-icons/faAlignLeft';
 	import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
-	import { onThumbnailError } from '$lib/Generic/GenericFunctions';
+	import { getPermissionsFast, onThumbnailError } from '$lib/Generic/GenericFunctions';
 	import DefaultBanner from '$lib/assets/default_banner_group.png';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
@@ -21,16 +21,23 @@
 	import DeletePollModal from './DeletePollModal.svelte';
 	import ReportPollModal from './ReportPollModal.svelte';
 	import { userGroupInfo, type groupUser } from '$lib/Group/interface';
+	import { onMount } from 'svelte';
+	import type { Permissions } from '$lib/Group/Permissions/interface';
 
 	export let poll: poll,
 		displayTag = false,
 		phase: Phase,
 		pollType: 3 | 4 = 3;
-
-	let deletePollModalShow = false,
+		
+		let deletePollModalShow = false,
 		reportPollModalShow = false,
 		choicesOpen = false,
-		poppup: poppup;
+		poppup: poppup,
+		permissions: Permissions;
+
+	onMount(async () => {
+		permissions = await getPermissionsFast(Number($page.params.groupId));
+	});
 </script>
 
 <div
@@ -58,12 +65,15 @@
 			Class="justify-self-center mt-2"
 			ClassOpen="right-0"
 		/>
-		<!-- {#if groupUser?.is_admin} -->
+
+		
+{$userGroupInfo.user.username}
+
 		<MultipleChoices
 			bind:choicesOpen
-			labels={phase === 'result' || phase === 'prediction_vote'
-				? [$_('Delete Poll'), $_('Report Poll')]
-				: $userGroupInfo?.is_admin
+			labels={!(phase === 'result' || phase === 'prediction_vote') &&
+			poll?.allow_fast_forward &&
+			(permissions?.poll_fast_forward || $userGroupInfo.is_admin)
 				? [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]
 				: [$_('Delete Poll'), $_('Report Poll')]}
 			functions={[

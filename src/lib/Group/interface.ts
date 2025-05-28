@@ -108,16 +108,24 @@ export interface groupUser extends User {
 export type SelectablePages = 'Members' | 'Pending Invites' | 'Invite';
 
 export const userGroupInfo = writable({
-	banner_image: '',
-	delegate: false,
-	id: 0,
+	user: {
+		id: 0,
+		username: '',
+		profile_image: null,
+		banner_image: null,
+		public_status: 'private',
+		chat_status: 'private'
+	},
 	is_admin: false,
+	active: false,
 	permission_id: null,
 	permission_name: '',
-	profile_image: null,
-	user_id: 0,
-	username: '',
-	group_id: 0
+	group_id: 0,
+	group_name: '',
+	group_image: '',
+	delegate_pool_id: null,
+	id: 0,
+	work_groups: []
 });
 
 export const userIdStore = writable(0);

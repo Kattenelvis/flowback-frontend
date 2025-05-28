@@ -29,7 +29,7 @@
 		pollType = 1,
 		finished: boolean,
 		groupUser: groupUser,
-		phase: Phase,
+		phase: Phase = "pre_start",
 		proposals: proposal[],
 		selectedProposal: proposal | null,
 		proposalsToPredictionMarket: proposal[] = [],

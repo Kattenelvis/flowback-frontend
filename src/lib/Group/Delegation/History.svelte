@@ -194,7 +194,7 @@
 									<div class="mt-1 pl-1 text-sm">
 										<details>
 											<summary class="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline">
-												Historical IMAC
+												{$_("Historical IMAC")}
 											</summary>
 											<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded mt-1">
 												<pre class="text-xs overflow-x-auto text-gray-900 dark:text-gray-300">

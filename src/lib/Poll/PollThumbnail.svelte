@@ -163,12 +163,11 @@
 
 					<MultipleChoices
 						bind:choicesOpen
-						labels={phase === 'result' ||
-						phase === 'prediction_vote' ||
-						!poll?.allow_fast_forward ||
-						(!permissions?.poll_fast_forward && !$userGroupInfo.is_admin)
-							? [$_('Delete Poll'), $_('Report Poll')]
-							: [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]}
+						labels={!(phase === 'result' || phase === 'prediction_vote') ||
+						(poll?.allow_fast_forward &&
+							(permissions?.poll_fast_forward || $userGroupInfo.is_admin))
+							? [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]
+							: [$_('Delete Poll'), $_('Report Poll')]}
 						functions={[
 							() => ((deletePollModalShow = true), (choicesOpen = false)),
 							() => ((reportPollModalShow = true), (choicesOpen = false)),
@@ -216,12 +215,11 @@
 
 					<MultipleChoices
 						bind:choicesOpen
-						labels={phase === 'result' ||
-						phase === 'prediction_vote' ||
-						!poll?.allow_fast_forward ||
-						(!permissions?.poll_fast_forward && !$userGroupInfo.is_admin)
-							? [$_('Delete Poll'), $_('Report Poll')]
-							: [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]}
+						labels={!(phase === 'result' || phase === 'prediction_vote') &&
+						(poll?.allow_fast_forward &&
+							(permissions?.poll_fast_forward || $userGroupInfo.is_admin))
+							? [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]
+							: [$_('Delete Poll'), $_('Report Poll')]}
 						functions={[
 							() => ((deletePollModalShow = true), (choicesOpen = false)),
 							() => ((reportPollModalShow = true), (choicesOpen = false)),

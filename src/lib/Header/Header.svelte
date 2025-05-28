@@ -23,12 +23,14 @@
 	import Sun from './Sun.svelte';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
+	import { getPermissionsFast } from '$lib/Generic/GenericFunctions';
+	import { page } from '$app/stores';
 
 	let sideHeaderOpen = false,
 		profileImage: string | null = DefaultPFP,
 		selectedHref = '';
 
-	onMount(() => {
+	onMount(async () => {
 		if (location.pathname !== '/login') {
 			getProfileImage();
 			setPfP();
@@ -171,7 +173,7 @@
 					<img
 						src={profileImage ? `${env.PUBLIC_API_URL}${profileImage}` : DefaultPFP}
 						class={`w-8 h-8 rounded-full cursor-pointer ${
-							sideHeaderOpen && 'border-blue-500 border-4'
+							sideHeaderOpen && 'ring-blue-500 ring-4'
 						}`}
 						alt="default pfp"
 					/>
