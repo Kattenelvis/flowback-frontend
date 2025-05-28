@@ -140,7 +140,11 @@
 
 	const setUserGroupInfo = async () => {
 		if (!$page.params.groupId) return;
-		if ($userGroupInfo?.group_id === Number($page.params.groupId)) return;
+		// if (
+		// 	(Number(localStorage.getItem('userId')) === $userGroupInfo?.user.id &&
+		// 	$userGroupInfo?.group_id === Number($page.params.groupId))
+		// )
+		// 	return;
 
 		const { res, json } = await fetchRequest(
 			'GET',
@@ -148,6 +152,9 @@
 		);
 		if (!res.ok) return;
 		userGroupInfo.set(json.results[0]);
+
+		console.log(json, "User Group Info");
+		
 	};
 
 	const setUserInfo = async () => {
@@ -156,7 +163,7 @@
 			Number(localStorage.getItem('userId')) === $userStore?.id
 		)
 			return;
-			
+
 		const { res, json } = await fetchRequest('GET', `users?id=${localStorage.getItem('userId')}`);
 		if (!res.ok) return;
 		userStore.set(json.results[0]);

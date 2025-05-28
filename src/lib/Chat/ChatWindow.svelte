@@ -350,7 +350,7 @@
 			</div>
 		{/if}
 	</div>
-	<Button onClick={() => (participantsModalOpen = true)}>Show users</Button>
+	<Button onClick={() => (participantsModalOpen = true)}>{$_("Show users")}</Button>
 {:else}
 	<div>{'No chat selected'}</div>
 {/if}
@@ -362,8 +362,8 @@
 				{#each participants as participant (participant.id)}
 					<ProfilePicture
 						displayName
-						username={participant.$userStore?.username}
-						profilePicture={participant.$userStore?.profile_image}
+						username={participant.user?.username}
+						profilePicture={participant.user?.profile_image}
 					/>
 				{/each}
 			</ul>
