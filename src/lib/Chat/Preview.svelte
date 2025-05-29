@@ -3,7 +3,7 @@
 	import { fetchRequest } from '$lib/FetchRequest';
 	import type { Group } from '$lib/Group/interface';
 	import Tab from '$lib/Generic/Tab.svelte';
-	import { userStore, type User } from '$lib/User/interfaces';
+	import { userStore } from '$lib/User/interfaces';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { onMount } from 'svelte';
 	import TextInput from '$lib/Generic/TextInput.svelte';
@@ -298,7 +298,7 @@
 	{/each}
 
 	{#each selectedPage === 'direct' ? directs : env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' ? workGroupList : groups as chatter (chatter.id)}
-		{#if (selectedPage === 'group' && env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' && chatter.joined) || env.PUBLIC_ONE_GROUP_FLOWBACK !== 'TRUE' || selectedPage === 'direct'}
+		{#if (selectedPage === 'group' && chatter.joined) || (selectedPage === 'direct' && chatter.id !== Number(localStorage.getItem('userId')))}
 			{@const previewObject =
 				selectedPage === 'direct'
 					? previewDirect.find((direct) => direct.channel_id === chatter.channel_id)
@@ -352,7 +352,7 @@
 							groupMembers = [...groupMembers, newMember];
 						}}
 					>
-						ADD USER
+						{$_('Add User')}
 					</Button>
 				</div>
 			{/if}
