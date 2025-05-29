@@ -32,7 +32,7 @@
 	import Permissions from './Permissions/Permissions.svelte';
 	import type { poppup } from '$lib/Generic/Poppup';
 	import Poppup from '$lib/Generic/Poppup.svelte';
-	import { userGroupInfo, type GroupUser } from '$lib/Group/interface';
+	import { groupUserStore, type GroupUser } from '$lib/Group/interface';
 
 	export let selectedPage: SelectablePage = 'flow',
 		group: GroupDetails,
@@ -62,7 +62,7 @@
 		const permission: Permissions = await getPermissionsFast($page.params.groupId);
 		userIsPermittedToCreatePost =
 			(permission !== undefined && permission !== null && permission.create_poll) ||
-			$userGroupInfo.is_admin;
+			$groupUserStore?.is_admin;
 	});
 
 	//@ts-ignore
@@ -212,7 +212,7 @@
 				{/if}
 			</div>
 		{/if}
-		{#if $userGroupInfo.is_admin}
+		{#if $groupUserStore?.is_admin}
 			<div class="bg-white dark:bg-darkobject shadow rounded flex flex-col mt-6">
 				<GroupSidebarButton
 					action={() => action('email')}

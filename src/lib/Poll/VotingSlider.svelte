@@ -2,7 +2,7 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
-	import { userGroupInfo } from '$lib/Group/interface';
+	import { groupUserStore } from '$lib/Group/interface';
 	import type { Phase } from './interface';
 
 	export let onSelection = (pos: number | null) => {},
@@ -59,8 +59,8 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
 	class="w-full bg-white dark:bg-darkobject py-3 px-1 rounded-lg relative"
-	class:draggable={($userGroupInfo.delegate && phase === 'delegate_vote') ||
-		(!$userGroupInfo.delegate && phase === 'vote')}
+	class:draggable={($groupUserStore?.delegate && phase === 'delegate_vote') ||
+		(!$groupUserStore?.delegate && phase === 'vote')}
 	on:mousedown={onMouseDown}
 >
 	<div id="track-container" class="p-1 relative w-full h-3 bg-purple-200 rounded-full">
@@ -104,7 +104,7 @@
 					class="absolute -top-6 z-30 text-sm bg-white px-1 py-0.5 rounded shadow -translate-x-1/2"
 					style="left: {(currentSnapPosition / maxScore) * 100}%"
 				>
-					{#if $userGroupInfo.delegate}
+					{#if $groupUserStore?.delegate}
 						{currentSnapPosition}
 					{:else}
 						{currentSnapPosition * 20}%
@@ -126,7 +126,7 @@
 			onSelection(null);
 		}}
 	>
-		{$_($userGroupInfo.delegate ? 'Clear vote' : 'Clear probability')}
+		{$_($groupUserStore?.delegate ? 'Clear vote' : 'Clear probability')}
 	</Button>
 </div>
 

@@ -20,7 +20,7 @@
 	import type { poppup } from '$lib/Generic/Poppup';
 	import DeletePollModal from './DeletePollModal.svelte';
 	import ReportPollModal from './ReportPollModal.svelte';
-	import { userGroupInfo, type groupUser } from '$lib/Group/interface';
+	import { groupUserStore, type groupUser } from '$lib/Group/interface';
 	import { onMount } from 'svelte';
 	import type { Permissions } from '$lib/Group/Permissions/interface';
 
@@ -67,19 +67,19 @@
 		/>
 
 		
-{$userGroupInfo.user.username}
+{$groupUserStore.user.username}
 
 		<MultipleChoices
 			bind:choicesOpen
 			labels={!(phase === 'result' || phase === 'prediction_vote') &&
 			poll?.allow_fast_forward &&
-			(permissions?.poll_fast_forward || $userGroupInfo.is_admin)
+			(permissions?.poll_fast_forward || $groupUserStore.is_admin)
 				? [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]
 				: [$_('Delete Poll'), $_('Report Poll')]}
 			functions={[
 				() => ((deletePollModalShow = true), (choicesOpen = false)),
 				() => ((reportPollModalShow = true), (choicesOpen = false)),
-				...($userGroupInfo?.is_admin
+				...($groupUserStore?.is_admin
 					? [async () => (phase = await nextPhase(poll?.poll_type, $page.params.pollId, phase))]
 					: [])
 			]}

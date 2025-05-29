@@ -105,7 +105,6 @@
 		if (json.cover_image) coverImage = `${env.PUBLIC_API_URL}${json.cover_image}`;
 
 		oldGroup = { ...json, image, coverImage };
-		console.log(oldGroup, 'oldGroup');
 	};
 
 	const resetEdits = async () => {

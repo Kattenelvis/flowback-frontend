@@ -8,7 +8,7 @@
 	import { faThumbTack, faThumbsUp, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 	import { _ } from 'svelte-i18n';
 	import NewDescription from '$lib/Poll/NewDescription.svelte';
-	import { userGroupInfo, type Thread } from '$lib/Group/interface';
+	import { groupUserStore, type Thread } from '$lib/Group/interface';
 	import MultipleChoices from '$lib/Generic/MultipleChoices.svelte';
 	import ReportThreadModal from './ReportThreadModal.svelte';
 
@@ -86,8 +86,8 @@
 				id={thread?.id}
 				labels={['comment']}
 			/>
-			{#if $userGroupInfo.is_admin || thread?.pinned}
-				<button class:cursor-pointer={$userGroupInfo.is_admin} on:click={() => pinThread(thread)}>
+			{#if $groupUserStore.is_admin || thread?.pinned}
+				<button class:cursor-pointer={$groupUserStore.is_admin} on:click={() => pinThread(thread)}>
 					<Fa
 						size="1.2x"
 						icon={faThumbTack}

@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import TextInput from '$lib/Generic/TextInput.svelte';
-	import { userGroupInfo, type GroupUser, type SelectablePages, type User } from './interface';
+	import { groupUserStore, type GroupUser, type SelectablePages, type User } from './interface';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
 	import { faEnvelope } from '@fortawesome/free-solid-svg-icons/faEnvelope';
@@ -378,7 +378,7 @@
 									</button>
 								{/if}
 							{/await}
-							{#if $userGroupInfo.is_admin && user.user.id !== (Number(localStorage.getItem('userId')) || 0)}
+							{#if $groupUserStore.is_admin && user.user.id !== (Number(localStorage.getItem('userId')) || 0)}
 								<Button
 									Class="w-10 h-10 flex items-center justify-center pl-6 bg-transparent"
 									onClick={() => (removeUserModalShow = true)}

@@ -107,7 +107,7 @@ export interface groupUser extends User {
 
 export type SelectablePages = 'Members' | 'Pending Invites' | 'Invite';
 
-export const userGroupInfo = writable({
+export const groupUserStore = writable({
 	user: {
 		id: 0,
 		username: '',

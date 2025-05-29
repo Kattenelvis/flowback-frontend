@@ -13,7 +13,7 @@
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
 	import { faTrash } from '@fortawesome/free-solid-svg-icons';
-	import { userGroupInfo } from '$lib/Group/interface';
+	import { groupUserStore } from '$lib/Group/interface';
 
 	export let workGroup: WorkGroup,
 		workGroups: WorkGroup[],
@@ -133,7 +133,7 @@
 		>
 	{/if}
 
-	{#if $userGroupInfo.is_admin}
+	{#if $groupUserStore?.is_admin}
 		<Button buttonStyle="warning-light" Class="!border-0" onClick={() => (showDeleteModal = true)}
 			><Fa icon={faTrash} /></Button
 		>

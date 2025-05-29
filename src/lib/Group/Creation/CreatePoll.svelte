@@ -32,7 +32,7 @@
 	import { onMount } from 'svelte';
 	import Select from '$lib/Generic/Select.svelte';
 	import type { WorkGroup } from '../WorkingGroups/interface';
-	import { userGroupInfo } from '$lib/Group/interface';
+	import { groupUserStore } from '$lib/Group/interface';
 
 	let title = '',
 		description = '',
@@ -295,7 +295,7 @@
 				<RadioButtons bind:Yes={isPublic} label="Public?" />
 			{/if}
 
-			{#if selectedPage === 'poll' && (permissions?.allow_fast_forward || $userGroupInfo.is_admin)}
+			{#if selectedPage === 'poll' && (permissions?.allow_fast_forward || $groupUserStore.is_admin)}
 				<RadioButtons bind:Yes={isFF} label="Fast Forward?" />
 			{/if}
 
