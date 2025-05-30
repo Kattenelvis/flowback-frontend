@@ -105,7 +105,7 @@
 
 		const { res, json } = await fetchRequest(
 			'GET',
-			`group/${$page.params.groupId}/users?id=${localStorage.getItem('userId')}`
+			`group/${$page.params.groupId}/users?user_id=${localStorage.getItem('userId')}`
 		);
 		if (!res.ok) return;
 		groupUserStore.set(json.results[0]);
