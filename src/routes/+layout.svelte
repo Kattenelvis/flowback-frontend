@@ -71,6 +71,7 @@
 	};
 
 	const getWorkingGroupList = async () => {
+		if (!$page.params.groupId) return;
 		const { res, json } = await fetchRequest(
 			'GET',
 			`group/${$page.params.groupId}/list?limit=100&order_by=name_asc`

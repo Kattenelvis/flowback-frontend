@@ -70,7 +70,7 @@
 		await getWorkingGroupList();
 
 		workGroupEdit = {
-			direct_join: false,
+			direct_join: true,
 			members: null,
 			name: '',
 			id: 0,
