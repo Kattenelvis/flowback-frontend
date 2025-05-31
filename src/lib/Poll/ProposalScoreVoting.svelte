@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import Button from '$lib/Generic/Button.svelte';
 	import type { Comment, Phase, poll, proposal } from '$lib/Poll/interface';
 	import Proposal from './Proposal.svelte';
 	import { proposals as proposalsLimit } from '../Generic/APILimits.json';
@@ -93,8 +92,10 @@
 			}
 		);
 
+		console.log(res, json);
+
 		if (!res.ok) {
-			if (json.detail[0] === 'groupuserdelegatepool does not exist')
+			if (json?.detail[0] === 'groupuserdelegatepool does not exist')
 				poppup = {
 					message: 'You cannot vote on this poll since you are not a delegate',
 					success: false
@@ -182,10 +183,5 @@
 		{/if}
 	</div>
 </div>
-
-<!-- {#if isVoting}
-	<Button action={() => (false ? delegateVote() : vote())} Class="w-[30%]">Save Votings</Button> -->
-<!-- <Button action={() => (groupUser.is_delegate ? delegateVote() : vote())} Class="w-[30%]" -->
-<!-- {/if} -->
 
 <Poppup bind:poppup />
