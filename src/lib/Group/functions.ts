@@ -1,7 +1,6 @@
 import { fetchRequest } from '$lib/FetchRequest';
 import type { Tag } from './interface';
 import { tags as tagLimit } from '../Generic/APILimits.json';
-import { userStore } from '$lib/User/interfaces';
 
 export const getTags = async (
 	groupId: string | number,

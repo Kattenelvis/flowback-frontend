@@ -96,18 +96,30 @@ export interface Tag {
 	imac: number;
 }
 
-export interface groupUser extends User {
-	user_id: number;
-	delegate_pool_id: boolean;
+export interface groupUser {
+	user: {
+		id: number;
+		username: string;
+		profile_image: null;
+		banner_image: null;
+		public_status: 'private';
+		chat_status: 'private';
+	};
 	is_admin: boolean;
-	permission_id: number;
+	active: boolean;
+	permission_id: null | number;
 	permission_name: string;
-	user: { id: number; username: string; profile_image: null | string; banner_image: null | string };
+	group_id: number;
+	group_name: string;
+	group_image: string;
+	delegate_pool_id: null | number;
+	id: number;
+	work_groups: any[];
 }
 
 export type SelectablePages = 'Members' | 'Pending Invites' | 'Invite';
 
-export const groupUserStore = writable({
+export const groupUserStore = writable<groupUser>({
 	user: {
 		id: 0,
 		username: '',

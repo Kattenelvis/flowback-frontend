@@ -1,9 +1,15 @@
 import { fetchRequest } from '$lib/FetchRequest';
-import type { GroupUser } from '$lib/Group/interface';
 import type { Permission } from '$lib/Group/Permissions/interface';
 import type { User } from '$lib/User/interfaces';
-import { writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 import { page } from '$app/stores';
+import { groupUserStore, type groupUser } from '$lib/Group/interface';
+
+let groupUserInfo:groupUser | null = null;
+
+groupUserStore.subscribe((value) => {
+	groupUserInfo = value;
+});
 
 //Hack to create a deep copy of an object
 export const deepCopy = (object: object) => {
@@ -50,7 +56,7 @@ export const onThumbnailError = (event: any, picture: string) => {
 interface UserInfo {
 	user: User;
 	permission?: Permission;
-	groupuser?: GroupUser;
+	groupuser?: groupUser;
 	groupId?: number;
 }
 
@@ -91,14 +97,10 @@ export const getPermissions = async (groupId: number | string, permissionId: num
 };
 
 export const getPermissionsFast = async (groupId: number | string) => {
+	if (!groupUserInfo) return;
 
-	const userInfo = await getGroupUserInfo(groupId);
-
-	if (userInfo === undefined) return;
-
-	if (userInfo?.permission_id) {
-		const permissions = await getPermissions(groupId, userInfo?.permission_id);
-		console.log(permissions, groupId, userInfo?.permission_id, "PERMISSIONS FAST");
+	if (groupUserInfo.permission_id) {
+		const permissions = await getPermissions(groupId, groupUserInfo.permission_id);
 		return permissions
 	}
 }

@@ -70,7 +70,7 @@
 				if (poll.status === -1 || poll.status === 1) clearInterval(time);
 				getProposals();
 				getPollData();
-			}, 500);
+			}, 1000);
 		}
 	});
 </script>
