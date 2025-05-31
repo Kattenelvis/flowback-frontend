@@ -16,14 +16,14 @@
 	//4 for score voting, 3 for date
 	export let pollType = 1,
 		proposals: any[] = [],
-		poll: poll;
+		poll: poll,
+		getPollData = () => {};
 
 	const getProposals = async () => {
 		const { json } = await fetchRequest(
 			'GET',
 			`group/poll/${$page.params.pollId}/proposals?limit=1000&order_by=score_desc`
 		);
-		console.log('WHAAAATTT', json, pollType);
 
 		if (pollType === 4) proposals = json.results;
 		else if (pollType === 3)
@@ -63,6 +63,15 @@
 
 	onMount(() => {
 		getProposals();
+
+		if (poll?.status === 2 || poll?.status === 0) {
+			let time = setInterval(() => {
+				
+				if (poll.status === -1 || poll.status === 1) clearInterval(time);
+				getProposals();
+				getPollData();
+			}, 500);
+		}
 	});
 </script>
 
@@ -74,7 +83,7 @@
 	{#if pollType === 4}
 		<!-- If the winner has atleast one point, display statistics (otherwise it looks empty) -->
 		{#if poll?.status === 2 || poll?.status === 0}
-			{$_('Calculating results, try refreshing in a while.')}
+			{$_('Calculating results...')}
 		{:else if poll?.status === -1}
 			{$_('Vote calculation failed')}
 		{:else}

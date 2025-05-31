@@ -641,7 +641,7 @@
     "Username may only contain letters, numbers, and @/./+/-/_ characters. No spaces are allowed.": "Användarnamnet får endast innehålla bokstäver, siffror och @/./+/-/_ tecken. Mellanslag är inte heller tillåtna.",
     "No description provided for this tag.": "Ingen beskrivning har angetts för denna tagg.",
     "Predict on what will happen if a proposal is implemented in reality.": "Förutse vad som kommer att hända om ett förslag genomförs i verkligheten.",
-    "!Calculating results, try refreshing in a while.": "!Beräknar resultat, försök att uppdatera sidan om en stund.",
+    "Calculating results, try refreshing in a while.": "Beräknar resultat, försök att uppdatera sidan om en stund.",
     "Vote calculation failed": "Röstberäkning misslyckades",
     "Pending invite": "Väntande inbjudan",
     "Couldn't accept user invite": "Kunde inte acceptera användarens förfråga",
@@ -660,5 +660,7 @@
     "Show users": "Visa användare",
     "Add User": "Lägg till användare",
     "Clear probability": "Rensa sannolikhet",
-    "Clear vote": "Rensa röst"
+    "Clear vote": "Rensa röst",
+    "Calculating results...": "Beräknar resultat...",
+    "Failed to calculate results": "Misslyckades att beräkna resultat"
 }

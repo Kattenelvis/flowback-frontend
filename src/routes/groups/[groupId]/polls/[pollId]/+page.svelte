@@ -345,7 +345,7 @@
 							/>
 						{/if}
 					</div>
-					<div slot="right"><Results bind:poll {pollType} /></div>
+					<div slot="right"><Results bind:poll {getPollData} {pollType} /></div>
 					<div slot="bottom">
 						<Comments bind:proposals api={'poll'} />
 					</div>
@@ -357,7 +357,7 @@
 			{:else}
 				<Structure poll={null}>
 					<div slot="left" class="w-[600px]">
-						<Results bind:poll {pollType} />
+						<Results bind:poll {getPollData} {pollType} />
 					</div>
 
 					<div slot="right"><Comments api="poll" /></div>
