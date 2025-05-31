@@ -126,6 +126,7 @@
 			selectedChat = chatterId;
 			chatPartner.set(chatterId);
 			selectedChatChannelId = chatterId;
+			selectedPage = 'group';
 		}
 	};
 

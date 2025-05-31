@@ -18,7 +18,8 @@
 
 	let showUI = false,
 		scrolledY = '',
-		openLoginModal = false;
+		openLoginModal = false,
+		isBrowser = false;
 
 	const shouldShowUI = () => {
 		let pathname = window?.location?.pathname;
@@ -44,7 +45,9 @@
 	};
 
 	const redirect = async () => {
-		const relativePath = new URL(location.href).pathname;
+		if (!isBrowser) return;
+		
+		const relativePath = window.location.pathname;
 
 		let pathname = window?.location?.pathname;
 
@@ -125,28 +128,27 @@
 		scrolledY = $page.params.pollId;
 	});
 
-	$: {
-		if ($page) {
-			console.log('Page changed to: ', $page.url.pathname);
-			redirect();
-			getWorkingGroupList();
-			showUI = shouldShowUI();
+	$: if ($page.url.pathname && isBrowser) {
+		console.log('Page changed to: ', $page.url.pathname);
+		redirect();
+		getWorkingGroupList();
+		showUI = shouldShowUI();
 
-			setTimeout(() => {
-				const html = document.getElementById(`poll-thumbnail-${scrolledY}`);
-				html?.scrollIntoView();
-			}, 200);
+		setTimeout(() => {
+			const html = document.getElementById(`poll-thumbnail-${scrolledY}`);
+			html?.scrollIntoView();
+		}, 200);
 
-			checkSessionExpiration();
-			setUserGroupInfo();
-			setUserInfo();
-		}
+		checkSessionExpiration();
+		setUserGroupInfo();
+		setUserInfo();
 	}
 
 	//Initialize Translation, which should happen before any lifecycle hooks.
 	initializeLocalization();
 
 	onMount(() => {
+		isBrowser = true;
 		getWorkingGroupList();
 		showUI = shouldShowUI();
 		redirect();
