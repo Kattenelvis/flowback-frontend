@@ -28,8 +28,8 @@
 		displayTag = false,
 		phase: Phase,
 		pollType: 3 | 4 = 3;
-		
-		let deletePollModalShow = false,
+
+	let deletePollModalShow = false,
 		reportPollModalShow = false,
 		choicesOpen = false,
 		poppup: poppup,
@@ -65,9 +65,6 @@
 			Class="justify-self-center mt-2"
 			ClassOpen="right-0"
 		/>
-
-		
-{$groupUserStore.user.username}
 
 		<MultipleChoices
 			bind:choicesOpen

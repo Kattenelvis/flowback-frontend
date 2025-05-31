@@ -104,7 +104,7 @@
 		formData.append('pinned', 'false');
 		formData.append('tag', tags[0]?.id?.toString() || '1');
 		if (workGroup && selected_poll === 'Date Poll' && !isPublic)
-			formData.append('work_group_id', workGroup.toString());
+			// formData.append('work_group_id', workGroup.toString());
 
 		images.forEach((image) => {
 			formData.append('attachments', image);

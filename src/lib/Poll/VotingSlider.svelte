@@ -126,7 +126,7 @@
 			onSelection(null);
 		}}
 	>
-		{$_($groupUserStore?.delegate ? 'Clear vote' : 'Clear probability')}
+		{$_(phase === 'prediction_bet' ? 'Clear probability' : 'Clear vote')}
 	</Button>
 </div>
 

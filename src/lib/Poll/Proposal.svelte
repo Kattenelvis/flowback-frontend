@@ -37,7 +37,6 @@
 			commentsStore.filterByProposal(null);
 			commentFilterProposalId = null;
 		} else {
-
 			commentsStore.filterByProposal(proposal);
 
 			commentFilterProposalId = proposal.id;
@@ -64,7 +63,6 @@
 	});
 
 	$: if (filteredComments) {
-		
 	}
 </script>
 
@@ -127,9 +125,9 @@
 					class:saturate-0={commentFilterProposalId !== proposal.id &&
 						commentFilterProposalId !== null}
 				/>
-				
+
 				{$commentsStore.allComments.filter((comment) =>
-					comment?.message?.includes(`#${proposal.title}`)
+					comment?.message?.includes(`#${proposal.title.replaceAll(' ', '-')}`)
 				).length}
 			</button>
 
@@ -157,21 +155,6 @@
 		</button>
 	</div>
 </button>
-
-{#if isVoting}
-	<input
-		value={voting.find((vote) => vote.proposal === proposal.id)?.score}
-		id="amount"
-		class="dark:bg-darkobject dark:border-gray-600 dark:hover:brightness-110 border-b-2"
-		type="number"
-		on:change={(e) => onChange(e)}
-		min={0}
-		max={100}
-	/>
-{:else}
-	<!-- Ensures flex design stays intact -->
-	<div />
-{/if}
 
 <style>
 	.elipsis {

@@ -21,7 +21,7 @@ function createCommentStore() {
                 allComments: comments,
                 filteredComments: store.filterByProposal
                     ? comments.filter(comment =>
-                        comment.message?.includes(`#${store.filterByProposal?.title}`)
+                        comment.message?.includes(`#${store.filterByProposal?.title.replaceAll(' ', '-')}`)
                     )
                     : comments
             })),
@@ -29,7 +29,7 @@ function createCommentStore() {
             update(store => ({
                 ...store,
                 allComments: insertFilteredComments(store.allComments, comment),
-                filteredComments: store.filterByProposal && comment.message?.includes(`#${store.filterByProposal.title}`)
+                filteredComments: store.filterByProposal && comment.message?.includes(`#${store.filterByProposal.title.replaceAll(' ', '-')}`)
                     ? insertFilteredComments(store.filteredComments, comment)
                     : insertFilteredComments(store.allComments, comment)
             })),
@@ -39,7 +39,7 @@ function createCommentStore() {
                 filterByProposal: proposal || null,
                 filteredComments: proposal
                     ? store.allComments.filter(comment =>
-                        comment.message?.includes(`#${proposal.title}`))
+                        comment.message?.includes(`#${proposal.title.replaceAll(' ', '-')}`))
                     : store.allComments
             })),
         getAll: () => {

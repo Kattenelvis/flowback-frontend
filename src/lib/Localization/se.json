@@ -658,5 +658,7 @@
     "Report Poll": "Rapportera omröstning",
     "Historical IMAC": "Historisk IMAC",
     "Show users": "Visa användare",
-    "Add User": "Lägg till användare"
+    "Add User": "Lägg till användare",
+    "Clear probability": "Rensa sannolikhet",
+    "Clear vote": "Rensa röst"
 }
