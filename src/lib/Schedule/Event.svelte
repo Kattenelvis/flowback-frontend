@@ -2,6 +2,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { _ } from 'svelte-i18n';
+	import { browser } from '$app/environment';
 	import type { scheduledEvent } from '$lib/Schedule/interface';
 	import { elipsis } from '$lib/Generic/GenericFunctions';
 	import { fetchRequest } from '$lib/FetchRequest';
@@ -53,6 +54,7 @@
 	});
 
 	onDestroy(() => {
+		if (!browser) return;
 		window.removeEventListener('click', handleOutsideClick);
 		restoreBackgroundScroll();
 	});
@@ -146,6 +148,8 @@
 	}
 
 	const handleOutsideClick = (e: MouseEvent) => {
+		if (!browser) return;
+		
 		const modal = document.querySelector('.modal-content');
 		const membersRegion = document.querySelector('.members-clickable-region');
 		const remindersRegion = document.querySelector('.reminders-clickable-region');
@@ -165,10 +169,12 @@
 	};
 
 	const preventBackgroundScroll = () => {
+		if (!browser) return;
 		document.body.style.overflow = 'hidden';
 	};
 
 	const restoreBackgroundScroll = () => {
+		if (!browser) return;
 		document.body.style.overflow = '';
 	};
 
