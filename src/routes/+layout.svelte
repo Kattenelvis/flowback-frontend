@@ -3,11 +3,9 @@
 	import { initializeLocalization } from '$lib/Localization/i18n';
 	import Header from '$lib/Header/Header.svelte';
 	import { beforeNavigate, goto, onNavigate } from '$app/navigation';
-	import { userInfo, getPermissions, getPermissionsFast } from '$lib/Generic/GenericFunctions';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { groupUserStore, type GroupUser } from '$lib/Group/interface';
-	import type { Permission } from '$lib/Group/Permissions/interface';
 	import Chat from '$lib/Chat/Chat.svelte';
 	import { _ } from 'svelte-i18n';
 	import { env } from '$env/dynamic/public';
@@ -39,36 +37,34 @@
 	//TODO: Avoid code duplication and introduce group stores for storing group data.
 	const getGrouplist = async () => {
 		const { res, json } = await fetchRequest('GET', 'group/list');
+		console.log(res, 'Group List');
+
 		if (!res.ok) return;
 		else return json.results;
 	};
 
 	const redirect = async () => {
-		const groups = await getGrouplist();
 		const relativePath = new URL(location.href).pathname;
 
 		let pathname = window?.location?.pathname;
 
-		if (window.localStorage.getItem('token') === undefined && relativePath !== '/login')
-			goto('/login');
-		else if (
-			//For one group flowback, if no group has been setup, redirect to create group.
-			env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' &&
-			relativePath !== '/creategroup' &&
-			groups.length === 0
-		)
-			goto('/creategroup');
-		else if (pathname === '/') goto('/home');
-
-		const sessionExpiration = window.localStorage.getItem('sessionExpirationTime');
+		const sessionExpirationTime = window.localStorage.getItem('sessionExpirationTime');
 		if (
-			sessionExpiration &&
+			sessionExpirationTime &&
 			relativePath !== '/login' &&
-			sessionExpiration < new Date().getTime().toString()
+			sessionExpirationTime < new Date().getTime().toString()
 		) {
 			localStorage.removeItem('token');
 			goto('/login');
-		}
+		} else if (!window.localStorage.getItem('token') && relativePath !== '/login') goto('/login');
+		else if (
+			//For one group flowback, if no group has been setup, redirect to create group.
+			env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' &&
+			relativePath !== '/creategroup'
+		) {
+			const groups = await getGrouplist();
+			if (groups.length === 0) goto('/creategroup');
+		} else if (pathname === '/') goto('/home');
 	};
 
 	const getWorkingGroupList = async () => {
@@ -129,23 +125,23 @@
 		scrolledY = $page.params.pollId;
 	});
 
-	onNavigate(() => {
-		console.log('Navigated to: ', $page.url.pathname);
+	$: {
+		if ($page) {
+			console.log('Page changed to: ', $page.url.pathname);
+			redirect();
+			getWorkingGroupList();
+			showUI = shouldShowUI();
 
-		getWorkingGroupList();
+			setTimeout(() => {
+				const html = document.getElementById(`poll-thumbnail-${scrolledY}`);
+				html?.scrollIntoView();
+			}, 200);
 
-		showUI = shouldShowUI();
-		redirect();
-
-		setTimeout(() => {
-			const html = document.getElementById(`poll-thumbnail-${scrolledY}`);
-			html?.scrollIntoView();
-		}, 200);
-
-		checkSessionExpiration();
-		setUserGroupInfo();
-		setUserInfo();
-	});
+			checkSessionExpiration();
+			setUserGroupInfo();
+			setUserInfo();
+		}
+	}
 
 	//Initialize Translation, which should happen before any lifecycle hooks.
 	initializeLocalization();
