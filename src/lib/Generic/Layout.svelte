@@ -12,4 +12,5 @@
 <div class={`${centered ? 'flex justify-center flex-col items-center' : ''} ${Class}`}>
 	<slot />
 </div>
+
 <Cookies />
