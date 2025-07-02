@@ -43,23 +43,24 @@
 		/>
 	{/if}
 
-	<button
-		class="cursor-pointer"
-		on:click|preventDefault={() => {
-			fileinput.click();
-		}}
-	>
-		<Fa {icon} size={iconSize} />
-	</button>
-	<button
-		on:click|preventDefault={() => {
-			fileinput.click();
-		}}
-	>
-		{#if !minimalist}
+	{#if minimalist}
+		<button
+			class="cursor-pointer"
+			on:click|preventDefault={() => {
+				fileinput.click();
+			}}
+		>
+			<Fa {icon} size={iconSize} />
+		</button>
+	{:else}
+		<button
+			on:click|preventDefault={() => {
+				fileinput.click();
+			}}
+		>
 			{$_('Choose Image')}
-		{/if}
-	</button>
+		</button>
+	{/if}
 	<input
 		style="display:none"
 		type="file"
