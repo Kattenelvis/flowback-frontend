@@ -14,8 +14,8 @@
 	import type { poppup } from '$lib/Generic/Poppup';
 	import Poppup from '$lib/Generic/Poppup.svelte';
 	import { commentsStore } from './commentStore';
-	import { derived } from 'svelte/store';
 	import { getCommentDepth } from './functions';
+	import { onDestroy } from 'svelte';
 
 	export let comments: Comment[] = [],
 		proposals: proposal[] = [],
@@ -166,10 +166,23 @@
 		});
 	};
 
+	const handleKeyDown = (event: KeyboardEvent) => {
+		// Check for a specific key, e.g., the "k" key:
+		if (event.ctrlKey && event.key === 'Enter') {
+			beingEdited ? commentUpdate() : commentCreate();
+		}
+	};
+
+	document.addEventListener('keydown', handleKeyDown);
+
 	onMount(() => {
 		darkModeStore.subscribe((value) => {
 			darkmode = value;
 		});
+	});
+
+	onDestroy(() => {
+		document.removeEventListener('keydown', handleKeyDown);
 	});
 </script>
 
