@@ -1,11 +1,9 @@
 <script lang="ts">
 	import GroupSidebarButton from '$lib/Group/GroupSidebarButton.svelte';
 	import type { GroupDetails, SelectablePage } from '$lib/Group/interface';
-	import workgroupsymbol from '$lib/assets/workgroupsymbol.svg';
 	import { page } from '$app/stores';
 	import Fa from 'svelte-fa';
 	import {
-		faPeopleGroup,
 		faUserGroup,
 		faCircleInfo,
 		faVideoCamera,
@@ -19,20 +17,17 @@
 		faPeopleCarryBox
 	} from '@fortawesome/free-solid-svg-icons';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import { onMount } from 'svelte';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import Button from '$lib/Generic/Button.svelte';
 	import { _ } from 'svelte-i18n';
 	import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
-	import { faCoins, faLink } from '@fortawesome/free-solid-svg-icons';
+	import { faCoins } from '@fortawesome/free-solid-svg-icons';
 	import { goto } from '$app/navigation';
 	import { removeGroupMembership } from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote';
 	import { env } from '$env/dynamic/public';
-	import { getPermissionsFast } from '$lib/Generic/GenericFunctions';
-	import Permissions from './Permissions/Permissions.svelte';
 	import type { poppup } from '$lib/Generic/Poppup';
 	import Poppup from '$lib/Generic/Poppup.svelte';
-	import { groupUserStore, type GroupUser } from '$lib/Group/interface';
+	import { groupUserStore, groupUserPermissionStore } from '$lib/Group/interface';
 
 	export let selectedPage: SelectablePage = 'flow',
 		group: GroupDetails,
@@ -57,13 +52,6 @@
 		selectedPage = page;
 		goto(`?page=${page}`, { noScroll: true });
 	};
-
-	onMount(async () => {
-		const permission: Permissions = await getPermissionsFast($page.params.groupId);
-		userIsPermittedToCreatePost =
-			(permission !== undefined && permission !== null && permission.create_poll) ||
-			$groupUserStore?.is_admin;
-	});
 
 	//@ts-ignore
 	$: selectedPage = $page.url.searchParams.get('page') || 'flow';
@@ -97,7 +85,7 @@
 		<div class="mb-6 w-full">
 			<GroupSidebarButton
 				action={() => {
-					if (userIsPermittedToCreatePost)
+					if ($groupUserPermissionStore?.create_poll)
 						goto(
 							`/createpoll?id=${$page.params.groupId}&type=${
 								selectedPage === 'threads' ? 'thread' : 'poll'
@@ -106,7 +94,7 @@
 					else poppup = { message: 'You do not have permission to create a post', success: false };
 				}}
 				text="Create a post"
-				disabled={!userIsPermittedToCreatePost}
+				disabled={!$groupUserPermissionStore?.create_poll}
 				faIcon={faCheckToSlot}
 				isSelected={false}
 				Class="text-white hover:!bg-blue-800 active:!bg-blue-900 bg-primary shadow rounded w-full"

@@ -5,7 +5,7 @@
 	import { beforeNavigate, goto, onNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { groupUserStore, type GroupUser } from '$lib/Group/interface';
+	import { groupUserPermissionStore, groupUserStore, type GroupUser } from '$lib/Group/interface';
 	import Chat from '$lib/Chat/Chat.svelte';
 	import { _ } from 'svelte-i18n';
 	import { env } from '$env/dynamic/public';
@@ -46,7 +46,7 @@
 
 	const redirect = async () => {
 		if (!isBrowser) return;
-		
+
 		const relativePath = window.location.pathname;
 
 		let pathname = window?.location?.pathname;
@@ -109,9 +109,20 @@
 		);
 		if (!res.ok) return;
 		groupUserStore.set(json.results[0]);
-
-		console.log(json, 'User Group Info');
 	};
+
+	const setUserGroupPermissionInfo = async () => {
+		if (!$page.params.groupId) return;
+		const { res, json } = await fetchRequest(
+			'GET',
+			`group/${$page.params.groupId}/permission?user_id=${localStorage.getItem('userId')}`
+		);
+		if (!res.ok) return;
+		const permissionInfo = json.results ? json.results[0] : null;
+		groupUserPermissionStore.set(permissionInfo);
+	};
+
+	setUserGroupPermissionInfo();
 
 	const setUserInfo = async () => {
 		if (

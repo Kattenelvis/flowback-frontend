@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { type Permissions } from './Permissions/interface';
 
 export type SelectablePage =
 	| 'flow'
@@ -140,7 +141,7 @@ export const groupUserStore = writable<groupUser>({
 	work_groups: []
 });
 
-export const userIdStore = writable(0);
+export const groupUserPermissionStore = writable<Permissions>();
 
 export interface Thread {
 	created_by: {
