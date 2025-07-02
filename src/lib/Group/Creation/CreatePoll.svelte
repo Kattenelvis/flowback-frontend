@@ -6,11 +6,7 @@
 	import TextArea from '$lib/Generic/TextArea.svelte';
 	import StatusMessage from '$lib/Generic/StatusMessage.svelte';
 	import { _ } from 'svelte-i18n';
-	import {
-		getPermissions,
-		getPermissionsFast,
-		type StatusMessageInfo
-	} from '$lib/Generic/GenericFunctions';
+	import { type StatusMessageInfo } from '$lib/Generic/GenericFunctions';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import RadioButtons from '$lib/Generic/RadioButtons.svelte';
 	import { statusMessageFormatter } from '$lib/Generic/StatusMessage';
@@ -106,9 +102,9 @@
 		if (workGroup && selected_poll === 'Date Poll' && !isPublic)
 			// formData.append('work_group_id', workGroup.toString());
 
-		images.forEach((image) => {
-			formData.append('attachments', image);
-		});
+			images.forEach((image) => {
+				formData.append('attachments', image);
+			});
 
 		const { res, json } = await fetchRequest(
 			'POST',
@@ -187,7 +183,6 @@
 	onMount(async () => {
 		getGroupTags();
 		getWorkGroupList();
-		permissions = await getPermissionsFast(Number(groupId));
 	});
 
 	$: if (selectedPage) status = undefined;

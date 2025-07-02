@@ -6,7 +6,7 @@
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
 	import { faAlignLeft } from '@fortawesome/free-solid-svg-icons/faAlignLeft';
 	import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
-	import { getPermissionsFast, onThumbnailError } from '$lib/Generic/GenericFunctions';
+	import { onThumbnailError } from '$lib/Generic/GenericFunctions';
 	import DefaultBanner from '$lib/assets/default_banner_group.png';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
@@ -20,8 +20,7 @@
 	import type { poppup } from '$lib/Generic/Poppup';
 	import DeletePollModal from './DeletePollModal.svelte';
 	import ReportPollModal from './ReportPollModal.svelte';
-	import { groupUserStore, type groupUser } from '$lib/Group/interface';
-	import { onMount } from 'svelte';
+	import { groupUserStore, groupUserPermissionStore } from '$lib/Group/interface';
 	import type { Permissions } from '$lib/Group/Permissions/interface';
 
 	export let poll: poll,
@@ -32,12 +31,7 @@
 	let deletePollModalShow = false,
 		reportPollModalShow = false,
 		choicesOpen = false,
-		poppup: poppup,
-		permissions: Permissions;
-
-	onMount(async () => {
-		permissions = await getPermissionsFast(Number($page.params.groupId));
-	});
+		poppup: poppup;
 </script>
 
 <div
@@ -70,7 +64,7 @@
 			bind:choicesOpen
 			labels={!(phase === 'result' || phase === 'prediction_vote') &&
 			poll?.allow_fast_forward &&
-			(permissions?.poll_fast_forward || $groupUserStore.is_admin)
+			($groupUserPermissionStore?.poll_fast_forward || $groupUserStore.is_admin)
 				? [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]
 				: [$_('Delete Poll'), $_('Report Poll')]}
 			functions={[
@@ -82,12 +76,10 @@
 			]}
 			Class="justify-self-center mt-2"
 		/>
-		<!-- {/if} -->
 	</div>
 
 	<div class="flex gap-4 items-baseline grid-area-items my-1">
 		{#if poll?.poll_type === 4}
-			<!-- TODO make it easy to change poll types e.t.c -->
 			<HeaderIcon Class="cursor-default" icon={faAlignLeft} text={'Text Poll'} />
 		{:else if poll?.poll_type === 3}
 			<HeaderIcon Class="cursor-default" icon={faCalendarAlt} text={'Date Poll'} />
@@ -156,7 +148,6 @@
 	.poll-header-grid {
 		display: grid;
 		grid-template-columns: 0.3fr 4fr 0.3fr;
-		/* grid-template-rows: 0.1fr 0.2fr 1fr; */
 	}
 
 	.grid-area-items {
