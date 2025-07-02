@@ -85,7 +85,7 @@
 		<div class="mb-6 w-full">
 			<GroupSidebarButton
 				action={() => {
-					if ($groupUserPermissionStore?.create_poll)
+					if ($groupUserPermissionStore?.create_poll || $groupUserStore?.is_admin)
 						goto(
 							`/createpoll?id=${$page.params.groupId}&type=${
 								selectedPage === 'threads' ? 'thread' : 'poll'
@@ -94,7 +94,7 @@
 					else poppup = { message: 'You do not have permission to create a post', success: false };
 				}}
 				text="Create a post"
-				disabled={!$groupUserPermissionStore?.create_poll}
+				disabled={!$groupUserPermissionStore?.create_poll && !$groupUserStore?.is_admin}
 				faIcon={faCheckToSlot}
 				isSelected={false}
 				Class="text-white hover:!bg-blue-800 active:!bg-blue-900 bg-primary shadow rounded w-full"

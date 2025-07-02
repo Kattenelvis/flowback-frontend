@@ -115,14 +115,12 @@
 		if (!$page.params.groupId) return;
 		const { res, json } = await fetchRequest(
 			'GET',
-			`group/${$page.params.groupId}/permission?user_id=${localStorage.getItem('userId')}`
+			`group/${$page.params.groupId}/permissions?id=${$groupUserStore?.permission_id}`
 		);
 		if (!res.ok) return;
 		const permissionInfo = json.results ? json.results[0] : null;
 		groupUserPermissionStore.set(permissionInfo);
 	};
-
-	setUserGroupPermissionInfo();
 
 	const setUserInfo = async () => {
 		if (
@@ -140,8 +138,9 @@
 		scrolledY = $page.params.pollId;
 	});
 
-	$: if ($page.url.pathname && isBrowser) {
-		console.log('Page changed to: ', $page.url.pathname);
+	$: if ($page.url.pathname && isBrowser) onPathChange();
+
+	const onPathChange = async () => {
 		redirect();
 		getWorkingGroupList();
 		showUI = shouldShowUI();
@@ -152,9 +151,10 @@
 		}, 200);
 
 		checkSessionExpiration();
-		setUserGroupInfo();
 		setUserInfo();
-	}
+		await setUserGroupInfo();
+		setUserGroupPermissionInfo();
+	};
 
 	//Initialize Translation, which should happen before any lifecycle hooks.
 	initializeLocalization();

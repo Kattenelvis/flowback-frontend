@@ -21,7 +21,6 @@
 	import DeletePollModal from './DeletePollModal.svelte';
 	import ReportPollModal from './ReportPollModal.svelte';
 	import { groupUserStore, groupUserPermissionStore } from '$lib/Group/interface';
-	import type { Permissions } from '$lib/Group/Permissions/interface';
 
 	export let poll: poll,
 		displayTag = false,
