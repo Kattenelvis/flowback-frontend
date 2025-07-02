@@ -168,7 +168,7 @@
 
 	const handleKeyDown = (event: KeyboardEvent) => {
 		// Check for a specific key, e.g., the "k" key:
-		if (event.ctrlKey && event.key === 'Enter') {
+		if (event.ctrlKey && event.key === 'Enter' && message.trim() !== '') {
 			beingEdited ? commentUpdate() : commentCreate();
 		}
 	};
