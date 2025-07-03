@@ -104,6 +104,7 @@
 	{#if displayTimeline}
 		<div
 			class={`mt-4 flex justify-between rounded-md 
+			${horizontal ? '' : 'gap-20'}
 			${horizontal ? 'flex-row' : 'flex-col'}
 			${horizontal ? 'w-full' : 'w-4'}
 			${horizontal ? 'max-h-4' : 'max-w-4'}

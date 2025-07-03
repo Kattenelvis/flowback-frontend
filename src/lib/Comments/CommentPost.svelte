@@ -202,14 +202,15 @@
 				</div>
 				<ul class="divide-y divide-gray-200">
 					{#each proposals as proposal}
-						<li
-							class="hover:bg-gray-100 dark:hover:bg-darkbackground dark:hover:brightness-125 cursor-pointer px-4 py-2"
-							on:click={() => {
-								message = `${message}${proposal.title.replaceAll(' ', '-')} `;
-								recentlyTappedButton = '';
-							}}
-						>
-							{proposal.title}
+						<li class="px-4 py-2">
+							<button type="button"
+								class="w-full text-left hover:bg-gray-100 dark:hover:bg-darkbackground dark:hover:brightness-125 cursor-pointer"
+								on:click={() => {
+									message = `${message}${proposal.title.replaceAll(' ', '-')} `;
+									recentlyTappedButton = '';
+								}}>
+								{proposal.title}
+							</button>
 						</li>
 					{/each}
 				</ul>
