@@ -1,15 +1,9 @@
 <script lang="ts">
-	import {
-		workGroupsStore,
-		type WorkGroup,
-		type WorkGroupInvite,
-		type WorkGroupUser
-	} from './interface';
+	import { workGroupsStore, type WorkGroup, type WorkGroupUser } from './interface';
 	import Button from '$lib/Generic/Button.svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import type { poppup } from '$lib/Generic/Poppup';
 	import Poppup from '$lib/Generic/Poppup.svelte';
-	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
 	import { faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -67,6 +61,7 @@
 		if (!res.ok) return;
 
 		poppup = { message: 'Invite Sent', success: true };
+		workGroup.requested_access = true;
 		getWorkGroupInvite();
 	};
 
@@ -83,13 +78,8 @@
 
 		workGroup.member_count--;
 		workGroup.joined = false;
+		workGroup.requested_access = false;
 		workGroupsStore.set(workGroups);
-	};
-
-	const isMember = () => {
-		return workGroupUserList.find(
-			(user) => user.group_user.user.id === (Number(localStorage.getItem('userId')) || -1)
-		);
 	};
 
 	const deleteWorkGroup = async () => {
@@ -105,10 +95,6 @@
 		handleRemoveGroup(workGroup.id);
 		showDeleteModal = false;
 	};
-
-	onMount(async () => {
-		// getUserList();
-	});
 </script>
 
 <div
@@ -127,10 +113,12 @@
 		<Button buttonStyle="primary-light" Class="px-3 py-1 w-[20%]" onClick={joinGroup}
 			>{$_('Join')}</Button
 		>
-	{:else}
+	{:else if !workGroup.requested_access}
 		<Button buttonStyle="primary-light" Class="px-3 py-1 w-[20%]" onClick={askToJoin}
 			>{$_('Ask to join')}</Button
 		>
+	{:else if workGroup.requested_access}
+		<div Class="px-3 py-1 w-[20%]">{$_('Already asked to join')}</div>
 	{/if}
 
 	{#if $groupUserStore?.is_admin}

@@ -9,10 +9,8 @@
 		faCircle,
 		faCircleCheck,
 		faCircleExclamation,
-		faMinus
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { Phase, poll } from '../interface';
-	import { onMount } from 'svelte';
 
 	export let enableDetails = false,
 		displayTimeline = true,

@@ -662,5 +662,6 @@
     "Clear probability": "Rensa sannolikhet",
     "Clear vote": "Rensa röst",
     "Calculating results...": "Beräknar resultat...",
-    "Failed to calculate results": "Misslyckades att beräkna resultat"
+    "Failed to calculate results": "Misslyckades att beräkna resultat",
+    "Already asked to join": "Redan frågat om att gå med"
 }

@@ -32,7 +32,8 @@
 			previous: '',
 			total_page: 0,
 			joined: false,
-			chat: 1
+			chat: 1,
+			requested_access: false
 		},
 		poppup: poppup,
 		open = false,
@@ -80,7 +81,8 @@
 			previous: '',
 			total_page: 0,
 			joined: false,
-			chat: 1
+			chat: 1,
+			requested_access: false
 		};
 
 		open = false;
