@@ -118,6 +118,7 @@
 		workGroups.forEach((workGroup) => {
 			if (workGroup.id === workGroupId && groupUserId === Number(localStorage.getItem('userId')))
 				workGroup.joined = true;
+				workGroup.member_count++;
 		});
 		workGroups = workGroups;
 	};
