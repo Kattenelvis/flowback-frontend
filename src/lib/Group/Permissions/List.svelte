@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { page } from '$app/stores';
-	import type { Permission } from './interface';
+	import type { Permissions } from './interface';
 	import { onMount } from 'svelte';
 	import { permissions as permissionsLimit } from '../../Generic/APILimits.json';
 	import { _ } from 'svelte-i18n';
@@ -11,7 +11,7 @@
 
 	export let selectedPage: 'assign' | 'create' | 'list', selectedRole: any;
 
-	let roles: Permission[] = [],
+	let roles: Permissions[] = [],
 		showDeleteModal = false;
 
 	const getRoleList = async () => {
