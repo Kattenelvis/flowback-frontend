@@ -123,6 +123,11 @@
 		workGroups = workGroups;
 	};
 
+	const handleRemoveGroup = (id: number) => {
+		workGroups = workGroups.filter((group) => group.id !== id);
+		getWorkGroupInvite();
+	};
+
 	onMount(async () => {
 		loading = true;
 		workGroupsStore.subscribe((_workGroups) => (workGroups = _workGroups));
@@ -132,9 +137,6 @@
 		loading = false;
 	});
 
-	const handleRemoveGroup = (id: number) => {
-		workGroups = workGroups.filter((group) => group.id !== id);
-	};
 </script>
 
 <div class="flex items-center gap-3 mb-4">
