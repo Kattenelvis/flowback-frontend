@@ -199,7 +199,7 @@
 
 <Poppup bind:poppup />
 
-<Modal bind:open>
+<Modal bind:open Class="max-w-[500px]">
 	<div slot="header" class="w-full"><span>{$_('Create work group')}</span></div>
 	<form slot="body" class="w-full" on:submit|preventDefault={createWorkingGroup}>
 		<TextInput label="Name" required bind:value={workGroupEdit.name} />
