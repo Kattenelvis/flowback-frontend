@@ -13,7 +13,6 @@
 	import { elipsis } from '$lib/Generic/GenericFunctions';
 	import type { kanban } from './Kanban';
 	import Select from '$lib/Generic/Select.svelte';
-	import { onMount } from 'svelte';
 
 	export let type: 'home' | 'group',
 		open: boolean = false,

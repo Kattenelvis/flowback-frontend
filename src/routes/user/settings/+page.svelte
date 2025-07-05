@@ -47,7 +47,7 @@
 				voting: false
 			}
 		},
-		version = '0.2.1',
+		version = '0.2.2',
 		serverConfig: any = {},
 		reports: any = [];
 
@@ -56,8 +56,6 @@
 			user_config: JSON.stringify(userConfig)
 		});
 	};
-
-95736250
 
 	const getServerConfig = async () => {
 		const { res, json } = await fetchRequest('GET', 'server/config');
