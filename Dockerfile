@@ -1,4 +1,4 @@
-FROM node:18-alpine AS sk-build
+FROM node:24-alpine3.21 AS sk-build
 WORKDIR /usr/src/app
 
 # This just sets the timezone
@@ -10,7 +10,7 @@ RUN cp /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN npm install
 RUN npm run build
 
-FROM node:18-alpine
+FROM node:24-alpine3.21 
 WORKDIR /usr/src/app
 
 # This just sets the timezone
@@ -31,5 +31,7 @@ COPY --from=sk-build /usr/src/app/build /usr/src/app/build
 
 # EXPOSE 5173
 EXPOSE 3000
-# CMD ["npm", "run", "dev"]
-CMD ["node", "build/index.js"]
+CMD ["npm", "run", "dev3000"]
+# CMD npm run dev3000
+# CMD ["node", "build/index.js"]
+
