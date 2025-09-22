@@ -12,29 +12,12 @@
 	import { goto } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
 
-	let selectedPage = 'Login',
+	let selectedPage = $state('Login'),
+		{ data } = $props(),
 		//Email is stored for automatic login when resetting password
-		email = '',
-		logoType = 'FLOWBACK';
+		email = $state('');
 
-	onMount(async () => {
-		
-		const response = await fetch('/login');
-		console.log("LOGO", response); 
-		const data = await response.json();
-		logoType = data.logoType;
-
-		const params = new URLSearchParams(window.location.search);
-		const emailParam = params.get('email');
-		const verificationCode = params.get('verification_code');
-
-		if (emailParam && verificationCode) {
-			selectedPage = 'Verify';
-			return;
-		}
-
-		if (localStorage.getItem('token')) goto('/home');
-	});
+	onMount(async () => {});
 </script>
 
 <svelte:head>
@@ -46,7 +29,7 @@
 	class="dark:bg-darkbackground bg-purple-50 min-h-[110vh] flex flex-col items-center"
 >
 	<div class="mt-16">
-		<img src={logoType === 'REFORUM' ? Reforum : Logo} class="w-[300px]" alt="flowback logo" />
+		<img src={data.logoType} class="w-[300px]" alt="flowback logo" />
 	</div>
 	<div
 		class="bg-white dark:bg-darkobject dark:text-darkmodeText mt-12 rounded shadow-lg w-full max-w-[600px]"
