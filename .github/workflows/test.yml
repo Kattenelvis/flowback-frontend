@@ -12,3 +12,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: ./.github/workflows/test2.yml
+    - name: Built it!
+      run: npm build
