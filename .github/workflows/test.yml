@@ -13,5 +13,3 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/workflows/test2.yml
-      with:
-        MY_NAME: "Mona"
