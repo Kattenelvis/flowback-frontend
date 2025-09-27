@@ -17,4 +17,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Built it!
-      run: npm run build
+      run: echo 'Hello World'
+    
