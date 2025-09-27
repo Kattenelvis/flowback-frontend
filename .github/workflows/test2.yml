@@ -4,9 +4,12 @@ name: Test 2
 #     push:
 #         branches: ["master"]
 
-on: push
+on: 
+  push:
+    branches: [ "yaml" ]
 
 jobs:
+  
   build:
     name: Hello world action 2
     runs-on: ubuntu-latest
