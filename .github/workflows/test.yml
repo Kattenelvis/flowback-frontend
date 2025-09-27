@@ -8,7 +8,7 @@ name: Test
 
 on: 
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '54 18 * * *'
 
 jobs:
   build:
