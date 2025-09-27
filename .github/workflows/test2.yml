@@ -13,7 +13,7 @@ jobs:
     steps:
     # - name: fkirst step
     - uses: actions/checkout@v3
-    - run: 'Hello World 2 Yay :3'
+    - run: 'echo "Hello World 2 Yay :3"'
 
     # - name: second step
     # - uses: ./.github/workflows/test.yml
