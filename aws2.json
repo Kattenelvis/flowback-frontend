@@ -8,8 +8,10 @@
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
+                "StringLike": {
+                    "token.actions.githubusercontent.com:sub": "repo: kattenelvis/flowback-frontend:*"
+                },
                 "StringEquals": {
-                    "token.actions.githubusercontent.com:sub": "repo: kattenelvis/flowback-frontend:ref:refs/heads/yaml",
                     "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
                 }
             }
