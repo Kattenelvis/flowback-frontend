@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { login, newWindow } from './generic';
-import { createGroup, createPermission, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group';
+import { createGroup, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group';
+import { createPermission } from './permission';
 
-const group = { name: "Test Group Group-Testing Invite only", public: true, invite: true }
+const group = { name: "Test Group Group-Testing Public", public: true, invite: false }
 
 test('Create Group', async ({ page }) => {
     await login(page)
@@ -72,17 +73,6 @@ test('Delete Group Invite', async ({ page }) => {
     await deleteGroup(page)
 })
 
-// TODO: Have some "Dangerous tests" section?
-// test('Delete Many Group', async ({ page }) => {
-//     await login(page)
-
-//     for (let i = 0; i < 20; i++) {
-//         await gotoFirstGroup(page)
-//         await deleteGroup(page)
-//     }
-// })
-
-
 test('Create-Delete-Group', async ({ page }) => {
     await login(page);
 
@@ -125,7 +115,7 @@ test('Create-Delete-Group', async ({ page }) => {
     await page.getByRole('button', { name: 'Edit Group' }).click();
 
     // Create, deactive and delete permission
-    await createPermission(page, group, [4, 5, 6, 11, 12, 13, 14, 16, 17, 18, 9, 8, 7, 10, 15, 19]);
+    await createPermission(page, group, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
     await page.getByRole('button', { name: 'Assign' }).click();
     await page.getByRole('button', { name: 'List' }).click();

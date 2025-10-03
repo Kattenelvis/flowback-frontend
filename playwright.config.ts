@@ -4,12 +4,11 @@ const config: PlaywrightTestConfig = {
 
 	//@ts-ignore
 	webServer: {
-		// command: 'npm run dev5000',
 		port: 4000,
 		reuseExistingServer: true,
 	},
-	timeout: 60000,
-	workers:10
+	timeout: 30000,
+	workers:1
 
 };
 

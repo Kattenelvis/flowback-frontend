@@ -56,13 +56,13 @@
 		if (selected_poll === 'Text Poll')
 			if (daysBetweenPhases === 0) {
 				//For debug purposes this puts one minute delay between each phase.
-				area_vote_end_date = new Date(inc.setMinutes(inc.getMinutes() + 1));
-				proposal_end_date = new Date(inc.setMinutes(inc.getMinutes() + 1));
-				prediction_statement_end_date = new Date(inc.setMinutes(inc.getMinutes() + 1));
-				prediction_bet_end_date = new Date(inc.setMinutes(inc.getMinutes() + 1));
-				delegate_vote_end_date = new Date(inc.setMinutes(inc.getMinutes() + 1));
-				vote_end_date = new Date(inc.setMinutes(inc.getMinutes() + 1));
-				end_date = new Date(inc.setMinutes(inc.getMinutes() + 1));
+				area_vote_end_date = new Date(inc.setSeconds(inc.getSeconds() + 1));
+				proposal_end_date = new Date(inc.setSeconds(inc.getSeconds() + 1));
+				prediction_statement_end_date = new Date(inc.setSeconds(inc.getSeconds() + 1));
+				prediction_bet_end_date = new Date(inc.setSeconds(inc.getSeconds() + 1));
+				delegate_vote_end_date = new Date(inc.setSeconds(inc.getSeconds() + 1));
+				vote_end_date = new Date(inc.setSeconds(inc.getSeconds() + 1));
+				end_date = new Date(inc.setSeconds(inc.getSeconds() + 1));
 			} else {
 				//For users to select over multiple days
 				area_vote_end_date = new Date(inc.setDate(inc.getDate() + daysBetweenPhases));
@@ -126,7 +126,6 @@
 						bind:value={start_date}
 						min={new Date()}
 						max={maxDatePickerYear}
-						
 					/>
 				</div>
 				{#if selected_poll !== 'Date Poll'}

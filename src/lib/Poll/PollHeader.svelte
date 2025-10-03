@@ -6,19 +6,21 @@
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
 	import { faAlignLeft } from '@fortawesome/free-solid-svg-icons/faAlignLeft';
 	import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
-	import { onThumbnailError } from '$lib/Generic/GenericFunctions';
-	import DefaultBanner from '$lib/assets/default_banner_group.png';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
 	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 	import { goto } from '$app/navigation';
-	import { getPhaseUserFriendlyName, nextPhase } from './functions';
+	import { getPhaseUserFriendlyName, imacFormatting, nextPhase } from './functions';
 	import { _ } from 'svelte-i18n';
 	import NewDescription from './NewDescription.svelte';
 	import MultipleChoices from '$lib/Generic/MultipleChoices.svelte';
 	import ReportPostModal from './ReportPostModal.svelte';
 	import { groupUserStore, groupUserPermissionStore } from '$lib/Group/interface';
 	import DeletePostModal from './DeletePostModal.svelte';
+	import { fetchRequest } from '$lib/FetchRequest';
+	import type { Tag as TagType } from '$lib/Group/interface';
+	import { onMount } from 'svelte';
+	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 
 	export let poll: poll,
 		displayTag = false,
@@ -28,7 +30,25 @@
 	let deletePollModalShow = false,
 		reportPollModalShow = false,
 		choicesOpen = false,
-		source = new URLSearchParams(window.location.search).get('source');
+		source = new URLSearchParams(window.location.search).get('source'),
+		tag: TagType;
+
+	const getTag = async () => {
+		const { json, res } = await fetchRequest(
+			'GET',
+			`group/${poll.group_id}/tags?id=${poll.tag_id}`
+		);
+
+		if (!res.ok) return;
+
+		tag = json.results[0];
+	};
+
+	onMount(() => {
+		getTag();
+	});
+
+	$: poll && getTag();
 </script>
 
 <div
@@ -72,7 +92,10 @@
 				() => ((deletePollModalShow = true), (choicesOpen = false)),
 				() => ((reportPollModalShow = true), (choicesOpen = false)),
 				...($groupUserStore?.is_admin
-					? [async () => (phase = await nextPhase(poll?.poll_type, $page.params.pollId ?? "", phase))]
+					? [
+							async () =>
+								(phase = await nextPhase(poll?.poll_type, $page.params.pollId ?? '', phase))
+						]
 					: [])
 			]}
 			Class="justify-self-center mt-2"
@@ -80,40 +103,42 @@
 		/>
 	</div>
 
-	<div class="flex gap-4 items-baseline grid-area-items my-1">
+	<div class="flex gap-4 items-center grid-area-items my-1">
 		{#if poll?.work_group_id}
 			{$_('Workgroup')}: {poll.work_group_name}
 		{/if}
 		{#if poll?.interval_mean_absolute_correctness}
-			{$_('Historical imac value')}: {poll.interval_mean_absolute_correctness}
+			{$_('Historical imac value')}: {imacFormatting(poll.interval_mean_absolute_correctness)}
 		{/if}
 		{#if poll?.poll_type === 4}
 			<HeaderIcon Class="cursor-default" icon={faAlignLeft} text={'Text Poll'} />
 		{:else if poll?.poll_type === 3}
 			<HeaderIcon Class="cursor-default" icon={faCalendarAlt} text={'Date Poll'} />
 		{/if}
-		<!-- Group Profile -->
-		{#if displayTag}
-			<Tag tag={{ name: poll?.tag_name, id: poll?.tag_id, active: true, imac: 0 }} />
+
+		{#if displayTag && tag}
+			<Tag id={'poll-tag'} bind:tag />
 		{/if}
+
 		{#if env.PUBLIC_ONE_GROUP_FLOWBACK !== 'TRUE'}
 			<a
 				href={`/groups/${$page.params.groupId}`}
 				class:hover:underline={poll?.group_joined}
 				class="text-black dark:text-darkmodeText"
 			>
-				<img
-					class="h-8 w-8 inline rounded-full break-word"
-					src={poll?.group_image ? `${env.PUBLIC_API_URL}${poll?.group_image}` : DefaultBanner}
-					alt="group thumbnail"
-					on:error={(e) => onThumbnailError(e, DefaultBanner)}
+				<ProfilePicture
+					displayName
+					profilePicture={poll?.group_image}
+					username={poll?.group_name}
 				/>
-				<span class="inline break-word">{poll?.group_name}</span>
 			</a>
-			<!-- Current Phase -->
+
+			{$_('Allowed to vote:')}
+			{$_($groupUserPermissionStore?.allow_vote.toString())}
+
 			{#if pollType === 4}
 				<div>
-					{$_('Current phase:')}
+					{$_('Current phase')}:
 					{$_(getPhaseUserFriendlyName(phase))}
 				</div>
 			{/if}
@@ -147,7 +172,7 @@
 	</div>
 {/if}
 
-<DeletePostModal bind:deleteModalShow={deletePollModalShow} postId={$page.params.pollId ?? ""} />
+<DeletePostModal bind:deleteModalShow={deletePollModalShow} postId={$page.params.pollId ?? ''} />
 
 <ReportPostModal
 	post_type="poll"

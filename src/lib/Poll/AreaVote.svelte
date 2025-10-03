@@ -68,7 +68,8 @@
 	});
 </script>
 
-<div class="flex flex-col h-[40vh] md:h-[50vh] lg:h-[60vh] xl:h-[70vh] max-h-[800px]">
+<!-- <div class="flex flex-col h-[40vh] md:h-[50vh] lg:h-[60vh] xl:h-[70vh] max-h-[350px]"> -->
+<div class="flex flex-col h-[460px]">
 	<h2 class="text-xl font-semibold mb-4 text-primary dark:text-secondary">
 		{$_('Areas')} ({tags.length})
 	</h2>
@@ -76,7 +77,7 @@
 	<div class="flex-grow flex flex-col gap-3 overflow-auto">
 		{#each tags as tag}
 			{#if tag.active}
-				<div class="flex items-center space-x-3 flex-wrap">
+				<div id={`tag-${tag.name}`} class="flex items-center space-x-3 flex-wrap">
 					<input
 						type="radio"
 						name="area"

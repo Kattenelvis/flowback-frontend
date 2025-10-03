@@ -1,9 +1,6 @@
 import { fetchRequest } from '$lib/FetchRequest';
 import { _ } from 'svelte-i18n';
 import type { Phase, poll } from './interface';
-import { writable } from 'svelte/store';
-
-
 
 export const formatDate = (dateInput: string) => {
 	const date = new Date(dateInput);
@@ -113,7 +110,7 @@ export const getGroupInfo = async (id: number | string) => {
 };
 
 
-export const nextPhase = async (pollType: number, pollId: string | number, phase: Phase) => {	
+export const nextPhase = async (pollType: number, pollId: string | number, phase: Phase) => {
 
 	if (phase === 'result' || phase === "prediction_vote") return 'prediction_vote';
 	pollId = Number(pollId);
@@ -141,16 +138,21 @@ export const nextPhase = async (pollType: number, pollId: string | number, phase
 };
 
 export const reportThread = async (threadId: number, description: string) => {
-    const {res, json} = await fetchRequest('POST', `report/create`, {
-        title: threadId,
-        description
-    }, true);
-    
-    if(!res.ok) {
-        return  { message: 'Failed to report thread', success: false };
-        return;
-    }
-    
-    return { message: 'Thread has been reported', success: true };
+	const { res, json } = await fetchRequest('POST', `report/create`, {
+		title: threadId,
+		description
+	}, true);
+
+	if (!res.ok) {
+		return { message: 'Failed to report thread', success: false };
+		return;
+	}
+
+	return { message: 'Thread has been reported', success: true };
 };
 
+
+export const imacFormatting = (imac: number | string) => {
+	imac = Number(imac)
+	return `${(imac * 100).toFixed(0)}%`
+}

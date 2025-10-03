@@ -32,15 +32,15 @@
 			proposal: proposal.id
 		}));
 
-		delegateVoting = voting
+		delegateVoting = voting;
 
-		// if (phase === 'delegate_vote' || phase === 'vote' || phase === 'result') {
-		// 	await getDelegateVotes();
-		// }
+		if (phase === 'delegate_vote' || phase === 'vote' || phase === 'result') {
+			await getDelegateVotes();
+		}
 
-		// if (phase === 'vote' || phase === 'result') {
-		// 	await getVotes();
-		// }
+		if (phase === 'vote' || phase === 'result') {
+			await getVotes();
+		}
 
 		needsReload++;
 	});
@@ -92,17 +92,18 @@
 			return;
 		}
 
-		delegateVoting = json?.results[0]?.vote.map((vote: any) => ({
-			score: vote.raw_score,
-			proposal: vote.proposal_id
-		}));
-
-		if (phase === 'delegate_vote')
-			voting = json?.results[0]?.vote.map((vote: any) => ({
+		if (json?.results[0]?.vote?.length > 0) {
+			delegateVoting = json?.results[0]?.vote.map((vote: any) => ({
 				score: vote.raw_score,
 				proposal: vote.proposal_id
 			}));
 
+			if (phase === 'delegate_vote')
+				voting = json?.results[0]?.vote.map((vote: any) => ({
+					score: vote.raw_score,
+					proposal: vote.proposal_id
+				}));
+		}
 		voting = voting;
 		delegateVoting = delegateVoting;
 
@@ -170,8 +171,6 @@
 	};
 
 	const changingVote = (score: number | string, proposalId: number) => {
-		console.log('HELLOOOO', voting, delegateVoting);
-
 		if (!voting) return;
 
 		if (phase === 'delegate_vote') {
@@ -188,12 +187,6 @@
 	};
 
 	const getScore = (proposal: proposal) => {
-		console.log(
-			delegateVoting,
-			'VOTING',
-			proposal,
-			delegateVoting?.find((vote) => vote.proposal === proposal.id)
-		);
 		if (phase === 'delegate_vote')
 			return delegateVoting?.find((vote) => vote.proposal === proposal.id)?.score ?? 0;
 		else if (phase === 'vote')
@@ -207,7 +200,7 @@
 	<div class="mt-4 h-[100%]">
 		{#if proposals}
 			{#key needsReload}
-				{#each proposals as proposal}
+				{#each proposals as proposal, i}
 					<div class="border-b-2 border-gray-300 select-none">
 						<Proposal
 							bind:proposalsToPredictionMarket
@@ -219,10 +212,6 @@
 						>
 							{#if phase === 'delegate_vote' || phase === 'vote'}
 								{@const score = getScore(proposal)}
-
-								<!-- {score}
-								{voting.length}
-								{delegateVoting.length} -->
 								{#key voting || delegateVoting}
 									<VotingSlider
 										bind:phase
@@ -235,6 +224,7 @@
 											if (phase === 'vote' && voting === delegateVoting) return 'gray';
 											else return 'purple';
 										})()}
+										id={i.toString()}
 									/>
 								{/key}
 							{/if}
@@ -245,7 +235,7 @@
 										const dVote = delegateVoting.find((vote) => vote.proposal === proposal.id);
 										if (dVote) changingVote(dVote.score, dVote.proposal);
 										vote();
-									}}>{$_('Reset to delegate votes')}</Button
+									}}>{$_($groupUserStore?.delegate_pool_id ? 'Reset to my delegate delegate votes' : 'Reset to delegate votes')}</Button
 								>
 							{/if}
 						</Proposal>

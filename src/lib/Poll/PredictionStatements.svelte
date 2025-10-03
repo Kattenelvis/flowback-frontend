@@ -74,6 +74,7 @@
 				>
 					<span class="text-primary dark:text-secondary font-semibold">{prediction.title}</span>
 					<span class="text-sm text-gray-500">{formatDate(prediction.end_date)}</span>
+					{Number(prediction.combined_bet) * 100}%
 					{#if prediction.description}
 						<NewDescription description={prediction.description} limit={2} lengthLimit={110} />
 					{/if}

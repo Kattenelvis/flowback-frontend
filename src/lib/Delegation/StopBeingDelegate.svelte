@@ -4,7 +4,7 @@
 	import { _ } from 'svelte-i18n';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import type { Delegate } from './interfaces';
-	import type { GroupUser } from '../interface';
+	import type { GroupUser } from '$lib/Group/interface';
 
 	export let groupUser: GroupUser,
 		loading: boolean,

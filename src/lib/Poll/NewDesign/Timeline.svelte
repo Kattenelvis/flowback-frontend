@@ -85,7 +85,7 @@
 
 <div class={`relative flex flex-col items-center ${Class}`}>
 	{#if displayTimelinePhase}
-		<div class="text-center dark:text-darkmodeText">
+		<div id="poll-timeline" class="text-center dark:text-darkmodeText">
 			<span class="font-semibold text-primary dark:text-secondary">
 				{$_('Current')}:
 			</span>

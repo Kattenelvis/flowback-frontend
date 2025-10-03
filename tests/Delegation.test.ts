@@ -3,6 +3,7 @@ import { login } from './generic';
 import { createPoll, createProposal, delegateVote, fastForward, goToPost } from './poll';
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import { becomeDelegate } from './delegation';
+import { assignPermission, createPermission } from './permission';
 
 test('Become-Delegate', async ({ page }) => {
     await login(page);
@@ -45,6 +46,12 @@ test('Delegation-Poll', async ({ page }) => {
     await page.waitForTimeout(300)
 
     await gotoGroup(page, group);
+    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click');
+    //Give b voting rights
+    await createPermission(page, group, [2]);
+    await assignPermission(page, group)
+
+    await gotoGroup(page, group);
 
     const title = `Test Poll for Delegation ${Math.floor(Math.random() * 10000)}`;
     await createPoll(page, { title, phase_time: 1 });
@@ -61,6 +68,10 @@ test('Delegation-Poll', async ({ page }) => {
 
     await expect(page.getByText('Vote Failed').first()).not.toBeVisible();
 
-    // await deleteGroup(page, group)
+    await expect(bPage.locator('#track-container-0')).toContainClass('disabled')
+    await expect(page.locator('#track-container-0')).not.toContainClass('disabled')
+
+    await gotoGroup(page, group)
+    await deleteGroup(page, group)
 
 });

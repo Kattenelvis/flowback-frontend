@@ -6,9 +6,9 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import Select from '$lib/Generic/Select.svelte';
 	import Toggle from '$lib/Generic/Toggle.svelte';
-	import type { Delegate } from '$lib/Group/Delegation/interfaces';
-	import Delegations from '$lib/Group/Delegation/Delegations.svelte';
-	import StopBeingDelegate from '$lib/Group/Delegation/StopBeingDelegate.svelte';
+	import type { Delegate } from '$lib/Delegation/interfaces';
+	import Delegations from '$lib/Delegation/Delegations.svelte';
+	import StopBeingDelegate from '$lib/Delegation/StopBeingDelegate.svelte';
 	import { groupUserPermissionStore, type Group, type GroupUser } from '$lib/Group/interface';
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';

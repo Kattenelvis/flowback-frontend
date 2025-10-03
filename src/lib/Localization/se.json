@@ -510,6 +510,7 @@
     "Successfully voted": "Röstade framgångsrikt",
     "Successfully evaluated consequence": "Konsekvens har utvärderats framgångsrikt",
     "Current phase:": "Pågående fas:",
+    "Current phase": "Pågående fas",
     "Could not submit tag vote": "Kunde inte skicka taggröstning",
     "Create consequence": "Skapa konsekvens",
     "Delete Consequence": "Ta bort konsekvens",
@@ -740,5 +741,8 @@
     "You are not allowed to vote in this group": "Du har inte tillåtelse att rösta i denna grupp",
     "Error when trying to become delegate": "Fel när du försökte bli delegat",
     "Successfully became delegate": "Lyckades bli delegat",
-    "Historical imac value": "Historiskt imac värde"
+    "Historical imac value": "Historiskt imac värde",
+    "Failed to update permission":"Misslyckades att updatera roll",
+    "Successfully updated permission":"Lyckades att updatera roll"
+    ,"Allowed to vote:":"Tillåten att rösta:"
 }

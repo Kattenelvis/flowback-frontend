@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { onMount } from 'svelte';
-	import type { Group, Tag } from '../interface';
+	import type { Group, Tag } from '$lib/Group/interface';
 	import type { Delegate, DelegateRelation } from './interfaces';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';

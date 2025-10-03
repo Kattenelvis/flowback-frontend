@@ -15,7 +15,7 @@
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
 	import { faArrowLeft, faPen, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
-	import History from '$lib/Group/Delegation/History.svelte';
+	import History from '$lib/Delegation/History.svelte';
 	import { goto } from '$app/navigation';
 	import { getStores } from '$app/stores';
 	import { TelInput, normalizedCountries } from 'svelte-tel-input';

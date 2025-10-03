@@ -50,6 +50,7 @@ export async function gotoGroup(page: any, group = { name: 'Test Group' }) {
     await page.getByPlaceholder('Search groups').click();
     await page.getByPlaceholder('Search groups').fill(group.name);
     await expect(page.getByRole('heading', { name: group.name, exact: true })).toBeVisible();
+    await page.waitForTimeout(400)
     await page.getByRole('heading', { name: group.name, exact: true }).click();
 }
 
@@ -80,7 +81,7 @@ export async function deleteGroup(page: any, group = { name: 'Test Group', publi
 }
 
 export async function createArea(page: any, group = { name: 'Test Group', public: false }, tag = "Test Tag") {
-    await page.getByRole('button', { name: 'Edit Group' }).click();
+    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
     await expect(page.getByRole('button', { name: 'Areas' })).toBeVisible();
     await page.getByRole('button', { name: 'Areas' }).click();
     await page.getByLabel('Tag * 0/').click();
@@ -89,18 +90,4 @@ export async function createArea(page: any, group = { name: 'Test Group', public
     await page.getByLabel('Description  0/').fill('Tag description');
     await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.locator('div:nth-child(3) > div').filter({ hasText: tag })).toHaveText(tag);
-}
-
-export async function createPermission(page: any, group = { name: 'Test Group', public: false }, permissions = [0]) {
-    // Create, deactive and delete permission
-    await page.getByRole('button', { name: 'Permissions' }).click();
-    await page.getByRole('button', { name: 'Create' }).click();
-    await page.getByLabel('Role name * 0/').click();
-    await page.getByLabel('Role name * 0/').fill('Test Permission');
-    await page.getByLabel('Role name * 15/').click();
-    await page.locator('.slider').first().click();
-    for (const index of permissions) {
-        await page.locator(`div:nth-child(${index}) > .switch > .slider`).click();
-    }
-    await page.getByRole('button', { name: 'Create Role' }).click();
 }

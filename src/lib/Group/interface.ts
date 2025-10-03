@@ -84,7 +84,7 @@ export interface Tag {
 	id: number;
 	name: string;
 	active: boolean;
-	imac: number;
+	imac?: number | null;
 }
 
 export interface GroupUser {

@@ -114,18 +114,20 @@
 
 		loading = false;
 
-		if (!res.ok)
+		if (!res.ok) {
 			ErrorHandlerStore.set({
 				message: 'Could not create Poll',
 				success: false
 			});
+			return;
+		}
 
 		ErrorHandlerStore.set({
 			message: 'Poll Created',
 			success: true
 		});
 
-		if (res.ok && groupId) {
+		if (groupId) {
 			goto(`groups/${groupId}/polls/${json}?source=group`);
 		}
 	};
@@ -167,13 +169,13 @@
 
 		//For debug purposes this puts one minute delay between each phase.
 		if (daysBetweenPhases === 0) {
-			area_vote_end_date = new Date(now.setMinutes(now.getMinutes() + 1));
-			proposal_end_date = new Date(now.setMinutes(now.getMinutes() + 1));
-			prediction_statement_end_date = new Date(now.setMinutes(now.getMinutes() + 1));
-			prediction_bet_end_date = new Date(now.setMinutes(now.getMinutes() + 1));
-			delegate_vote_end_date = new Date(now.setMinutes(now.getMinutes() + 1));
-			vote_end_date = new Date(now.setMinutes(now.getMinutes() + 1));
-			end_date = new Date(now.setMinutes(now.getMinutes() + 1));
+			area_vote_end_date = new Date(now.setMinutes(now.getMinutes()));
+			proposal_end_date = new Date(now.setMinutes(now.getMinutes()));
+			prediction_statement_end_date = new Date(now.setMinutes(now.getMinutes()));
+			prediction_bet_end_date = new Date(now.setMinutes(now.getMinutes()));
+			delegate_vote_end_date = new Date(now.setMinutes(now.getMinutes()));
+			vote_end_date = new Date(now.setMinutes(now.getMinutes()));
+			end_date = new Date(now.setMinutes(now.getMinutes()));
 			//For users to select over multiple days
 		} else {
 			area_vote_end_date = new Date(now.setDate(now.getDate() + daysBetweenPhases));

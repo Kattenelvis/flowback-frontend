@@ -12,7 +12,8 @@
 		style: 'purple' | 'gray' = 'purple',
 		maxScore = 5,
 		dragLinePosition: number | null = null,
-		currentSnapPosition: number | null = null;
+		currentSnapPosition: number | null = null,
+		id = '';
 
 	const snapPoints = Array.from({ length: maxScore + 1 }, (_, i) => i); // [0,1,2,3,4,5]
 
@@ -28,7 +29,7 @@
 
 	const onMouseDown = (e: MouseEvent) => {
 		const onMouseMove = (e: MouseEvent) => {
-			const container = (e.target as HTMLElement).closest('#track-container') as HTMLElement;
+			const container = (e.target as HTMLElement).closest(`#track-container-${id}`) as HTMLElement;
 			if (!container) return;
 
 			const rect = container.getBoundingClientRect();
@@ -59,7 +60,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-	class="w-full bg-white dark:bg-darkobject rounded-lg relative"
+	class="w-full bg-white dark:bg-darkobject rounded-lg relative disabled"
 	class:opacity-50={disabled}
 	class:draggable={!disabled &&
 		(($groupUserStore?.delegate_pool_id && phase === 'delegate_vote') ||
@@ -70,7 +71,7 @@
 	class:cursor-grab={!disabled}
 	class:cursor-not-allowed={disabled}
 >
-	<div id="track-container" class=" relative w-full h-3 bg-purple-200 rounded-full">
+	<div id={`track-container-${id}`} class="{disabled ? 'disabled' : ''} relative w-full h-3 bg-purple-200 rounded-full">
 		<!-- Active bar -->
 		<div
 			class="absolute top-0 left-0 h-full"

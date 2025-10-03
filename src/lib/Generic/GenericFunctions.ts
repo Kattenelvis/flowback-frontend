@@ -120,4 +120,3 @@ export const linkToPost = (postId: number, groupId: number, postType: 'poll' | '
 
 	return `/groups/${groupId}/${_postType}/${postId}`;
 }
-

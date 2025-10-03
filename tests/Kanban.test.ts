@@ -58,7 +58,6 @@ test('Kanban-Group', async ({ page }) => {
 test('Kanban-Edit', async ({ page }) => {
   await login(page);
 
-
   // Navigate to the kanban page
   await page.goto('/kanban');
   await expect(page).toHaveURL('/kanban?chatOpen=false');

@@ -8,7 +8,7 @@
 		phase: Phase = 'area_vote';
 
 	let genericStyle =
-		'bg-white dark:bg-darkobject dark:text-darkmodeText p-4 rounded shadow-md';
+		'bg-white h-[490px] max-h-[490px] dark:bg-darkobject dark:text-darkmodeText p-4 rounded shadow-md';
 
 	onMount(() => {});
 </script>
@@ -24,7 +24,7 @@
 			bind:phase
 			bind:poll
 			enableDetails={false}
-			Class={'!absolute md:!relative left-4 md:left-0'}
+			Class={'!absolute md:!relative left-4 md:left-0 h-[490px]'}
 		/>
 	{/if}
 

@@ -23,25 +23,31 @@ test('Group-Chat', async ({ page }) => {
     await page.getByRole('button', { name: 'open chat' }).click();
     await page.getByPlaceholder('Search chatters').click();
     await page.getByPlaceholder('Search chatters').fill(group.name);
-    await page.getByRole('button', { name: group.name }).first().click();
+    await page.getByRole('button', { name: `avatar ${group.name}` }).first().click();
+
     await page.getByPlaceholder('Write a message...').click();
     await page.getByPlaceholder('Write a message...').fill('Hello!! :D');
+    await page.waitForTimeout(300)
     await page.locator('form > button:nth-child(2)').click();
     await page.getByPlaceholder('Write a message...').click();
+    await page.waitForTimeout(300)
 
     await bPage.getByRole('button', { name: 'open chat' }).click();
     await bPage.getByPlaceholder('Search chatters').click();
     await bPage.getByPlaceholder('Search chatters').fill(group.name);
     await bPage.getByRole('button', { name: group.name }).click();
+    await page.waitForTimeout(300)
     await bPage.getByPlaceholder('Write a message...').fill('Hello!! :D');
     await bPage.getByPlaceholder('Write a message...').press('Enter');
+    await page.waitForTimeout(300)
 
-    await expect(page.getByText('Hello!! :D').nth(1)).toBeVisible();
-    await expect(page.getByText('Hello!! :D').nth(2)).toBeVisible();
+    expect(page.getByText('Hello!! :D').nth(1)).toBeVisible();
+    expect(page.getByText('Hello!! :D').nth(2)).toBeVisible();
 
-    await expect(bPage.getByText('Hello!! :D').nth(1)).toBeVisible();
-    await expect(bPage.getByText('Hello!! :D').nth(2)).toBeVisible();
+    expect(bPage.getByText('Hello!! :D').nth(1)).toBeVisible();
+    expect(bPage.getByText('Hello!! :D').nth(2)).toBeVisible();
 
+    await gotoGroup(page, group)
     await deleteGroup(page, group);
 
 });

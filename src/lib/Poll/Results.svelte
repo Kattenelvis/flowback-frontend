@@ -20,7 +20,7 @@
 		getPollData = () => {};
 
 	const getProposals = async () => {
-		const { json } = await fetchRequest(
+		const { res, json } = await fetchRequest(
 			'GET',
 			`group/poll/${$page.params.pollId}/proposals?limit=1000&order_by=score_desc`
 		);
@@ -36,8 +36,8 @@
 				}
 			];
 
-		votes = proposals.map((proposal) => proposal.score) || [];
-		labels = proposals.map((proposal) => proposal.title) || [];
+		votes = proposals.map((proposal) => proposal.score) ?? [];
+		labels = proposals.map((proposal) => proposal.title) ?? [];
 	};
 
 	const formatDateTime = (dateString: string) => {

@@ -97,9 +97,11 @@
 	const setUserGroupInfo = async () => {
 		if (!$page.params.groupId) return;
 
+		if (!$userStore?.id) return;
+
 		const { res, json } = await fetchRequest(
 			'GET',
-			`group/${$page.params.groupId}/users?user_id=${$userStore?.id || -1}`
+			`group/${$page.params.groupId}/users?user_id=${$userStore?.id}`
 		);
 
 		if (!res.ok || json?.results.length === 0) {
@@ -133,7 +135,7 @@
 		}, 200);
 
 		checkSessionExpiration();
-		setUserInfo();
+		await setUserInfo();
 		await setUserGroupInfo();
 		groupUserPermissionStore.set(await setUserGroupPermissionInfo($groupUserStore));
 	};
@@ -142,6 +144,8 @@
 	initializeLocalization();
 
 	onMount(async () => {
+		await setUserInfo();
+		await setUserGroupInfo();
 		groupUserPermissionStore.set(await setUserGroupPermissionInfo($groupUserStore));
 		isBrowser = true;
 		getWorkingGroupList();
