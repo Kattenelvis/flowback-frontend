@@ -9,9 +9,9 @@
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringLike": {
-                    "token.actions.githubusercontent.com:sub": "repo: kattenelvis/flowback-frontend:*"
                 },
                 "StringEquals": {
+                    "token.actions.githubusercontent.com:sub": "repo: aws-samples/EXAMPLEREPO:ref:refs/heads/ExampleBranch",
                     "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
                     "token.actions.githubusercontent.com:iss": "https://token.actions.githubusercontent.com"
                 }
