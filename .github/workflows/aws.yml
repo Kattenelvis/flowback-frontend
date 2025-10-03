@@ -12,7 +12,7 @@ env:
   
   AWS_REGION : eu-north-1
 
-# Permission can be added at job level or workflow level    aas
+# Permission can be added at job level or workflow level    aasaa
 permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
