@@ -22,6 +22,14 @@ jobs:
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v3
+      - name: Show OIDC subject (debug)
+        shell: bash
+        run: |
+            echo "Requesting OIDC token..."
+            URL="${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com"
+            TOKEN="$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$URL" | jq -r .value)"
+            echo "Raw JWT (header.payload.sig):"
+            echo "$TOKEN" | cut -d. -f2 | base64 -d | jq .
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
