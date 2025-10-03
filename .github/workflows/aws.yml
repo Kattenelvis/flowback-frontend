@@ -31,7 +31,7 @@ jobs:
             echo "Raw JWT (header.payload.sig):"
             echo "$TOKEN" | cut -d. -f2 | base64 -d | jq .
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::950490359718:role/GitHubAction-AssumeRoleWithAction
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
