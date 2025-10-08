@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { login, randomString } from './generic';
+import { login, randomString, register } from './generic';
 import { createGroup, gotoGroup } from './group';
 
 test('Kanban-User', async ({ page }) => {
-  await login(page);
+  await register(page);
 
   // Navigate to the kanban page
   await page.goto('/kanban');
@@ -28,7 +28,7 @@ test('Kanban-User', async ({ page }) => {
 });
 
 test('Kanban-Group', async ({ page }) => {
-  await login(page);
+  await register(page);
 
   // await gotoGroup(page);
   await createGroup(page, { name: "Test Kanban Group " + randomString(), public: true, invite: false })
@@ -57,7 +57,7 @@ test('Kanban-Group', async ({ page }) => {
 
 
 test('Kanban-Edit', async ({ page }) => {
-  await login(page);
+  await register(page);
 
   // Navigate to the kanban page
   await page.goto('/kanban');
@@ -101,7 +101,7 @@ test('Kanban-Edit', async ({ page }) => {
 });
 
 test('Kanban-Delete', async ({ page }) => {
-  await login(page);
+  await register(page);
 
 
   // Navigate to the kanban page

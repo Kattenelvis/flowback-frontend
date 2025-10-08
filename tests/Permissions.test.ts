@@ -4,7 +4,7 @@ import { login, newWindow } from "./generic";
 import { assignPermission, createPermission } from "./permission";
 
 test('Create-Permission-Full', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const rand = Math.random().toString(36).slice(2, 10);
     const group = { name: 'Test Group Permissions ' + rand, public: true };
@@ -36,7 +36,7 @@ test('Create-Permission-Full', async ({ page }) => {
 });
 
 test('Create-Permission-None', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const rand = Math.random().toString(36).slice(2, 10);
     const group = { name: 'Test Group Permissions ' + rand, public: true };

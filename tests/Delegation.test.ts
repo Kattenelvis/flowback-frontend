@@ -1,5 +1,5 @@
 import { test, chromium, expect } from '@playwright/test';
-import { login, randomString } from './generic';
+import { login, randomString, register } from './generic';
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll';
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import { becomeDelegate } from './delegation';
@@ -7,7 +7,7 @@ import { assignPermission, createPermission } from './permission';
 import { idfy } from '$lib/Generic/GenericFunctions2';
 
 test('Become-Delegate', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Group Delegation " + randomString(), public: true }
 
@@ -20,7 +20,7 @@ test('Become-Delegate', async ({ page }) => {
 })
 
 test('Delegation-Poll', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Group Delegation" + randomString(), public: true }
 

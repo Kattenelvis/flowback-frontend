@@ -1,5 +1,5 @@
 import test, { expect } from "@playwright/test";
-import { login, newWindow, randomString } from "./generic";
+import { login, newWindow, randomString, register } from "./generic";
 import { createArea, createGroup, gotoGroup, joinGroup } from "./group";
 import { areaVote, createPoll, createProposal, fastForward, goToPost, predictionProbability, predictionStatementCreate } from "./poll";
 import { assignPermission, createPermission } from "./permission";
@@ -7,7 +7,7 @@ import { assignPermission, createPermission } from "./permission";
 test('Imac-Test', async ({ page }) => {
     test.setTimeout(90000);
 
-    await login(page);
+    await register(page);
 
     let group = { name: "Test Group Imac", public: true }
 
@@ -59,7 +59,7 @@ test('Imac-Test-2-Users', async ({ page }) => {
     // test.setTimeout(100000);
     test.setTimeout(100000);
 
-    await login(page);
+    await register(page);
 
     let group = { name: "Test Group 2 Imac", public: true }
 

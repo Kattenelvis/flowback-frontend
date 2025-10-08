@@ -1,9 +1,9 @@
 import { test, expect, firefox, chromium } from '@playwright/test';
-import { login, logout } from './generic';
+import { login, logout, register } from './generic';
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 
 test('Group-Chat', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const rand = Math.random().toString(36).slice(2, 10);
     const group = { name: "Test Group Chat" + rand, public: true }
@@ -53,7 +53,7 @@ test('Group-Chat', async ({ page }) => {
 });
 
 test('Direct-Chat-Via-Group', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const rand = Math.random().toString(36).slice(2, 10);
     const group = { name: "Test Group Chat 2" + rand, public: true }

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { areaVote, createPoll, createProposal, fastForward, goToPost, predictionProbability, predictionStatementCreate, results, vote } from './poll';
-import { login, randomString } from './generic';
+import { login, randomString, register } from './generic';
 import { gotoGroup, createArea, createGroup, deleteGroup } from './group';
 import { idfy } from '$lib/Generic/GenericFunctions2';
 
@@ -9,7 +9,7 @@ test.describe('Basic-Post-Integration-Tests', () => {
     const poll = { title: "Test Poll Create and Go " + randomString(), date: false }
 
     test('Create-Post', async ({ page }) => {
-        await login(page);
+        await register(page);
 
         await createGroup(page, group)
         //Random poll name
@@ -17,7 +17,7 @@ test.describe('Basic-Post-Integration-Tests', () => {
     })
 
     test('Go-To-Post', async ({ page }) => {
-        await login(page);
+        await register(page);
 
         await gotoGroup(page, group)
 
@@ -28,7 +28,7 @@ test.describe('Basic-Post-Integration-Tests', () => {
 
 test('Area-Vote', async ({ page }) => {
     test.setTimeout(0)
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Poll Area " + randomString(), public: false }
 
@@ -67,7 +67,7 @@ test('Area-Vote', async ({ page }) => {
 })
 
 test('Proposal-Test', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Group Poll", public: false }
 
@@ -84,7 +84,7 @@ test('Proposal-Test', async ({ page }) => {
 
 test('Proposal-Spam-Test', async ({ page }) => {
     test.setTimeout(120000)
-    await login(page);
+    await register(page);
 
     const rand = randomString();
     const group = { name: "Test Group Proposals " + rand, public: false }
@@ -121,7 +121,7 @@ test('Proposal-Spam-Test', async ({ page }) => {
 
 
 test('Prediction-Creation', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Poll Prediction " + randomString(), public: false }
 
@@ -154,7 +154,7 @@ test('Prediction-Creation', async ({ page }) => {
 test('Prediction-Statements', async ({ page }) => {
     // test.setTimeout(520000);
 
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Prediction Statement " + randomString(), public: true }
 
@@ -198,7 +198,7 @@ test('Prediction-Statements', async ({ page }) => {
 test('Prediction-Probability', async ({ page }) => {
     test.setTimeout(50000);
     // await page.waitForTimeout(12000)
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Group Probability Voting", public: true }
 
@@ -241,7 +241,7 @@ test('Prediction-Probability', async ({ page }) => {
 test('Prediction-Probabilities', async ({ page }) => {
     test.setTimeout(50000);
     // await page.waitForTimeout(12000)
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Group Probability Voting", public: true }
     const area = "Tag imact test " + randomString()
@@ -287,7 +287,7 @@ test('Prediction-Probabilities', async ({ page }) => {
 
 
 test('Poll-Start-To-Finish', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Poll start to finish ", public: false }
     await createGroup(page, group)
@@ -330,7 +330,7 @@ test('Poll-Start-To-Finish', async ({ page }) => {
 });
 
 test('Date-Poll', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Group Poll", public: false }
     const poll = { title: "Test Group Poll", date: true }
@@ -358,7 +358,7 @@ test('Date-Poll', async ({ page }) => {
 });
 
 test('Thread-Create-Report-Delete', async ({ page }) => {
-    await login(page);
+    await register(page);
 
     const group = { name: "Test Group Thread", public: false }
 
