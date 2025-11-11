@@ -23,11 +23,14 @@
 		isUserMemberInGroup,
 		getGroupsUserIsMemberIn
 	} from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote';
+	//import {
+	//	becomeDelegate,
+	//	delegate,
+	//} from '$lib/Blockchain_v1_Ethereum/javascript/delegationsBlockchain';
 	import {
 		becomeDelegate,
-		delegate,
-	} from '$lib/Blockchain_v1_Ethereum/javascript/delegationsBlockchain';
-
+		delegateToDelegate,
+	} from '$lib/Blockchain_v2_CrossChain/adapters/delegationAdapter';
 
 	onMount(() => {
 		// test(value); // Call test with group
@@ -42,7 +45,7 @@
 	let groupId = 1;
 	let pollId = 8;
 	let proposalId = 1;
-
+	let delegateAddress = '0x7B95c1314BD7d95737157d9E6EcFCf0b6c22f272';  // for testing
 	async function connectWallet() {
 		if (typeof window.ethereum !== 'undefined') {
 			try {
@@ -128,8 +131,14 @@
 	<div class="p-6">
 		<button on:click={() => becomeDelegate(groupId)}>Become delegate</button>
 	</div>
-	<div class="p-6">
+	<!-- v1 - old (commented for reference) -->
+	<!-- <div class="p-6">
 		<button on:click={() => delegate(groupId)}>Delegate</button>
+	</div> -->
+	<!-- v2 - new -->
+	<div class="p-6">
+	<input type="text" bind:value={delegateAddress} placeholder="Enter Delegate Address">
+	<button on:click={() => delegateToDelegate(delegateAddress, groupId)}>Delegate</button>
 	</div>
 </Layout>
 

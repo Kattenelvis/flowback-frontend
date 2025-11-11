@@ -1,15 +1,20 @@
-import { ethers } from 'ethers';
+//import { ethers } from 'ethers';
+import { ethers, BrowserProvider } from 'ethers';
 import contractABI from './contractABI.json';
 
 interface Window {
-	ethereum?: import('ethers').providers.ExternalProvider;
+	//ethereum?: import('ethers').providers.ExternalProvider;
+	ethereum?: any;
 }
 
 async function getUser() {
 	if (window.ethereum) {
 		await window.ethereum.request({ method: 'eth_requestAccounts' });
-		const provider = new ethers.providers.Web3Provider(window.ethereum);
-		const signer = provider.getSigner();
+		//const provider = new ethers.providers.Web3Provider(window.ethereum);
+		//const signer = provider.getSigner();
+		const provider = new BrowserProvider(window.ethereum);
+		const signer = await provider.getSigner();
+
 		const address = await signer.getAddress();
 		console.log('Address:', address);
 
