@@ -18,6 +18,14 @@
 	import type { Permissions } from '$lib/Group/Permissions/interface';
 	import { getPermissionsFast } from '$lib/Generic/GenericFunctions';
 	import TextInput from '$lib/Generic/TextInput.svelte';
+	import {
+     becomeDelegate as becomeDelegateOnChain,
+     resignAsDelegate as resignAsDelegateOnChain,
+     removeDelegation as removeDelegationOnChain,
+     delegateToDelegate as delegateToDelegateOnChain,
+     getDelegateAddressByChainId,
+     isV2
+     } from '$lib/Blockchain_v2_CrossChain/adapters/delegationAdapter';
 
 	let group: Group,
 		groups: Group[],
@@ -64,6 +72,7 @@
 	/*
 	 	Makes the currently logged in user into a delegate(pool)
 	 */
+	/*
 	const createDelegationPool = async () => {
 		const { res, json } = await fetchRequest('POST', `group/${group.id}/delegate/pool/create`, {});
 
@@ -75,7 +84,48 @@
 		ErrorHandlerStore.set({ message: 'Successfully became delegate', success: true });
 		groupUser.delegate_pool_id = json;
 	};
+	*/
+	
+	const createDelegationPool = async () => {
+	let blockchainDelegateId: number | null = null;
 
+	// 1) Interact with the blockchain when enabling integration.
+	if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+		const result = await becomeDelegateOnChain(group.id).catch((error) => {
+			console.error('Blockchain delegation failed:', error);
+			return null;
+		});
+		if (!result) {
+			ErrorHandlerStore.set({
+				message: 'Blockchain delegation failed. Please try again.',
+				success: false
+			});
+			return;
+		}
+		blockchainDelegateId = result.delegateId ?? null;
+	}
+
+	// 2) Preparing the cargo for the backend
+	const payload: Record<string, any> = {};
+	if (blockchainDelegateId !== null) {
+		payload.blockchain_id = blockchainDelegateId;
+	}
+
+	const { res, json } = await fetchRequest(
+		'POST',
+		`group/${group.id}/delegate/pool/create`,
+		payload
+	);
+
+	if (!res.ok) {
+		ErrorHandlerStore.set({ message: 'Error when trying to become delegate', success: false });
+		return;
+	}
+
+	ErrorHandlerStore.set({ message: 'Successfully became delegate', success: true });
+	groupUser.delegate_pool_id = json;
+};
+/*
 	const removeAllDelegations = async (group: Group) => {
 		const promises = delegates.map((delegate) =>
 			fetchRequest('POST', `group/${group.id}/delegate/delete`, {
@@ -86,6 +136,42 @@
 		//TODO Add error handling
 		const results = await Promise.all(promises);
 
+		ErrorHandlerStore.set({ message: 'Removed delegations', success: true });
+	};
+*/
+	const removeAllDelegations = async (group: Group) => {
+		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+			for (const delegate of delegates) {
+				const address =
+					delegate.wallet_address ??
+					(delegate.blockchain_id !== null && delegate.blockchain_id !== undefined
+						? await getDelegateAddressByChainId(group.id, delegate.blockchain_id)
+						: null);
+			
+				if (!address) {
+					console.warn('Could not resolve delegate address for', delegate);
+					continue;
+				}
+			
+				const result = await removeDelegationOnChain(address, group.id);
+				if (!result) {
+					ErrorHandlerStore.set({
+						message: 'Blockchain delegation removal failed',
+						success: false
+					});
+					return;
+				}
+			}
+		}
+	
+		const promises = delegates.map((delegate) =>
+			fetchRequest('POST', `group/${group.id}/delegate/delete`, {
+				delegate_pool_id: delegate.pool_id
+			})
+		);
+		
+		await Promise.all(promises);
+		
 		ErrorHandlerStore.set({ message: 'Removed delegations', success: true });
 	};
 

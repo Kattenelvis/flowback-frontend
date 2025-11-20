@@ -5,6 +5,11 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import type { Delegate } from './interfaces';
 	import type { GroupUser } from '$lib/Group/interface';
+	import {
+	resignAsDelegate as resignAsDelegateOnChain,
+	isV2
+    } from '$lib/Blockchain_v2_CrossChain/adapters/delegationAdapter';
+	import { env } from '$env/dynamic/public';
 
 	export let groupUser: GroupUser,
 		loading: boolean,
@@ -22,6 +27,7 @@
 	/*
 		Makes the currently logged in user no longer a delegate(pool)
 	*/
+	/*
 	const deleteDelegationPool = async () => {
 		loading = true;
 		const { res } = await fetchRequest('POST', `group/${groupId}/delegate/pool/delete`);
@@ -32,6 +38,26 @@
 		groupUser.delegate_pool_id = null;
 		// userIsDelegateStore.update((value) => (value = false));
 	};
+	*/
+const deleteDelegationPool = async () => {
+	loading = true;
+
+	if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+		const chainOk = await resignAsDelegateOnChain(groupId);
+		if (!chainOk) {
+			ErrorHandlerStore.set({ message: 'Blockchain resignation failed', success: false });
+			loading = false;
+			return;
+		}
+	}
+
+	const { res } = await fetchRequest('POST', `group/${groupId}/delegate/pool/delete`);
+	loading = false;
+
+	if (!res.ok) return;
+
+	groupUser.delegate_pool_id = null;
+};
 
 	const selfDelegate = async () => {
 		loading = true;
@@ -101,4 +127,9 @@
 
 <Button Class={`bg-red-500 ${Class}`} onClick={deleteDelegation}>{$_('Stop being delegate')}</Button
 >
+<!--
 <Button onClick={selfDelegate}>{'Self-Delegate'}</Button>
+-->
+{#if !isV2}
+	<Button onClick={selfDelegate}>{'Self-Delegate'}</Button>
+{/if}

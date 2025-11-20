@@ -33,8 +33,8 @@
 		loading = true;
 
 		let blockchain_id;
-		console.log ('Blockchain Integration:', env.PUBLIC_BLOCKCHAIN_INTEGRATION, blockchain, poll.blockchain_id);
-		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE' && blockchain && poll.blockchain_id)
+		console.log ('Blockchain Integration:', env.PUBLIC_BLOCKCHAIN_INTEGRATION, blockchain, poll.blockchain_id);	
+		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE' && blockchain && poll.blockchain_id) {
 		// use v2  if PUBLIC_BLOCKCHAIN_VERSION === 'v2'
 			if (env.PUBLIC_BLOCKCHAIN_VERSION === 'v2') {
 				blockchain_id = await proposalCreateBlockchain_v2(poll.blockchain_id, title);

@@ -4,7 +4,10 @@
 	import Layout from '$lib/Generic/Layout.svelte';
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
-	import { becomeMemberOfGroup } from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote';
+	/* import { becomeMemberOfGroup } from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote'; */ 
+	import {
+	    becomeMemberOfGroup
+	} from '$lib/Blockchain_v2_CrossChain/adapters/rightToVoteUnified';
 	import { env } from '$env/dynamic/public';
 	import { goto } from '$app/navigation';
 	import PollThreadThumbnails from '$lib/Poll/PollThreadThumbnails.svelte';
@@ -45,7 +48,8 @@
 		ErrorHandlerStore.set({ message: 'Joined Group', success: true });
 		invitations = invitations.filter((invite) => invite.group !== id);
 		invitations = invitations;
-		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') becomeMemberOfGroup(id);
+		/*if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') becomeMemberOfGroup(id);*/
+		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') becomeMemberOfGroup(Number(id));
 	};
 
 	const rejectInvitation = async (id: number) => {

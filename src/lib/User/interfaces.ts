@@ -12,6 +12,7 @@ export interface User {
 	id: number;
 	contact_email: string;
 	contact_phone: string;
+	wallet_address?: string | null;
 }
 
 export interface GroupUser {
@@ -26,6 +27,7 @@ export interface GroupUser {
 	username: string;
 	user: User;
 	group_id: number;
+	wallet_address?: string | null;
 }
 
 export const userStore = writable<User | null>(null);
