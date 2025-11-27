@@ -23,7 +23,7 @@
      resignAsDelegate as resignAsDelegateOnChain,
      removeDelegation as removeDelegationOnChain,
      delegateToDelegate as delegateToDelegateOnChain,
-     getDelegateAddressByChainId,
+     //getDelegateAddressByChainId,
      isV2
      } from '$lib/Blockchain_v2_CrossChain/adapters/delegationAdapter';
 
@@ -91,7 +91,9 @@
 
 	// 1) Interact with the blockchain when enabling integration.
 	if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
-		const result = await becomeDelegateOnChain(group.id).catch((error) => {
+		//const result = await becomeDelegateOnChain(group.id).catch((error) => {
+			const chainGroupId = group.blockchain_id ?? group.id;
+			const result = await becomeDelegateOnChain(chainGroupId).catch((error) => {
 			console.error('Blockchain delegation failed:', error);
 			return null;
 		});
@@ -141,19 +143,21 @@
 */
 	const removeAllDelegations = async (group: Group) => {
 		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+			const chainGroupId = group.blockchain_id ?? group.id;
 			for (const delegate of delegates) {
 				const address =
-					delegate.wallet_address ??
-					(delegate.blockchain_id !== null && delegate.blockchain_id !== undefined
-						? await getDelegateAddressByChainId(group.id, delegate.blockchain_id)
-						: null);
+					delegate.wallet_address ?? null;
+					// (delegate.blockchain_id !== null && delegate.blockchain_id !== undefined
+					// 	? await getDelegateAddressByChainId(group.id, delegate.blockchain_id)
+					// 	: null);
 			
 				if (!address) {
 					console.warn('Could not resolve delegate address for', delegate);
 					continue;
 				}
 			
-				const result = await removeDelegationOnChain(address, group.id);
+				// const result = await removeDelegationOnChain(address, group.id);
+				const result = await removeDelegationOnChain(address, chainGroupId);
 				if (!result) {
 					ErrorHandlerStore.set({
 						message: 'Blockchain delegation removal failed',
@@ -315,7 +319,7 @@
 						Class="w-full mt-3"
 						bind:delegates
 						bind:groupUser
-						groupId={group.id}
+						groupId={group.blockchain_id ?? group.id}
 						bind:loading
 					/>
 				{:else}

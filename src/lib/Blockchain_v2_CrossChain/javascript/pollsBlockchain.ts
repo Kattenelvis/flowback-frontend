@@ -30,11 +30,14 @@ const getContract = async () => {
 };
 
 export const createPoll = async (groupId: number, title: string) => {
+	console.log('[createPoll] Starting...', { groupId, title });
 	try {
 		const contract = await getContract();
+		console.log('[createPoll] Contract obtained');
 		const nowInSeconds = Math.floor(Date.now() / 1000);
 		const oneDayInSeconds = 24 * 60 * 60;
 
+		console.log('[createPoll] Calling contract.createPoll...');
 		const tx = await contract.createPoll(
 			title,
 			'tag',
@@ -47,32 +50,56 @@ export const createPoll = async (groupId: number, title: string) => {
 			10, //maximum vote range
 			true // _storeOnEthereum
 		);
+		console.log('[createPoll] Transaction sent, waiting for receipt...', tx.hash);
 
 		const receipt = await tx.wait();
+		console.log('[createPoll] Receipt received:', {
+			status: receipt.status,
+			blockNumber: receipt.blockNumber,
+			transactionHash: receipt.hash,
+			logsCount: receipt.logs.length
+		});
 
-		if (receipt && receipt.status === 1n) {
-			console.log('Transaction successful');
+		if (receipt && (receipt.status === 1n || receipt.status === 1)) {
+			console.log('[createPoll] Transaction successful');
+			console.log('[createPoll] All logs:', receipt.logs);
 			const logs = receipt.logs;
 			const parsedLogs = logs
-				.map((log: any) => contract.interface.parseLog(log))
+				.map((log: any) => {
+					try {
+						return contract.interface.parseLog(log);
+					} catch (e) {
+						console.log('[createPoll] Failed to parse log:', log);
+						return null;
+					}
+				})
 				.filter((log: any) => log !== null);
+			console.log('[createPoll] Parsed logs:', parsedLogs);
+			console.log('[createPoll] All event names:', parsedLogs.map((log: any) => log?.name));
 			const pollCreatedEvents = parsedLogs.filter((log: any) => log.name === 'PollCreated');
+			console.log('[createPoll] PollCreated events found:', pollCreatedEvents.length);
 
 			if (pollCreatedEvents.length > 0) {
 				const PollCreatedEvent = pollCreatedEvents[0];
 				const pollId = parseInt(PollCreatedEvent.args.pollId.toString());
 				const pollTitle = PollCreatedEvent.args.title;
-				console.log(`Poll created with title ${pollTitle} and id ${pollId}`);
+				console.log(`[createPoll] Poll created with title ${pollTitle} and id ${pollId}`);
 				return pollId;
+			} else {
+				console.log('[createPoll] No PollCreated event found in logs');
 			}
+		} else {
+			console.log('[createPoll] Transaction failed or status not 1n');
 		}
 
 		return null;
 	} catch (error) {
+		console.error('[createPoll] Error caught:', error);
 		if (error instanceof Error) {
-			console.error('Error creating poll:', error.message);
+			console.error('[createPoll] Error creating poll:', error.message);
+			console.error('[createPoll] Error stack:', error.stack);
 		} else {
-			console.error('An unexpected error occurred:', error);
+			console.error('[createPoll] An unexpected error occurred:', error);
 		}
 		return null;
 	}
@@ -108,7 +135,7 @@ export const proposalCreate = async (pollId: number, title: string) => {
 
 		const receipt = await tx.wait();
 
-		if (receipt && receipt.status === 1n) {
+		if (receipt && (receipt.status === 1n || receipt.status === 1)) {
 			console.log('Transaction successful');
 			const logs = receipt.logs;
 			const parsedLogs = logs
@@ -185,7 +212,7 @@ export const vote = async (_pollId: number, _proposalId: number, _score: number,
 
 		const receipt = await tx.wait();
 
-		if (receipt && receipt.status === 1n) {
+		if (receipt && (receipt.status === 1n || receipt.status === 1)) {
 			console.log('Transaction successful');
 			const logs = receipt.logs;
 			const parsedLogs = logs

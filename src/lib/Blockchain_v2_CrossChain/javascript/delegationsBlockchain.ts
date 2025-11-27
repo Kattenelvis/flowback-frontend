@@ -12,7 +12,9 @@
 // ============================================================================
 
 import { BrowserProvider, Contract, JsonRpcSigner } from 'ethers';
-import pollsAbi from './contractABI.json';
+//import pollsAbi from './contractABI.json';
+import abiJson from './contractABI.json';
+const ABI = abiJson.abi;
 
 // Contract address on Base Sepolia (Polls v2 with Delegations)
 const DEFAULT_CONTRACT_ADDRESS = '0x27013b43c40fB4fB0c23DD0E56f1fB90FA8a0276';
@@ -65,7 +67,9 @@ async function getContract(): Promise<Contract> {
   }
   
   // Return contract instance with ABI and signer
-  return new Contract(CONTRACT_ADDRESS, pollsAbi as any, signer);
+  //return new Contract(CONTRACT_ADDRESS, pollsAbi as any, signer);
+  return new Contract(CONTRACT_ADDRESS, ABI, signer);
+
 }
 
 async function getReadOnlyContract(): Promise<Contract> {
@@ -76,7 +80,9 @@ async function getReadOnlyContract(): Promise<Contract> {
   if (!CONTRACT_ADDRESS) {
     throw new Error('CONTRACT_ADDRESS is missing');
   }
-  return new Contract(CONTRACT_ADDRESS, pollsAbi as any, provider);
+ // return new Contract(CONTRACT_ADDRESS, pollsAbi as any, provider);
+  return new Contract(CONTRACT_ADDRESS, ABI, provider);
+
 }
 // ============================================================================
 // Write Functions (require transactions and gas)
@@ -99,7 +105,8 @@ async function getReadOnlyContract(): Promise<Contract> {
 
      try {
        const signer = await getSigner();
-       const contract = new Contract(CONTRACT_ADDRESS, pollsAbi as any, signer);
+       // const contract = new Contract(CONTRACT_ADDRESS, pollsAbi as any, signer);
+       const contract = new Contract(CONTRACT_ADDRESS, ABI, signer);
        const tx = await contract.becomeDelegate(gid);
        const receipt = await tx.wait();
 

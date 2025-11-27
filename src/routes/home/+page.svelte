@@ -48,8 +48,14 @@
 		ErrorHandlerStore.set({ message: 'Joined Group', success: true });
 		invitations = invitations.filter((invite) => invite.group !== id);
 		invitations = invitations;
+		// Retrieve group details to obtain the correct blockchain_id
+		const { res: groupRes, json: groupJson } = await fetchRequest('GET', `group/${id}/detail`);
+		if (groupRes.ok && env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+   		const chainGroupId = Number(groupJson.blockchain_id);
+   		await becomeMemberOfGroup(chainGroupId);
+  		}
 		/*if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') becomeMemberOfGroup(id);*/
-		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') becomeMemberOfGroup(Number(id));
+		/*if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') becomeMemberOfGroup(Number(id));*/
 	};
 
 	const rejectInvitation = async (id: number) => {

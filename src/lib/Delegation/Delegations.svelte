@@ -13,9 +13,10 @@
 	import {
      delegateToDelegate as delegateToDelegateOnChain,
      removeDelegation as removeDelegationOnChain,
-     getDelegateAddressByChainId,
+     // getDelegateAddressByChainId,
      isV2
-   } from '$lib/Blockchain_v2_CrossChain/adapters/delegationAdapter';
+    } from '$lib/Blockchain_v2_CrossChain/adapters/delegationAdapter';
+	import { env } from '$env/dynamic/public';
 
 	export let group: Group,
 		delegates: Delegate[] = [];
@@ -78,7 +79,7 @@
 
 		delegateRelations = json?.results;
 	};
-
+/*
 	   const resolveDelegateAddress = async (delegate: Delegate) => {
      if (delegate.wallet_address) return delegate.wallet_address;
 
@@ -88,6 +89,16 @@
 
      return null;
    };
+*/
+   const resolveDelegateAddress = async (delegate: Delegate) => {
+ 		// if backend already provides a wallet address, use it
+ 		if (delegate.wallet_address) return delegate.wallet_address;
+
+ 		// v2: no on-chain lookup by blockchain_id anymore
+ 		console.warn('resolveDelegateAddress: no chain resolver implemented for v2');
+ 		return null;
+	};
+
 
 	const createDelegateRelation = async (delegate_pool_id: number) => {
 		const { json, res } = await fetchRequest('POST', `group/${group.id}/delegate/create`, {
@@ -127,7 +138,10 @@
 			return;
 		}
 
-		const chainOk = await delegateToDelegateOnChain(address, group.id);
+		const chainGroupId = group.blockchain_id ?? group.id;
+		const chainOk = await delegateToDelegateOnChain(address, chainGroupId);
+
+		// const chainOk = await delegateToDelegateOnChain(address, group.id);
 		if (!chainOk) {
 			ErrorHandlerStore.set({ message: 'Blockchain delegation failed', success: false });
 			loading = false;
@@ -145,7 +159,12 @@
 			return;
 		}
 
-		const chainOk = await removeDelegationOnChain(address, group.id);
+		
+		const chainGroupId = group.blockchain_id ?? group.id;
+
+		const chainOk = await removeDelegationOnChain(address, chainGroupId);
+
+		//const chainOk = await removeDelegationOnChain(address, group.id);
 		if (!chainOk) {
 			ErrorHandlerStore.set({
 				message: 'Failed to remove delegation on chain',
