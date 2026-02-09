@@ -10,6 +10,13 @@
 	import { _ } from 'svelte-i18n';
 	import { userStore } from '$lib/User/interfaces';
 	import Loader from '$lib/Generic/Loader.svelte';
+	import {
+     delegateToDelegate as delegateToDelegateOnChain,
+     removeDelegation as removeDelegationOnChain,
+     // getDelegateAddressByChainId,
+     isV2
+    } from '$lib/Blockchain_v2_CrossChain/adapters/delegationAdapter';
+	import { env } from '$env/dynamic/public';
 
 	export let group: Group,
 		delegates: Delegate[] = [];
@@ -72,6 +79,26 @@
 
 		delegateRelations = json?.results;
 	};
+/*
+	   const resolveDelegateAddress = async (delegate: Delegate) => {
+     if (delegate.wallet_address) return delegate.wallet_address;
+
+     if (delegate.blockchain_id !== null && delegate.blockchain_id !== undefined) {
+       return await getDelegateAddressByChainId(group.id, delegate.blockchain_id);
+     }
+
+     return null;
+   };
+*/
+   const resolveDelegateAddress = async (delegate: Delegate) => {
+ 		// if backend already provides a wallet address, use it
+ 		if (delegate.wallet_address) return delegate.wallet_address;
+
+ 		// v2: no on-chain lookup by blockchain_id anymore
+ 		console.warn('resolveDelegateAddress: no chain resolver implemented for v2');
+ 		return null;
+	};
+
 
 	const createDelegateRelation = async (delegate_pool_id: number) => {
 		const { json, res } = await fetchRequest('POST', `group/${group.id}/delegate/create`, {
@@ -100,6 +127,53 @@
 					: // If remove, filter it away
 						[...relation.tags.filter((_tag) => _tag.id !== tag).map((_tag) => _tag.id)]
 		};
+
+	if (action === 'add' && env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+		const delegateData = delegates.find((d) => d.pool_id === relation?.delegate_pool_id);
+		const address = delegateData ? await resolveDelegateAddress(delegateData) : null;
+
+		if (!address) {
+			ErrorHandlerStore.set({ message: 'Could not resolve delegate address', success: false });
+			loading = false;
+			return;
+		}
+
+		const chainGroupId = group.blockchain_id ?? group.id;
+		const chainOk = await delegateToDelegateOnChain(address, chainGroupId);
+
+		// const chainOk = await delegateToDelegateOnChain(address, group.id);
+		if (!chainOk) {
+			ErrorHandlerStore.set({ message: 'Blockchain delegation failed', success: false });
+			loading = false;
+			return;
+		}
+	}
+
+	if (action === 'remove' && env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+		const delegateData = delegates.find((d) => d.pool_id === relation?.delegate_pool_id);
+		const address = delegateData ? await resolveDelegateAddress(delegateData) : null;
+
+		if (!address) {
+			ErrorHandlerStore.set({ message: 'Could not resolve delegate address', success: false });
+			loading = false;
+			return;
+		}
+
+		
+		const chainGroupId = group.blockchain_id ?? group.id;
+
+		const chainOk = await removeDelegationOnChain(address, chainGroupId);
+
+		//const chainOk = await removeDelegationOnChain(address, group.id);
+		if (!chainOk) {
+			ErrorHandlerStore.set({
+				message: 'Failed to remove delegation on chain',
+				success: false
+			});
+			loading = false;
+			return;
+		}
+	}
 
 		const { res } = await fetchRequest('POST', `group/${group.id}/delegate/update`, payload);
 

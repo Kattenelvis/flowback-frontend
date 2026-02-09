@@ -1,6 +1,28 @@
 [profile.default]
 src = "src"
+test = "test"
 out = "out"
 libs = ["lib", "node_modules"]
+
+solc_version = "0.8.18"
+optimizer = true
+optimizer_runs = 20000
+via_ir = true
+evm_version = "paris"
+
+# Remappings
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "@openzeppelin/=lib/openzeppelin-contracts/"
+]
+
+# Network configurations
+[rpc_endpoints]
+base_sepolia = "https://sepolia.base.org"
+ethereum_sepolia = "https://ethereum-sepolia-rpc.publicnode.com"
+
+[etherscan]
+base_sepolia = { key = "", url = "https://api-sepolia.basescan.org/api" }
+ethereum_sepolia = { key = "", url = "https://api-sepolia.etherscan.io/api" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

@@ -11,6 +11,8 @@ export interface Delegate {
 	group_name: string;
 	id: number;
 	pool_id: number;
+	blockchain_id?: number | null;
+	wallet_address?: string | null;
 	is_admin: boolean;
 	permission_id: number | null;
 	permission_name: string | null;
@@ -91,6 +93,7 @@ export interface DelegatePool {
 export interface DelegateRelation {
 	blockchain_id?: null | number;
 	delegate_pool_id: number;
+	wallet_address?: string | null;
 	delegates: DelegateMinimal[];
 	id: number;
 	tags: { name: string; id: number; active: boolean }[];

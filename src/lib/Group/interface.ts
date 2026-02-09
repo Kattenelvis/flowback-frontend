@@ -42,7 +42,8 @@ export interface DelegateMinimal {
 	id: number;
 	pool_id: number;
 	profile_image: string;
-
+	wallet_address?: string | null;
+	blockchain_id?: number | null;
 	tags: Tag[];
 }
 

@@ -26,3 +26,13 @@ test-results
 ./test-results
 tests/Post.test.ts-snapshots
 tests/screenshots
+
+# ==============================
+# Foundry / Blockchain
+# ==============================
+out/
+cache/
+broadcast/
+lib/
+*.lock
+foundry.lock

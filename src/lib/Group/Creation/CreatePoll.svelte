@@ -8,8 +8,12 @@
 	import Loader from '$lib/Generic/Loader.svelte';
 	import RadioButtons from '$lib/Generic/RadioButtons.svelte';
 	import { goto } from '$app/navigation';
-	import { createPoll as createPollBlockchain } from '$lib/Blockchain_v1_Ethereum/javascript/pollsBlockchain';
+
+	// import { createPoll as createPollBlockchain } from '$lib/Blockchain_v1_Ethereum/javascript/pollsBlockchain';
+	// import { createPoll as createPollBlockchain_v2 } from '$lib/Blockchain_v2_CrossChain/javascript/pollsBlockchain';
+	import { createPollAdapter } from '$lib/Blockchain_v2_CrossChain/adapters/pollsAdapter';
 	import FileUploads from '$lib/Generic/File/FileUploads.svelte';
+
 	import AdvancedTimeSettings from './AdvancedTimeSettings.svelte';
 	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
 	import Tab from '$lib/Generic/Tab.svelte';
@@ -27,6 +31,7 @@
 	import type { pollType } from './interface';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 
+
 	let title = $state(''),
 		description = $state(''),
 		times: Date[] = $state([]),
@@ -43,6 +48,7 @@
 		workGroups: WorkGroup[] = $state([]),
 		workGroup: number | null = $state(null),
 		permissions: any;
+		let groupBlockchainId: number | null = null;
 
 	const groupId = $page.url.searchParams.get('id');
 
@@ -62,11 +68,37 @@
 		const formData = new FormData();
 		let blockchain_id;
 
+		/**if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE' && pushToBlockchain) {
+			 // use v2  if PUBLIC_BLOCKCHAIN_VERSION === 'v2'
+		if (env.PUBLIC_BLOCKCHAIN_VERSION === 'v2') {
+		    blockchain_id = await createPollBlockchain_v2(Number(groupId), title);
+		} else {
+				blockchain_id = await createPollBlockchain(Number(groupId), title);
+				}
+				if (blockchain_id) formData.append('blockchain_id', blockchain_id.toString());
+		}**/
+
 		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE' && pushToBlockchain) {
-			blockchain_id = await createPollBlockchain(Number(groupId), title);
-			if (blockchain_id)
+			    if (env.PUBLIC_BLOCKCHAIN_VERSION === 'v2') {
+					if (!groupBlockchainId) {
+						loading = false;
+						ErrorHandlerStore.set({
+							message: 'Group blockchain_id not loaded yet.',
+							success: false
+						});
+						return;
+					}
+				blockchain_id = await createPollAdapter(groupBlockchainId, title);
+			} else {
+				// v1 uses regular groupId
+				blockchain_id = await createPollAdapter(Number(groupId), title);
+			}		
+			if (blockchain_id) {
 				formData.append('blockchain_id', blockchain_id.toString());
+			}
 		}
+		
+
 
 		formData.append('title', title);
 		formData.append('description', description);
@@ -127,6 +159,16 @@
 		}
 	};
 
+const loadGroupBlockchainId = async () => {
+	const { res, json } = await fetchRequest('GET', `group/${groupId}/detail`);
+
+	if (res.ok && json?.blockchain_id !== undefined && json?.blockchain_id !== null) {
+		groupBlockchainId = Number(json.blockchain_id);
+		console.log("DEBUG groupBlockchainId:", groupBlockchainId);
+	}
+};
+
+
 	const createThread = async () => {
 		let thread: {
 			title: string;
@@ -166,6 +208,14 @@
 		workGroups = workGroups.filter((workGroup) => workGroup.joined);
 	};
 
+	const loadPermissions = async () => {
+		const { res, json } = await fetchRequest('GET', `group/${groupId}/detail`);
+		if (res.ok) {
+			permissions = json?.permissions;
+		}
+	};
+
+
 	const handleKeyDown = (event: KeyboardEvent) => {
 		// Check for a specific key, e.g., the "k" key:
 		if (event.ctrlKey && event.key === 'Enter') {
@@ -181,6 +231,8 @@
 		document.addEventListener('keydown', handleKeyDown);
 		getGroupTags();
 		getWorkGroupList();
+		loadGroupBlockchainId();
+		loadPermissions();
 	});
 
 	$effect(() => {
