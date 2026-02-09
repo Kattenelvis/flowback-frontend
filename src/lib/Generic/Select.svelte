@@ -18,7 +18,8 @@
 		charlimit = 30,
 		disableFirstChoice = false,
 		id: string = '',
-		disabled = false;
+		disabled = false,
+		innerLabelValue: any = '';
 
 	// onMount(() => {
 	// 	value = defaultValue;
@@ -43,12 +44,16 @@
 		{id}
 	>
 		{#if innerLabel}
-			<option value="" disabled={disableFirstChoice} selected>{$_(innerLabel)}</option>
+			<option value={innerLabelValue} disabled={disableFirstChoice} selected
+				>{$_(innerLabel)}</option
+			>
 		{/if}
 
 		{#if labels}
 			{#each labels as label, i}
-				<option value={values[i]} class="dark:bg-darkobject"> {elipsis($_(label))} </option>
+				<option value={values[i]} class="dark:bg-darkobject">
+					{elipsis($_(label))}
+				</option>
 			{/each}
 		{/if}
 	</select>

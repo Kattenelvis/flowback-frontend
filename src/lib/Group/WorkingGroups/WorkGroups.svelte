@@ -2,7 +2,6 @@
 	import { fetchRequest } from '$lib/FetchRequest';
 	import Button from '$lib/Generic/Button.svelte';
 	import {
-		workGroupsStore,
 		type WorkGroupInvite,
 		type WorkGroup as WorkingGroupType
 	} from './interface';
@@ -32,7 +31,6 @@
 			chat: 1,
 			requested_access: false
 		},
-		 
 		open = false,
 		search: string,
 		invites: WorkGroupInvite[] = [],
@@ -45,7 +43,10 @@
 		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Could not fetch work groups', success: false });
+			ErrorHandlerStore.set({
+				message: 'Could not fetch work groups',
+				success: false
+			});
 			return;
 		}
 
@@ -61,10 +62,13 @@
 		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to create work group', success: false });
+			ErrorHandlerStore.set({
+				message: 'Failed to create work group',
+				success: false
+			});
 			return;
 		}
-		
+
 		await getWorkingGroupList();
 
 		workGroupEdit = {
@@ -99,19 +103,28 @@
 	};
 
 	const addUserToGroup = async (groupUserId: number, workGroupId: number) => {
-		const { res, json } = await fetchRequest('POST', `group/workgroup/${workGroupId}/user/add`, {
-			is_moderator: false,
-			target_group_user_id: groupUserId
-		});
+		const { res, json } = await fetchRequest(
+			'POST',
+			`group/workgroup/${workGroupId}/user/add`,
+			{
+				is_moderator: false,
+				target_group_user_id: groupUserId
+			}
+		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to add user to group', success: false });
+			ErrorHandlerStore.set({
+				message: 'Failed to add user to group',
+				success: false
+			});
 			return;
 		}
 
 		invites = invites.filter((invite) => invite.work_group_id !== workGroupId);
 
-		let workGroup = workGroups.find((workGroup) => workGroup.id === workGroupId);
+		let workGroup = workGroups.find(
+			(workGroup) => workGroup.id === workGroupId
+		);
 		if (workGroup) {
 			workGroup.requested_access = false;
 			workGroup.member_count++;
@@ -128,7 +141,6 @@
 
 	onMount(async () => {
 		loading = true;
-		workGroupsStore.subscribe((_workGroups) => (workGroups = _workGroups));
 		await getWorkingGroupList();
 
 		getWorkGroupInvite();
@@ -166,11 +178,13 @@
 					<div class="flex justify-between w-full">
 						<div>
 							<b class="font-semibold">{invite.group_user.user.username}</b>
-							{$_('wants to join')} <b class="font-semibold">{invite.work_group_name}</b>
+							{$_('wants to join')}
+							<b class="font-semibold">{invite.work_group_name}</b>
 						</div>
 						<Button
 							buttonStyle="primary-light"
-							onClick={() => addUserToGroup(invite.group_user.id, invite.work_group_id)}
+							onClick={() =>
+								addUserToGroup(invite.group_user.id, invite.work_group_id)}
 							>{$_('Add User')}</Button
 						>
 					</div>
@@ -184,13 +198,16 @@
 			on:click={() => (open = true)}
 			class="mt-2 text-left bg-white hover:bg-gray-100 cursor-pointer active:bg-gray-200 dark:bg-darkobject shadow rounded-sm dark:text-darkmodeText w-full px-4 py-2 flex justify-between items-center min-h-14"
 		>
-			<span class="text-primary dark:text-secondary w-[40%] font-semibold break-words"
+			<span
+				class="text-primary dark:text-secondary w-[40%] font-semibold break-words"
 				>{$_('+ Add Workgroup')}</span
 			>
 		</button>
 	{/if}
 
-	<div class="bg-white shadow rounded-sm dark:bg-darkobject flex flex-col gap-4 mt-2">
+	<div
+		class="bg-white shadow rounded-sm dark:bg-darkobject flex flex-col gap-4 mt-2"
+	>
 		{#each workGroups as workingGroup}
 			<WorkingGroup
 				{getWorkGroupInvite}
@@ -201,8 +218,6 @@
 		{/each}
 	</div>
 </Loader>
-
- 
 
 <Modal
 	bind:open

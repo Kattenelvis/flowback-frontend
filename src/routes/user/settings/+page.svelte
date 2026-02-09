@@ -19,7 +19,12 @@
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { goto } from '$app/navigation';
 
-	type PageType = 'profile' | 'notifications' | 'poll-process' | 'info' | 'reports';
+	type PageType =
+		| 'profile'
+		| 'notifications'
+		| 'poll-process'
+		| 'info'
+		| 'reports';
 
 	interface SettingsPage {
 		page: PageType;
@@ -28,30 +33,30 @@
 	}
 
 	const sidebarItems: SettingsPage[] = [
-		{ 
-			page: 'profile', 
-			icon: faUser, 
-			text: 'User Profile' 
+		{
+			page: 'profile',
+			icon: faUser,
+			text: 'User Profile'
 		},
-		{ 
-			page: 'notifications', 
-			icon: faBell, 
-			text: 'Notifications' 
+		{
+			page: 'notifications',
+			icon: faBell,
+			text: 'Notifications'
 		},
-		{ 
-			page: 'poll-process', 
-			icon: faPieChart, 
-			text: 'Poll Process' 
+		{
+			page: 'poll-process',
+			icon: faPieChart,
+			text: 'Poll Process'
 		},
-		{ 
-			page: 'info', 
-			icon: faInfo, 
-			text: 'Information' 
+		{
+			page: 'info',
+			icon: faInfo,
+			text: 'Information'
 		},
-		{ 
-			page: 'reports', 
-			icon: faWarning, 
-			text: 'Reports' 
+		{
+			page: 'reports',
+			icon: faWarning,
+			text: 'Reports'
 		}
 	];
 
@@ -89,7 +94,7 @@
 		},
 		reports: report[] = [],
 		serverConfig: any = {},
-		version = '45',
+		version = '67',
 		open = false,
 		selectedRepport: report = {
 			description: '',
@@ -163,11 +168,13 @@
 				>
 					<Fa icon={faArrowLeft} />
 				</button>
-				<h1 class="text-xl text-left text-primary dark:text-secondary font-semibold">
+				<h1
+					class="text-xl text-left text-primary dark:text-secondary font-semibold"
+				>
 					{$_('Settings')}
 				</h1>
 			</div>
-			
+
 			<div class="mt-4">
 				{#each sidebarItems as item}
 					<button
@@ -188,7 +195,9 @@
 		>
 			<ul class="flex flex-col">
 				{#if selectedPage === 'profile'}
-					<li class="text-lg text-primary dark:text-secondary font-semibold mb-3">
+					<li
+						class="text-lg text-primary dark:text-secondary font-semibold mb-3"
+					>
 						{$_('General')}
 					</li>
 					<RadioButtons2
@@ -210,7 +219,9 @@
 					/>
 
 					<div class="pt-4">
-						<div class="cursor-pointer hover:underline">{$_('Give me all my data')}</div>
+						<div class="cursor-pointer hover:underline">
+							{$_('Give me all my data')}
+						</div>
 						<div class="text-red-600 cursor-pointer hover:underline mt-2">
 							{$_('Delete account')}
 						</div>
@@ -218,13 +229,16 @@
 				{:else if selectedPage === 'notifications' && userConfig?.notificationSettings}
 					{#each Object.entries(userConfig.notificationSettings) as [key1, settings]}
 						<li>
-							<span class="text-lg text-primary dark:text-secondary font-semibold"
+							<span
+								class="text-lg text-primary dark:text-secondary font-semibold"
 								>{configToReadable(key1)}</span
 							>
 							<ul class="pl-4 pt-2">
 								<span class="my-4">{$_('Notify me when')}...</span>
 								{#each Object.entries(settings) as [key2, setting]}
-									<li class="flex justify-between p-2 rounded hover:bg-gray-100">
+									<li
+										class="flex justify-between p-2 rounded hover:bg-gray-100"
+									>
 										<span>{$_(configToReadable(key2))}</span>
 										<input
 											on:change={saveUserConfig}
@@ -301,16 +315,25 @@
 <Modal bind:open>
 	<div slot="header">{$_('Report Details')}</div>
 	<div slot="body" class="flex flex-col gap-2">
-		<span>{selectedRepport?.post_title}</span>
-		<span>{selectedRepport?.post_description}</span>
-		<span>{selectedRepport?.title}</span>
-		<span>{selectedRepport?.description}</span>
-		<a
-			href={`${linkToPost(
-				selectedRepport.post_id,
-				selectedRepport.group_id,
-				selectedRepport.post_type
-			)}`}>goto</a
-		>
+		{#await fetchRequest('GET', selectedRepport.post_type === 'poll' ? `home/polls?group_ids=${selectedRepport.group_id}&id=${selectedRepport.post_id}` : `group/thread/list?group_ids=${selectedRepport.group_id}&id=${selectedRepport.post_id}`) then { res, json }}
+			{#if res.ok}
+				{@const post = json?.results[0]}
+
+				<span>{post?.title}</span>
+				<span>{post?.description}</span>
+			{/if}
+			<span>{selectedRepport?.title}</span>
+			<span>{selectedRepport?.description}</span>
+			<button
+				on:click={() =>
+					goto(
+						`${linkToPost(
+							selectedRepport.post_id,
+							selectedRepport.group_id,
+							selectedRepport.post_type
+						)}`
+					)}>goto</button
+			>
+		{/await}
 	</div>
 </Modal>

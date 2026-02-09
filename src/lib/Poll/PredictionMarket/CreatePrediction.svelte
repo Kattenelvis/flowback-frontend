@@ -192,7 +192,7 @@
 </div>
 
 <Loader bind:loading Class="!static pt-3">
-	<form on:submit|preventDefault={createPredictionStatement} class="max-h-[80%] overflow-auto">
+	<form on:submit|preventDefault={createPredictionStatement} class="flex flex-col h-full">
 		{#if proposalsToPredictionMarket}
 			<div class="flex flex-col gap-2">
 				<span>{$_('If implemented')}</span>
@@ -232,7 +232,7 @@
 			/>
 		</div>
 
-		<div class="flex gap-2 absolute bottom-0 w-full">
+    <div class="flex gap-2 mt-auto pt-4">
 			<Button type="submit" buttonStyle="primary-light" Class="w-full mt-5">{$_('Submit')}</Button>
 			<Button
 				type="button"

@@ -1,14 +1,13 @@
 <script lang="ts">
 	import Select from '$lib/Generic/Select.svelte';
 	import TextInput from '$lib/Generic/TextInput.svelte';
-	import type { Comment, proposal } from '$lib/Poll/interface';
+	import type { proposal } from '$lib/Poll/interface';
 	import { _ } from 'svelte-i18n';
-	import { commentsStore } from './commentStore';
+	import { commentsStore, filterByTags } from './commentStore';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import Button from '$lib/Generic/Button.svelte';
-	import { fetchRequest } from '$lib/FetchRequest';
 	import { page } from '$app/stores';
-	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
+	import { idfy } from '$lib/Generic/GenericFunctions2';
 
 	export let sortBy: string | null = null,
 		Class = '',
@@ -18,42 +17,14 @@
 
 	let displayProposalsModal = false;
 
-	const filterByTags = async () => {
-		let loading = true;
-		let toKeep: Comment[] = [];
-		const tags = proposals.map((p) => `#${p.title.replaceAll(' ', '-')}`);
-
-		for (const comment of $commentsStore.allComments) {
-			const { res, json } = await fetchRequest(
-				'GET',
-				`group/poll/${$page.params.pollId}/comment/${comment.id}/ancestor`
-			);
-
-			if (!res.ok) {
-				loading = false;
-				ErrorHandlerStore.set({ message: 'Failed to filter comments', success: false });
-				return;
-			}
-
-			const ancestors: Comment[] = json.results;
-
-			// Keep ancestor trees such that they contain at least one of the selected tags
-			if (ancestors.some((_comment) => tags.some((tag) => _comment.message?.includes(tag))))
-				toKeep = [...toKeep, ...ancestors];
-			else console.log('skipping:', ancestors, comment);
-		}
-
-		// Filter Duplicates
-		toKeep = toKeep.filter((comment) => toKeep.some((c) => c.id === comment.id));
-
-		commentsStore.update((store) => ({ ...store, filteredComments: toKeep }));
-		loading = false;
-	};
-	
-	$: if (selectedProposals.length === 0) commentsStore.filterByProposal(null);
+	$: if (selectedProposals.length === 0)
+		commentsStore.update((store) => ({
+			allComments: store.allComments,
+			filterByProposal: null,
+			filteredComments: store.allComments
+		}));
 	else {
-		const _proposals = proposals.filter((p) => selectedProposals.includes(p.id));
-		// commentsStore.filterByProposals(_proposals, 'or');
+		filterByTags(proposals, selectedProposals, $page.params.pollId ?? '');
 	}
 </script>
 
@@ -105,11 +76,11 @@
 					<input
 						type="checkbox"
 						name="proposals"
-						id={`${proposal.id}`}
+						id={`${idfy(proposal.title)}`}
 						value={proposal.id}
 						bind:group={selectedProposals}
-						on:input={filterByTags}
 					/>
+					<!-- on:input={filterByTags} -->
 					<label class="text-left" for={`proposal-${proposal.id}`}>{proposal.title}</label>
 				</div>
 			{/each}

@@ -5,7 +5,7 @@
 	import { faCircle } from '@fortawesome/free-solid-svg-icons/faCircle';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { darkModeStore, getIconFilter } from '$lib/Generic/DarkMode';
 	import { chatOpenStore } from '$lib/Chat/functions';
@@ -44,7 +44,7 @@
 		checkSelectedPage();
 	});
 
-	$: if ($page.url.pathname) checkSelectedPage();
+	$: if (page.url.pathname) checkSelectedPage();
 </script>
 
 {#if href}
@@ -91,6 +91,8 @@
 		</div>
 	</button>
 {:else}
+	<!-- These are typically applied on pollthumbnail and threadthumbnail -->
+
 	<button
 		on:mouseover={() => (hovering = true)}
 		on:mouseleave={() => (hovering = false)}
@@ -123,7 +125,6 @@
 <style>
 	.header-icon {
 		position: absolute;
-		width: 100px;
 		left: calc(50% - 50px);
 		text-align: center;
 		filter: opacity(0.8);

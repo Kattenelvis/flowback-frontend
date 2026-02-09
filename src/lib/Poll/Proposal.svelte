@@ -11,15 +11,17 @@
 	import { faSquare } from '@fortawesome/free-regular-svg-icons';
 	import Fa from 'svelte-fa';
 	import commentSymbol from '$lib/assets/iconComment.svg';
-	import { commentsStore } from '$lib/Comments/commentStore';
+	import { commentsStore, filterByTags } from '$lib/Comments/commentStore';
 	import { darkModeStore } from '$lib/Generic/DarkMode';
 	import { predictionStatementsStore } from './PredictionMarket/interfaces';
 	import { idfy } from '$lib/Generic/GenericFunctions2';
+	import { page } from '$app/stores';
 
 	export let proposal: proposal,
 		Class = '',
 		selectedProposal: proposal | null = null,
 		proposalsToPredictionMarket: proposal[] = [],
+		proposals: proposal[] = [],
 		phase: Phase,
 		filteredComments: Comment[] = [],
 		allComments: Comment[] = [],
@@ -28,22 +30,25 @@
 	export const id: number = 0;
 
 	const handleClickedCommentSymbol = () => {
+		if (commentFilterProposalId === proposal.id) {
+			commentsStore.update((store) => ({
+				allComments: store.allComments,
+				filterByProposal: null,
+				filteredComments: store.allComments
+			}));
+			commentFilterProposalId = null;
+			return;
+		}
+
+		filterByTags(proposals, [proposal.id], $page.params.pollId ?? '');
+		commentFilterProposalId = proposal.id;
 		// Scroll to the comments section
 		const comments = document.getElementById('comments');
+		
 		scrollTo({
 			top: comments?.offsetTop,
 			behavior: 'smooth'
 		});
-
-		//Filtering comments by proposal
-		if (commentFilterProposalId === proposal.id) {
-			commentsStore.filterByProposal(null);
-			commentFilterProposalId = null;
-		} else {
-			commentsStore.filterByProposal(proposal);
-
-			commentFilterProposalId = proposal.id;
-		}
 	};
 
 	onMount(() => {
@@ -112,8 +117,7 @@
 					src={commentSymbol}
 					alt="Comment"
 					class="w-6 h-6 mr-2"
-					class:saturate-0={commentFilterProposalId !== proposal.id &&
-						commentFilterProposalId !== null}
+					class:saturate-0={commentFilterProposalId !== proposal.id}
 				/>
 
 				{$commentsStore.allComments.filter((comment) =>

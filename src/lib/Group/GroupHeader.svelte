@@ -13,7 +13,9 @@
 	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 	import { goto } from '$app/navigation';
 
-	export let selectedPage: SelectablePage, group: GroupDetails, memberCount: number;
+	export let selectedPage: SelectablePage,
+		group: GroupDetails,
+		memberCount: number;
 
 	//https://docs.flowback.org/#notification-categories
 	const groupNotificationCategories = [
@@ -21,7 +23,6 @@
 		'group_user',
 		'kanban',
 		'poll',
-		'schedule_event',
 		'thread'
 	];
 
@@ -30,17 +31,21 @@
 		'Group User',
 		'Kanban',
 		'Polls',
-		'Events',
 		'Threads'
-	]
+	];
 </script>
 
-<div id="group-header" class="bg-white dark:bg-darkobject w-full max-w-[120rem]">
+<div
+	id="group-header"
+	class="bg-white dark:bg-darkobject w-full max-w-[120rem]"
+>
 	<div class="relative">
 		<div class="relative">
 			<img
 				class="cover w-full"
-				src={group.cover_image ? `${env.PUBLIC_API_URL}${group.cover_image}` : DefaultBanner}
+				src={group.cover_image
+					? `${env.PUBLIC_API_URL}${group.cover_image}`
+					: DefaultBanner}
 				alt="cover"
 			/>
 
@@ -74,16 +79,17 @@
 
 		<img
 			class="h-36 w-36 absolute -bottom-12 left-[10%] md:left-[12%] profile rounded-full"
-			src={group.image
-				? `${env.PUBLIC_API_URL}${group.image}`
-				: DefaultBanner}
+			src={group.image ? `${env.PUBLIC_API_URL}${group.image}` : DefaultBanner}
 			alt="profile"
 		/>
 	</div>
 
 	<div class="dark:bg-darkobject dark:text-darkmodeText w-[55%] mx-auto py-4">
 		<div class="">
-			<div class="flex align-baseline items-baseline relative" id="notifications-list-group">
+			<div
+				class="flex align-baseline items-baseline relative"
+				id="notifications-list-group"
+			>
 				<button
 					class="text-xl hover:text-gray-800 dark:hover:text-gray-400 cursor-pointer"
 					id="group-header-title"
@@ -111,7 +117,11 @@
 		</div>
 		{#if group.description.length > 0}
 			<div class="text-xs mt-2 pb-1 grid-area-description break-words">
-				<NewDescription limit={2} lengthLimit={250} description={group.description} />
+				<NewDescription
+					limit={2}
+					lengthLimit={250}
+					description={group.description}
+				/>
 			</div>
 		{/if}
 	</div>

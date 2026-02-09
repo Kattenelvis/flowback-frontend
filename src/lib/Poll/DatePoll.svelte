@@ -3,19 +3,19 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { DateInput } from 'date-picker-svelte';
-	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
-	import WeekView from '$lib/Generic/Schedules/WeekView.svelte';
-	import Structure from './NewDesign/Structure.svelte';
+	import DatePollSelection from '$lib/Generic/Schedules/DatePollSelection.svelte';
 	import Comments from '$lib/Comments/Comments.svelte';
 	import type { timeProposal } from './interface';
 
-	let open = false;
-	let date: Date;
-	let proposals: timeProposal[] = [];
+	let open = $state(false),
+		date: Date | null = $state(null),
+		proposals: timeProposal[] = $state([]);
 
-	const pollId = $page.params.pollId;
+	let { Class = '', results = false } = $props();
+
+	const pollId = page.params.pollId;
 
 	async function createProposal(date: Date) {
 		const end_date = new Date(date);
@@ -28,23 +28,24 @@
 	}
 
 	async function handleProposalSubmit() {
-		await createProposal(date);
+		if (date) await createProposal(date);
 		open = false;
 	}
-
-	onMount(async () => {
-	});
 </script>
 
-<Structure Class="!max-w-[1400px]" poll={null}>
-	<div slot="left">
-		<div class="overflow-auto">
-			<WeekView bind:proposals x={7} y={24} />
-		</div>
-	</div>
+<div
+	class={`bg-white dark:bg-darkobject dark:text-darkmodeText shadow rounded my-6 ${Class}`}
+>
+	<DatePollSelection bind:proposals x={7} y={24} {results} />
+</div>
 
-	<div slot="right"><Comments api="poll" /></div>
-</Structure>
+{#if !results}
+	<div
+		class="h-full overflow-y-auto bg-white dark:bg-darkobject dark:text-darkmodeText p-4 rounded shadow-md my-6 max-w-[1000px] w-[95%] lg:w-[70%]"
+	>
+		<Comments api="poll" />
+	</div>
+{/if}
 
 <Modal bind:open onSubmit={handleProposalSubmit}>
 	<div slot="body" class="">

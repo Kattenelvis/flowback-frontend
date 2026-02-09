@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { type Message1, type PreviewMessage } from './interfaces';
 import { env } from '$env/dynamic/public';
-import { previewStore } from './functions';
+import { chatPartnerStore, previewStore } from './functions';
 export const messageStore = writable<Message1 | null>(null);
 
 const createSocket = (userId: number) => {
@@ -9,8 +9,8 @@ const createSocket = (userId: number) => {
 	// If logged out, don't create socket
 	if (!token) return;
 
-	const link = `${env.PUBLIC_WEBSOCKET_API}/chat/ws?token=${token}`;
-	const socket = new WebSocket(link);
+	const link = `${env.PUBLIC_WEBSOCKET_API}/chat/ws?token=${token}`,
+		socket = new WebSocket(link);
 
 	socket.onopen = () => {
 		console.log('[open] Connection established');
@@ -23,16 +23,18 @@ const createSocket = (userId: number) => {
 			messageStore.set(parsedMessage);
 		}
 
-
 		// When user recieves a messages, update the preview store to reflect the new message.
 		previewStore.update((previews) => {
 
 			let preview = previews?.find((p: PreviewMessage) => p.channel_id === parsedMessage.channel_id);
 
-			if (preview) {
-				preview.recent_message = parsedMessage
-			}
+			if (!preview) return previews
 
+			if (chatPartnerStore.get() !== parsedMessage.channel_id)
+				preview.recent_message = { ...parsedMessage, notified: false }
+
+			else
+				preview.recent_message = { ...parsedMessage, notified: true }
 			return previews
 		})
 
@@ -44,10 +46,8 @@ const createSocket = (userId: number) => {
 
 			// If user A messages B for the first time, make it show up in B's chat field.
 			const newPreview: PreviewMessage = {
-				channel_id: parsedMessage.channel_id,
-				channel_title: parsedMessage.channel_title,
+				...parsedMessage,
 				id: parsedMessage.channel_id,
-				timestamp: parsedMessage.timestamp,
 				recent_message: {
 					created_at: parsedMessage.timestamp,
 					profile_image: parsedMessage.user.profile_image,
@@ -60,11 +60,9 @@ const createSocket = (userId: number) => {
 					target_id: parsedMessage.channel_origin_name === 'user' ? parsedMessage.channel_id : undefined,
 					target_username: parsedMessage.channel_origin_name === 'user' ? parsedMessage.user.username : undefined,
 					updated_at: parsedMessage.timestamp,
-					notified: true
+					notified: false
 				},
-				participants: parsedMessage.participants
 			};
-			// console.log(newPreview, parsedMessage, previews, "STUFF");
 
 			return [...previews, newPreview];
 		})

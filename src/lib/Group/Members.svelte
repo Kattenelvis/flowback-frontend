@@ -10,7 +10,7 @@
 	import Fa from 'svelte-fa';
 	import { faEnvelope } from '@fortawesome/free-solid-svg-icons/faEnvelope';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
-	import { groupMembers as groupMembersLimit } from '../Generic/APILimits.json';
+	import { groupMembers as groupMembersLimit } from '$lib/Generic/APILimits.json';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { env } from '$env/dynamic/public';
 	import { faPaperPlane, faRunning } from '@fortawesome/free-solid-svg-icons';
@@ -18,7 +18,6 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { chatPartnerStore, chatOpenStore } from '$lib/Chat/functions';
-	import type { Delegate } from '$lib/Delegation/interfaces';
 	import Select from '$lib/Generic/Select.svelte';
 	import { getUserChannelId } from '$lib/Chat/functions';
 	import UserSearch from '$lib/Generic/UserSearch.svelte';
@@ -32,7 +31,6 @@
 		searchedInvitationUsers: User[] = [],
 		searchedUsers: GroupUser[] = [],
 		searched = false,
-		delegates: Delegate[] = [],
 		removeUserModalShow = false,
 		adminFilter: 'All' | 'Admin' | 'Member' = 'All',
 		permissions: Permissions[] = [],
@@ -46,11 +44,10 @@
 		searchUsers('');
 		getPermissions();
 		//Does this one even do anything?
-		fetchRequest('GET', `group/${$page.params.groupId}/invites`);
+		// fetchRequest('GET', `group/${$page.params.groupId}/invites`);
 	});
 
 	const getUsers = async () => {
-		const token = localStorage.getItem('token') || '';
 		const { json } = await fetchRequest(
 			'GET',
 			`group/${$page.params.groupId}/users?limit=${groupMembersLimit}&is_admin=${adminFilter}`
@@ -75,30 +72,44 @@
 		// Apply sorting based on sortOrder (always sort)
 		if (sortOrder === 'a-z') {
 			searchedUsers = searchedUsers.sort((a, b) =>
-				a.user.username.toLowerCase().localeCompare(b.user.username.toLowerCase())
+				a.user.username
+					.toLowerCase()
+					.localeCompare(b.user.username.toLowerCase())
 			);
 		} else if (sortOrder === 'z-a') {
 			searchedUsers = searchedUsers.sort((a, b) =>
-				b.user.username.toLowerCase().localeCompare(a.user.username.toLowerCase())
+				b.user.username
+					.toLowerCase()
+					.localeCompare(a.user.username.toLowerCase())
 			);
 		}
 	};
 
 	const getInvitesList = async () => {
-		const { res, json } = await fetchRequest('GET', `group/${$page.params.groupId}/invites`);
+		const { res, json } = await fetchRequest(
+			'GET',
+			`group/${$page.params.groupId}/invites`
+		);
 		if (res.ok) usersAskingForInvite = json?.results;
 		// else poppup = { message: "Couldn't get invites list", success: false };
 	};
 
 	const inviteUser = async (userId: number) => {
 		loading = true;
-		const { res, json } = await fetchRequest('POST', `group/${$page.params.groupId}/invite`, {
-			to: userId
-		});
+		const { res, json } = await fetchRequest(
+			'POST',
+			`group/${$page.params.groupId}/invite`,
+			{
+				to: userId
+			}
+		);
 
 		loading = false;
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: "Couldn't get invites list", success: false });
+			ErrorHandlerStore.set({
+				message: "Couldn't get invites list",
+				success: false
+			});
 			return;
 		}
 
@@ -120,10 +131,15 @@
 			}
 		);
 
-		usersAskingForInvite = usersAskingForInvite.filter((user) => user.id !== userId);
+		usersAskingForInvite = usersAskingForInvite.filter(
+			(user) => user.id !== userId
+		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: "Couldn't accept user invite", success: false });
+			ErrorHandlerStore.set({
+				message: "Couldn't accept user invite",
+				success: false
+			});
 			return;
 		}
 
@@ -141,26 +157,43 @@
 			}
 		);
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: "Couldn't reject user invite", success: false });
+			ErrorHandlerStore.set({
+				message: "Couldn't reject user invite",
+				success: false
+			});
 			return;
 		}
 
-		usersAskingForInvite = usersAskingForInvite.filter((user) => user.id !== userId);
+		usersAskingForInvite = usersAskingForInvite.filter(
+			(user) => user.id !== userId
+		);
 		await getInvitesList();
 	};
 
 	const userRemove = async (userToRemove: number) => {
-		const { res } = await fetchRequest('POST', `group/${$page.params.groupId}/user/delete`, {
-			target_user_id: userToRemove
-		});
+		const { res } = await fetchRequest(
+			'POST',
+			`group/${$page.params.groupId}/user/delete`,
+			{
+				target_user_id: userToRemove
+			}
+		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: $_('Failed to remove user'), success: false });
+			ErrorHandlerStore.set({
+				message: $_('Failed to remove user'),
+				success: false
+			});
 			return;
 		}
 
-		ErrorHandlerStore.set({ message: $_('Successfully removed user'), success: true });
-		searchedUsers = searchedUsers.filter((user) => user.user.id !== userToRemove);
+		ErrorHandlerStore.set({
+			message: $_('Successfully removed user'),
+			success: true
+		});
+		searchedUsers = searchedUsers.filter(
+			(user) => user.user.id !== userToRemove
+		);
 		removeUserModalShow = false;
 		await getUsers();
 	};
@@ -224,7 +257,10 @@
 						<span class="pl-4">{$_('Role')}: </span>
 						<Select
 							classInner="p-1 font-semibold"
-							labels={['All', ...permissions.map((permission) => permission.role_name)]}
+							labels={[
+								'All',
+								...permissions.map((permission) => permission.role_name)
+							]}
 							values={[null, ...permissions.map((permission) => permission.id)]}
 							bind:value={roleFilter}
 							onInput={() => searchUsers(searchUserQuery)}
@@ -245,7 +281,9 @@
 
 		<!-- Invites -->
 		{#if usersAskingForInvite.length > 0}
-			<div class="w-full flex-col gap-6 shadow rounded bg-white p-2 dark:bg-darkobject">
+			<div
+				class="w-full flex-col gap-6 shadow rounded bg-white p-2 dark:bg-darkobject"
+			>
 				<span class="font-semibold text-sm text-gray-700 dark:text-darkmodeText"
 					>{$_('Users requesting invite')}</span
 				>
@@ -263,12 +301,14 @@
 							<Button
 								Class="mr-4 px-2"
 								buttonStyle="primary-light"
-								onClick={() => acceptInviteUser(user.user)}>{$_('Accept')}</Button
+								onClick={() => acceptInviteUser(user.user)}
+								>{$_('Accept')}</Button
 							>
 							<Button
 								Class="px-2"
 								buttonStyle="warning-light"
-								onClick={() => denyInviteUser(user.user)}>{$_('Decline')}</Button
+								onClick={() => denyInviteUser(user.user)}
+								>{$_('Decline')}</Button
 							>
 						</div>
 					{/if}
@@ -291,7 +331,9 @@
 
 		<!-- Members List -->
 		{#if searchedUsers.length > 0}
-			<div class="w-full p-4 flex flex-col gap-6 bg-white rounded shadow dark:bg-darkobject">
+			<div
+				class="w-full p-4 flex flex-col gap-6 bg-white rounded shadow dark:bg-darkobject"
+			>
 				<span class="font-semibold text-sm text-gray-700 dark:text-darkmodeText"
 					>{$_('All members')}</span
 				>
@@ -316,12 +358,16 @@
 							</button>
 
 							{#if user.delegate_pool_id !== null}
-								<div class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700 mr-2">
+								<div
+									class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700 mr-2"
+								>
 									{$_('Delegate')}
 								</div>
 							{/if}
 							{#if user?.is_admin}
-								<div class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700 mr-2">
+								<div
+									class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700 mr-2"
+								>
 									{$_('Admin')}
 								</div>
 							{/if}
@@ -353,11 +399,21 @@
 										bind:open={removeUserModalShow}
 										Class="w-80 max-w-[400px]"
 										buttons={[
-											{ label: 'Yes', type: 'warning', onClick: () => userRemove(user.user.id) },
-											{ label: 'No', type: 'default', onClick: () => (removeUserModalShow = false) }
+											{
+												label: 'Yes',
+												type: 'warning',
+												onClick: () => userRemove(user.user.id)
+											},
+											{
+												label: 'No',
+												type: 'default',
+												onClick: () => (removeUserModalShow = false)
+											}
 										]}
 									>
-										<div slot="header">{$_('Kick ') + user.user.username + '?'}</div>
+										<div slot="header">
+											{$_('Kick ') + user.user.username + '?'}
+										</div>
 									</Modal>
 								{/if}
 							</div>

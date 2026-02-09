@@ -18,6 +18,7 @@
 	import WorkGroups from '$lib/Group/WorkingGroups/WorkGroups.svelte';
 	import { env } from '$env/dynamic/public';
 	import PollThreadThumbnails from '$lib/Poll/PollThreadThumbnails.svelte';
+	import { InfoToGet } from '$lib/Poll/interface';
 
 	let selectedPage: SelectablePage = 'flow';
 	let group: GroupDetails = {
@@ -44,7 +45,10 @@
 
 	const getGroupInfo = async () => {
 		//TODO: detail is outdated
-		const { json, res } = await fetchRequest('GET', `group/${$page.params.groupId}/detail`);
+		const { json, res } = await fetchRequest(
+			'GET',
+			`group/${$page.params.groupId}/detail`
+		);
 		loading = false;
 		if (!res.ok) return;
 
@@ -57,7 +61,8 @@
 	let hasMounted = false;
 	onMount(() => {
 		hasMounted = true;
-		const page = new URLSearchParams(window.location.search).get('page') || 'flow';
+		const page =
+			new URLSearchParams(window.location.search).get('page') || 'flow';
 		//@ts-ignore
 		selectedPage = page;
 
@@ -101,19 +106,24 @@
 
 					{#if selectedPage === 'flow'}
 						<PollThreadThumbnails
-							infoToGet={env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' ? 'user' : 'group'}
+							infoToGet={env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE'
+								? InfoToGet.user
+								: InfoToGet.group}
 							Class={`w-full mx-auto my-0`}
 						/>
 					{:else if selectedPage === 'members'}
 						<Members />
-					<!-- {:else if selectedPage === 'documents'} -->
+						<!-- {:else if selectedPage === 'documents'} -->
 						<!-- <Documents /> -->
 					{:else if selectedPage === 'statistics'}
 						<Statistics {memberCount} />
 					{:else if selectedPage === 'email'}
 						<SendEmail />
 					{:else if selectedPage === 'about'}
-						<About description={group.description} creatorId={group.created_by} />
+						<About
+							description={group.description}
+							creatorId={group.created_by}
+						/>
 					{:else if selectedPage === 'tags'}
 						<Tags />
 					{:else if selectedPage === 'kanban'}

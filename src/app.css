@@ -35,8 +35,12 @@ body {
 	/* overflow-x: hidden; */
 	/* overflow-y: scroll; */
 	/* overscroll-behavior-y: none; */
-	height:100vh;
-	overflow: scroll;
+	height:100%;
+	overflow-y:auto;
+
+	/* Scuffed solution for hindering a scrollbar from showing when clicking on header sidebar (i.e clicking one's profile picture in the top right) */
+	overflow-x:hidden;
+	/* overflow: scroll; */
 }
 
 html.dark {
@@ -44,7 +48,8 @@ html.dark {
 }
 
 html {
-	overflow:hidden
+	height:100%;
+	/* overflow:hidden */
 }
 
 body::before {

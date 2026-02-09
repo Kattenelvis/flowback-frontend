@@ -95,8 +95,8 @@
 
 		<div slot="body" class="text-left">
 			{#if env.PUBLIC_SUPPORT_PHONE}
-				<div>{$_('Phone support is only between 15:30 and 17:30 CET')}</div>
-				<div>{$_('Number: +46737482562')}</div>
+	<div>{$_('Phone support is only between 15:30 and 17:30 CET')}</div>
+				<div>{$_(`Number: ${env.PUBLIC_SUPPORT_PHONE}`)}</div>
 			{/if}
 			{#if env.PUBLIC_SUPPORT_MAIL}
 				<div>{$_(`Mail: ${env.PUBLIC_SUPPORT_MAIL}`)}</div>

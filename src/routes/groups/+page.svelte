@@ -19,7 +19,10 @@
 		next: string | undefined | null;
 
 	onMount(() => {
-		if (env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' && location.href.includes('/groups'))
+		if (
+			env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' &&
+			location.href.includes('/groups')
+		)
 			goto('/home');
 		getGroups();
 	});
@@ -40,7 +43,7 @@
 			urlFilter = `${urlFilter}&name__icontains=${filter.search}`;
 
 			loading = true;
-			
+
 			const { res, json } = await fetchRequest(
 				'GET',
 				`group/list?limit=${groupsLimit}` + urlFilter
@@ -69,7 +72,7 @@
 	};
 </script>
 
-<svelte:body onscroll={() => lazyLoading(getGroups)} />
+<svelte:window onscroll={() => lazyLoading(getGroups)} />
 
 <svelte:head>
 	<title>Groups</title>
@@ -77,7 +80,10 @@
 
 <Layout centered>
 	<Loader bind:loading Class="w-full flex flex-col items-center">
-		<div id="groups-list" class="max-w-[1000px] flex flex-col items-center mt-6 gap-6 mb-6 w-full">
+		<div
+			id="groups-list"
+			class="max-w-[1000px] flex flex-col items-center mt-6 gap-6 mb-6 w-full"
+		>
 			{#if !(env.PUBLIC_DISABLE_GROUP_CREATION === 'TRUE')}
 				<Button href="creategroup" Class="w-[90%] md:w-[40%] rounded-2xl"
 					>{$_('Create Group')}</Button
@@ -87,7 +93,7 @@
 			<GroupFiltering bind:filter />
 
 			{#each groupList as group}
-				<GroupThumbnail {group} />
+				<GroupThumbnail bind:group />
 			{/each}
 		</div>
 	</Loader>

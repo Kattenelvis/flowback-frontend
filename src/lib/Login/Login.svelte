@@ -9,7 +9,6 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import CheckboxButtons from '$lib/Generic/CheckboxButtons.svelte';
 	import { userStore } from '$lib/User/interfaces';
-	import { env } from '$env/dynamic/public';
 
 	let username: string,
 		password: string,
@@ -20,7 +19,12 @@
 
 	const logIn = async () => {
 		loading = true;
-		const { json, res } = await fetchRequest('POST', 'login', { username, password }, false);
+		const { json, res } = await fetchRequest(
+			'POST',
+			'login',
+			{ username, password },
+			false
+		);
 		loading = false;
 
 		if (!res.ok)
@@ -32,7 +36,8 @@
 			await localStorage.setItem('token', json.token);
 
 			//Checks if user has selected the "Remain logged in" button and acts accordingly
-			if (remainLoggedIn) await localStorage.removeItem('sessionExpirationTime');
+			if (remainLoggedIn)
+				await localStorage.removeItem('sessionExpirationTime');
 			else
 				await localStorage.setItem(
 					'sessionExpirationTime',
@@ -47,13 +52,18 @@
 
 			goto('/home');
 		} else {
-			ErrorHandlerStore.set(statusMessageFormatter(res, json, 'There was a problem logging in'));
+			ErrorHandlerStore.set(
+				statusMessageFormatter(res, json, 'There was a problem logging in')
+			);
 		}
 	};
 </script>
 
 <Loader bind:loading>
-	<form class="p-6 gap-6 flex flex-col items-center" on:submit|preventDefault={logIn}>
+	<form
+		class="p-6 gap-6 flex flex-col items-center"
+		on:submit|preventDefault={logIn}
+	>
 		<TextInput label={'Email'} bind:value={username} required name="email" />
 		<div class="w-full">
 			<TextInput
@@ -73,9 +83,8 @@
 				<button
 					type="button"
 					class="cursor-pointer hover:underline text-gray-400"
-					on:click={() =>  selectedPage = 'ForgotPassword'}
-
-			>
+					on:click={() => (selectedPage = 'ForgotPassword')}
+				>
 					{$_('Forgot password?')}
 				</button>
 			</div>

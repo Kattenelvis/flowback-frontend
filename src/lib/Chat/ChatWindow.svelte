@@ -4,7 +4,6 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { userStore } from '$lib/User/interfaces';
-	import { formatDate } from '$lib/Generic/DateFormatter';
 	import { _ } from 'svelte-i18n';
 	import { browser } from '$app/environment';
 	import TextArea from '$lib/Generic/TextArea.svelte';
@@ -16,18 +15,16 @@
 	import { chatWindow as chatWindowLimit } from '../Generic/APILimits.json';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
-	import { chatOpenStore, chatPartnerStore, previewStore } from './functions';
+	import { chatPartnerStore, previewStore } from './functions';
 
-	export let selectedChat: number | null,
-		selectedPage: 'direct' | 'group',
-		isLookingAtOlderMessages: boolean;
+	export let selectedPage: 'direct' | 'group', isLookingAtOlderMessages: boolean;
 
 	let message: string = '',
 		olderMessages: string,
 		newerMessages: string,
 		showEmoji = false,
 		messages: Message[] = [],
-		socket: WebSocket,
+		socket: WebSocket | null = null,
 		chatWindow: any,
 		errorState = false,
 		participants: any[] = [],
@@ -41,8 +38,8 @@
 			`chat/message/channel/${$chatPartnerStore}/list?order_by=created_at_desc&limit=${chatWindowLimit}`
 		);
 		if (!res.ok) {
-			selectedChat = null;
 			messages = [];
+			$chatPartnerStore = null;
 			errorState = true;
 			return;
 		}
@@ -52,13 +49,12 @@
 	};
 
 	const postMessage = async () => {
-		if (!selectedChat || !$chatPartnerStore || message.length === 0 || message.match(/^\s+$/))
-			return;
+		if (!$chatPartnerStore || message.length === 0 || message.match(/^\s+$/)) return;
 
 		if (newerMessages) await getRecentMessages();
 
 		let previewMessage = $previewStore?.find(
-			(p) => p.id === selectedChat || p.recent_message?.group_id === selectedChat
+			(p) => p.id === $chatPartnerStore || p.recent_message?.group_id === $chatPartnerStore
 		);
 
 		if (previewMessage) {
@@ -84,7 +80,9 @@
 						banner_image: ''
 					},
 					channel_id: $chatPartnerStore,
-					...(selectedPage === 'direct' ? { target_id: selectedChat } : { group_id: selectedChat })
+					...(selectedPage === 'direct'
+						? { target_id: $chatPartnerStore }
+						: { group_id: $chatPartnerStore })
 				}
 			};
 		}
@@ -171,21 +169,21 @@
 		} else {
 			let previewMessage = preview.find((p) => p.channel_id === message.channel_id);
 			if (!previewMessage) {
-			// 	previewMessage = {
-			// 		id: message.id,
-			// 		message: message.message,
-			// 		// created_at: message.created_at.toString(),
-			// 		timestamp: new Date().toString(),
-			// 		notified: true,
-			// 		profile_image: message.user?.profile_image,
-			// 		user_id: message.user?.id,
-			// 		user: message.user,
-			// 		channel_id: message.channel_id,
-			// 		...(message.channel_origin_name === 'group'
-			// 			? { group_id: message.channel_id }
-			// 			: { target_id: message.user?.id })
-			// 	};
-			// 	preview.push(previewMessage);
+				// 	previewMessage = {
+				// 		id: message.id,
+				// 		message: message.message,
+				// 		// created_at: message.created_at.toString(),
+				// 		timestamp: new Date().toString(),
+				// 		notified: true,
+				// 		profile_image: message.user?.profile_image,
+				// 		user_id: message.user?.id,
+				// 		user: message.user,
+				// 		channel_id: message.channel_id,
+				// 		...(message.channel_origin_name === 'group'
+				// 			? { group_id: message.channel_id }
+				// 			: { target_id: message.user?.id })
+				// 	};
+				// 	preview.push(previewMessage);
 			} else {
 				// previewMessage.recent_message.message = message.message;
 				// previewMessage.recent_message.created_at = message.created_at.toString();
@@ -237,6 +235,25 @@
 		unsubscribeMessageStore = receiveMessage();
 		correctHeightRelativeToHeader();
 		window.addEventListener('resize', correctHeightRelativeToHeader);
+
+		let retries = 0;
+		let interval: NodeJS.Timeout;
+		// Attempt reconnecting websocket when server is shut down
+		// Inspired by the user2909737's reply https://stackoverflow.com/questions/3780511/reconnection-of-client-when-server-reboots-in-websocket
+		if (!socket) return;
+		socket.onclose = () => {
+			if (!interval)
+				interval = setInterval(() => {
+					console.warn('Attempting to reconnect');
+					if (socket?.readyState === socket?.OPEN || retries === 50) {
+						clearInterval(interval);
+						return;
+					}
+					socket = Socket.createSocket($userStore?.id ?? 0) ?? null;
+					retries++;
+					// TODO: Add randomness to the interval to prevent many people reconnecting at once if backend issue?
+				}, 4000);
+		};
 	});
 
 	onDestroy(() => {
@@ -248,6 +265,7 @@
 	$: (selectedPage || $chatPartnerStore) && getRecentMessages();
 	$: (selectedPage || $chatPartnerStore) && getChannelParticipants();
 	$: isLookingAtOlderMessages = !!newerMessages;
+	// @ts-ignore
 	$: if ($userStore) socket = Socket.createSocket($userStore?.id);
 	$: messages &&
 		browser &&
@@ -271,7 +289,11 @@
 			{/if}
 			{#each messages as message (message.id)}
 				{#if message.type === 'info'}
-					<li class="px-4 py-2 max-w-[80%] text-center">{message.message}</li>
+					{@const user = message.user.username}
+
+					<li class="px-4 py-2 max-w-[100%] text-center">
+						{$_({ id: 'channelJoin', values: { user } })}
+					</li>
 				{:else}
 					{@const sentByUser = message.user?.id === $userStore?.id}
 					<li class="px-4 py-2 max-w-[80%]" class:ml-auto={sentByUser}>

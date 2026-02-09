@@ -8,7 +8,10 @@
 	import { onMount } from 'svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import VotingSlider from './VotingSlider.svelte';
-	import { groupUserStore, groupUserPermissionStore } from '$lib/Group/interface';
+	import {
+		groupUserStore,
+		groupUserPermissionStore
+	} from '$lib/Group/interface';
 	import Button from '$lib/Generic/Button.svelte';
 	import { idfy } from '$lib/Generic/GenericFunctions2';
 
@@ -43,6 +46,7 @@
 			await getVotes();
 		}
 
+		// TODO: Remove "needsReload" while making sure things reload properly
 		needsReload++;
 	});
 
@@ -70,7 +74,8 @@
 
 		voting = voting.map((vote) => ({
 			score: (vote.score = json?.results?.find(
-				(score: { score: number; proposal: number }) => score.proposal === vote.proposal
+				(score: { score: number; proposal: number }) =>
+					score.proposal === vote.proposal
 			).raw_score),
 			proposal: vote.proposal
 		}));
@@ -173,7 +178,9 @@
 		if (!voting) return;
 
 		if (phase === 'delegate_vote') {
-			const i = delegateVoting?.findIndex((vote) => vote.proposal === proposalId);
+			const i = delegateVoting?.findIndex(
+				(vote) => vote.proposal === proposalId
+			);
 			delegateVoting[i].score = Number(score);
 			delegateVoting = delegateVoting;
 		} else if (phase === 'vote') {
@@ -187,7 +194,10 @@
 
 	const getScore = (proposal: proposal) => {
 		if (phase === 'delegate_vote')
-			return delegateVoting?.find((vote) => vote.proposal === proposal.id)?.score ?? 0;
+			return (
+				delegateVoting?.find((vote) => vote.proposal === proposal.id)?.score ??
+				0
+			);
 		else if (phase === 'vote')
 			return voting?.find((vote) => vote.proposal === proposal.id)?.score ?? 0;
 	};
@@ -202,6 +212,7 @@
 						<Proposal
 							bind:proposalsToPredictionMarket
 							bind:commentFilterProposalId
+							bind:proposals
 							bind:selectedProposal
 							bind:phase
 							bind:filteredComments={comments}
@@ -210,7 +221,8 @@
 							{#if phase === 'delegate_vote' || phase === 'vote'}
 								{@const score = getScore(proposal)}
 								{@const disabled =
-									(phase === 'delegate_vote' && $groupUserStore?.delegate_pool_id === null) ||
+									(phase === 'delegate_vote' &&
+										$groupUserStore?.delegate_pool_id === null) ||
 									(phase === 'vote' && !$groupUserPermissionStore?.allow_vote)}
 
 								{#key voting || delegateVoting}
@@ -228,7 +240,9 @@
 							{#if phase === 'vote' && $groupUserPermissionStore?.allow_vote}
 								<Button
 									onClick={() => {
-										const dVote = delegateVoting.find((vote) => vote.proposal === proposal.id);
+										const dVote = delegateVoting.find(
+											(vote) => vote.proposal === proposal.id
+										);
 										if (dVote) changingVote(dVote.score, dVote.proposal);
 										vote();
 									}}

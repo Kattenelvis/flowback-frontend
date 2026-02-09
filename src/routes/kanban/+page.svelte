@@ -1,5 +1,4 @@
 <script>
-	import { env } from '$env/dynamic/public';
 	import Button from '$lib/Generic/Button.svelte';
 	import Layout from '$lib/Generic/Layout.svelte';
 	import KanbanBoard from '$lib/Group/Kanban/KanbanBoard.svelte';
@@ -26,7 +25,7 @@
 			</div>
 		</Button>
 		
-			<KanbanBoard type={env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' ? 'group' : 'group'} />
+			<KanbanBoard />
 		</div>
 	</div>
 </Layout>

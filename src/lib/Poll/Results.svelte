@@ -9,6 +9,7 @@
 	import { faStar } from '@fortawesome/free-solid-svg-icons';
 	import NewDescription from './NewDescription.svelte';
 	import type { poll, proposal } from './interface';
+	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 
 	//4 for score voting, 3 for date
 	export let pollType = 1,
@@ -26,6 +27,11 @@
 			'GET',
 			`group/poll/${$page.params.pollId}/proposals?limit=1000&order_by=score_desc`
 		);
+
+		if (!res.ok) {
+			ErrorHandlerStore.set({ message: 'Failed to get proposals', success: false });
+			return;
+		}
 
 		if (pollType === 4) proposals = json?.results;
 		else if (pollType === 3)
@@ -90,7 +96,7 @@
 	};
 </script>
 
-<div class="w-full">
+<div class="w-full flex flex-col">
 	<span class="text-primary dark:text-secondary font-semibold text-xl text-center block py-2"
 		>{$_('Results')}</span
 	>

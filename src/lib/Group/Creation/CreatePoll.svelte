@@ -8,10 +8,12 @@
 	import Loader from '$lib/Generic/Loader.svelte';
 	import RadioButtons from '$lib/Generic/RadioButtons.svelte';
 	import { goto } from '$app/navigation';
+
 	// import { createPoll as createPollBlockchain } from '$lib/Blockchain_v1_Ethereum/javascript/pollsBlockchain';
 	// import { createPoll as createPollBlockchain_v2 } from '$lib/Blockchain_v2_CrossChain/javascript/pollsBlockchain';
 	import { createPollAdapter } from '$lib/Blockchain_v2_CrossChain/adapters/pollsAdapter';
-	import FileUploads from '$lib/Generic/FileUploads.svelte';
+	import FileUploads from '$lib/Generic/File/FileUploads.svelte';
+
 	import AdvancedTimeSettings from './AdvancedTimeSettings.svelte';
 	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
 	import Tab from '$lib/Generic/Tab.svelte';
@@ -19,8 +21,7 @@
 	import {
 		faAlignLeft,
 		faArrowLeft,
-		faCalendarAlt,
-		faChevronDown
+		faCalendarAlt
 	} from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';
 	import { onDestroy, onMount } from 'svelte';
@@ -30,31 +31,24 @@
 	import type { pollType } from './interface';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 
-	let title = '',
-		description = '',
-		start_date = new Date(),
-		area_vote_end_date = new Date(),
-		proposal_end_date = new Date(),
-		prediction_statement_end_date = new Date(),
-		prediction_bet_end_date = new Date(),
-		delegate_vote_end_date = new Date(),
-		vote_end_date = new Date(),
-		end_date = new Date(),
-		isPublic = false,
-		loading = false,
-		showAdvancedTimeSettings = false,
-		daysBetweenPhases = 2,
-		images: File[] = [],
-		isFF = false,
-		pushToBlockchain = true,
-		selectedPoll: pollType = 'Text Poll',
-		selectedPage: 'poll' | 'thread' =
-			$page.url.searchParams.get('type') === 'thread' ? 'thread' : 'poll',
-		tags: { id: number }[] = [],
-		workGroups: WorkGroup[] = [],
-		workGroup: number,
-		permissions: any,
-		groupBlockchainId: number | null = null;
+
+	let title = $state(''),
+		description = $state(''),
+		times: Date[] = $state([]),
+		isPublic = $state(false),
+		loading = $state(false),
+		images: File[] = $state([]),
+		isFF = $state(false),
+		pushToBlockchain = $state(true),
+		selectedPoll: pollType = $state('Text Poll'),
+		selectedPage: 'poll' | 'thread' = $state(
+			$page.url.searchParams.get('type') === 'thread' ? 'thread' : 'poll'
+		),
+		tags: { id: number }[] = $state([]),
+		workGroups: WorkGroup[] = $state([]),
+		workGroup: number | null = $state(null),
+		permissions: any;
+		let groupBlockchainId: number | null = null;
 
 	const groupId = $page.url.searchParams.get('id');
 
@@ -85,40 +79,46 @@
 		}**/
 
 		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE' && pushToBlockchain) {
-		    if (env.PUBLIC_BLOCKCHAIN_VERSION === 'v2') {
-		        if (!groupBlockchainId) {
-		            loading = false;
-		            ErrorHandlerStore.set({
-		                message: 'Group blockchain_id not loaded yet.',
-		                success: false
-		            });
-		            return;
-		        }
-		        blockchain_id = await createPollAdapter(groupBlockchainId, title);
-		    } else {
-		        // v1 uses regular groupId
-		        blockchain_id = await createPollAdapter(Number(groupId), title);
-		    }
-		
-		    if (blockchain_id) {
-		        formData.append('blockchain_id', blockchain_id.toString());
-		    }
+			    if (env.PUBLIC_BLOCKCHAIN_VERSION === 'v2') {
+					if (!groupBlockchainId) {
+						loading = false;
+						ErrorHandlerStore.set({
+							message: 'Group blockchain_id not loaded yet.',
+							success: false
+						});
+						return;
+					}
+				blockchain_id = await createPollAdapter(groupBlockchainId, title);
+			} else {
+				// v1 uses regular groupId
+				blockchain_id = await createPollAdapter(Number(groupId), title);
+			}		
+			if (blockchain_id) {
+				formData.append('blockchain_id', blockchain_id.toString());
+			}
 		}
 		
 
 
 		formData.append('title', title);
 		formData.append('description', description);
-		formData.append('start_date', start_date.toISOString());
-		formData.append('area_vote_end_date', area_vote_end_date.toISOString());
-		formData.append('proposal_end_date', proposal_end_date.toISOString());
-		formData.append('prediction_statement_end_date', prediction_statement_end_date.toISOString());
-		formData.append('prediction_bet_end_date', prediction_bet_end_date.toISOString());
-		formData.append('delegate_vote_end_date', delegate_vote_end_date.toISOString());
-		formData.append('vote_end_date', vote_end_date.toISOString());
-		formData.append('end_date', end_date.toISOString());
+		formData.append('start_date', times[0].toISOString());
+		if (selectedPoll === 'Text Poll') {
+			formData.append('area_vote_end_date', times[1].toISOString());
+			formData.append('proposal_end_date', times[2].toISOString());
+			formData.append('prediction_statement_end_date', times[3].toISOString());
+			formData.append('prediction_bet_end_date', times[4].toISOString());
+			formData.append('delegate_vote_end_date', times[5].toISOString());
+			formData.append('vote_end_date', times[6].toISOString());
+			formData.append('end_date', times[7].toISOString());
+		} else if (selectedPoll === 'Date Poll') {
+			formData.append('end_date', times[1].toISOString());
+		}
 		formData.append('allow_fast_forward', isFF.toString());
-		formData.append('poll_type', (selectedPoll === 'Text Poll' ? 4 : 3).toString());
+		formData.append(
+			'poll_type',
+			(selectedPoll === 'Text Poll' ? 4 : 3).toString()
+		);
 		formData.append('dynamic', selectedPoll === 'Text Poll' ? 'false' : 'true');
 		formData.append('public', isPublic.toString());
 		formData.append('pinned', 'false');
@@ -148,8 +148,6 @@
 			});
 			return;
 		}
-
-		console.log('CODE REACHES HERE');
 
 		ErrorHandlerStore.set({
 			message: 'Poll Created',
@@ -197,7 +195,9 @@ const loadGroupBlockchainId = async () => {
 			return;
 		}
 
-		goto(`groups/${$page.url.searchParams.get('id')}/thread/${json}`);
+		goto(
+			`groups/${$page.url.searchParams.get('id')}/thread/${json}?source=create`
+		);
 	};
 
 	const getWorkGroupList = async () => {
@@ -234,23 +234,39 @@ const loadGroupBlockchainId = async () => {
 		loadGroupBlockchainId();
 		loadPermissions();
 	});
+
+	$effect(() => {
+		times =
+			selectedPoll === 'Text Poll'
+				? new Array(8).fill(new Date())
+				: new Array(2).fill(new Date());
+	});
 </script>
 
 <form
-	on:submit|preventDefault={() => (selectedPage === 'poll' ? createPoll() : createThread())}
+	onsubmitcapture={(e) => {
+		e.preventDefault();
+		selectedPage === 'poll' ? createPoll() : createThread();
+	}}
 	class="relative md:w-2/3 max-w-[800px] dark:text-darkmodeText my-6"
 >
 	<button
 		class="absolute -left-12 bg-white dark:bg-darkobject p-3 rounded shadow z-40 hover:bg-gray-100 active:bg-gray-200 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-		on:click={goBack}
+		onclick={goBack}
 		type="button"
 		aria-label="Go back"
 	>
 		<Fa icon={faArrowLeft} />
 	</button>
 	<Loader {loading}>
-		<div class="bg-white dark:bg-darkobject p-6 shadow-xl flex flex-col gap-3 rounded">
-			<Tab displayNames={['Poll', 'Thread']} tabs={['poll', 'thread']} bind:selectedPage />
+		<div
+			class="bg-white dark:bg-darkobject p-6 shadow-xl flex flex-col gap-3 rounded"
+		>
+			<Tab
+				displayNames={['Poll', 'Thread']}
+				tabs={['poll', 'thread']}
+				bind:selectedPage
+			/>
 
 			{#if selectedPage === 'poll'}
 				<RadioButtons2
@@ -265,50 +281,24 @@ const loadGroupBlockchainId = async () => {
 				/>
 			{/if}
 
-			<TextInput inputClass="bg-white" required label="Title" bind:value={title} />
-			<TextArea label="Description" bind:value={description} inputClass="whitespace-pre-wrap" />
+			<TextInput
+				inputClass="bg-white"
+				required
+				label="Title"
+				bind:value={title}
+			/>
+			<TextArea
+				label="Description"
+				bind:value={description}
+				inputClass="whitespace-pre-wrap"
+			/>
 			<FileUploads bind:files={images} disableCropping />
 
 			{#if selectedPage === 'poll'}
 				<div class="rounded border border-gray-200 dark:border-gray-500 p-2">
-					<div class="flex justify-between">
-						<h2>{$_('Days between phases')}:</h2>
-						<input
-							type="number"
-							class="dark:bg-darkbackground show-buttons-all-times text-right"
-							bind:value={daysBetweenPhases}
-							min="0"
-							max="1000"
-						/>
-					</div>
-
-					<button
-						class="w-full flex justify-center items-center border-t-2"
-						type="button"
-						on:click={() => (showAdvancedTimeSettings = !showAdvancedTimeSettings)}
-					>
-						<Fa icon={faChevronDown} rotate={showAdvancedTimeSettings ? 180 : 0} />
-						{#if !showAdvancedTimeSettings}
-							<p>{$_('Display advanced time settings')}</p>
-						{:else}
-							<p>{$_('Hide advanced time settings')}</p>
-						{/if}
-					</button>
-
-					<div class:hidden={!showAdvancedTimeSettings}>
-						<AdvancedTimeSettings
-							bind:selected_poll={selectedPoll}
-							bind:start_date
-							bind:area_vote_end_date
-							bind:proposal_end_date
-							bind:prediction_statement_end_date
-							bind:prediction_bet_end_date
-							bind:delegate_vote_end_date
-							bind:vote_end_date
-							bind:end_date
-							bind:daysBetweenPhases
-						/>
-					</div>
+					{#key times}
+						<AdvancedTimeSettings bind:times />
+					{/key}
 				</div>
 			{/if}
 
@@ -325,24 +315,22 @@ const loadGroupBlockchainId = async () => {
 			{/if}
 
 			<Select
-				disabled={(selectedPage !== 'thread' && selectedPoll !== 'Date Poll') || isPublic}
+				disabled={(selectedPage !== 'thread' && selectedPoll !== 'Date Poll') ||
+					isPublic}
 				classInner="border border-gray-300"
 				label={$_('Work Group')}
-				labels={workGroups.map((workGroup) => workGroup.name)}
-				values={workGroups.map((workGroup) => workGroup.id)}
+				labels={[
+					'No workgroup selected',
+					...workGroups.map((workGroup) => workGroup.name)
+				]}
+				values={[null, ...workGroups.map((workGroup) => workGroup.id)]}
 				bind:value={workGroup}
-				innerLabelOn={true}
-				innerLabel={$_('No workgroup assigned')}
+				disableFirstChoice
 			/>
 
-			<Button type="submit" disabled={loading} Class={'bg-primary p-3 mt-3'}>{$_('Post')}</Button>
+			<Button type="submit" disabled={loading} Class={'bg-primary p-3 mt-3'}
+				>{$_('Post')}</Button
+			>
 		</div>
 	</Loader>
 </form>
-
-<style>
-	.show-buttons-all-times::-webkit-inner-spin-button,
-	.show-buttons-all-times::-webkit-outer-spin-button {
-		opacity: 1;
-	}
-</style>

@@ -27,7 +27,6 @@
 
 		comments?.forEach((comment: comment) => {
 			comment.reply_depth = getCommentDepth(comment, comments);
-			console.log(comment.reply_depth, 'DEPTH');
 		});
 
 		commentsStore.setAll(comments);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Fa from 'svelte-fa';
 	import { _ } from 'svelte-i18n';
-	import CropperModal from './Cropper/CropperModal.svelte';
+	import CropperModal from '../Cropper/CropperModal.svelte';
 
 	export let croppedImage: File | null = null,
 		label: string,
@@ -24,10 +24,6 @@
 		if (!disableCropping) currentlyCropping = true;
 		else onCrop();
 	};
-
-	$: if (imageString !== null) {
-		// currentlyCropping = true;
-	}
 </script>
 
 <div class={`image-upload ${Class}`}>
