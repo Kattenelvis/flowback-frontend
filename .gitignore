@@ -34,5 +34,6 @@ out/
 cache/
 broadcast/
 lib/
+!src/lib/
 *.lock
 foundry.lock
