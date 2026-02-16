@@ -37,3 +37,7 @@ lib/
 !src/lib/
 *.lock
 foundry.lock
+# Ignore foundry stuff under src/lib as well (frontend repo)
+src/lib/**/out/
+src/lib/**/cache/
+src/lib/**/broadcast/
