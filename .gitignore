@@ -41,3 +41,6 @@ foundry.lock
 src/lib/**/out/
 src/lib/**/cache/
 src/lib/**/broadcast/
+# Ignore v1 Foundry files for now
+src/lib/Blockchain_v1_Ethereum/foundry.toml
+src/lib/Blockchain_v1_Ethereum/script/
