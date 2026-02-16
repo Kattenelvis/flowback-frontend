@@ -11,79 +11,40 @@
 // Network: Base Sepolia (Chain ID: 84532)
 // ============================================================================
 
-import { BrowserProvider, Contract, JsonRpcSigner } from 'ethers';
-//import pollsAbi from './contractABI.json';
+import { env } from '$env/dynamic/public';
+import { Contract } from 'ethers';
 import abiJson from './contractABI.json';
+import { getSigner as getSignerV2, getPollsContract, getReadProvider } from './client';
 const ABI = abiJson.abi;
+// We reuse the shared wallet/contract helpers from `client.ts` to avoid duplicating
+// MetaMask connection logic. This ensures consistent behavior across the app:
+// - silent account check before prompting (no unnecessary popup)
+// - chainId validation (prevents wrong-network transactions)
+// - clearer error handling (e.g., user rejected 4001)
 
 // Contract address on Base Sepolia (Polls v2 with Delegations)
-const DEFAULT_CONTRACT_ADDRESS = '0x27013b43c40fB4fB0c23DD0E56f1fB90FA8a0276';
 
-// Optional: use environment variable if needed
-// import { env } from '$env/dynamic/public';
-// const CONTRACT_ADDRESS = env.PUBLIC_POLLS_V2_ADDRESS ?? DEFAULT_CONTRACT_ADDRESS;
-const CONTRACT_ADDRESS = DEFAULT_CONTRACT_ADDRESS;
-
-   export type BecomeDelegateResult = {
-     delegate: string;
-     groupId: number;
-     delegateId: number | null;
-   };
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get connected signer from MetaMask (ethers v6)
- * @returns {Promise<JsonRpcSigner>} The signer for transactions
- * @throws {Error} If MetaMask is not available
- */
-async function getSigner(): Promise<JsonRpcSigner> {
-  if (typeof window === 'undefined' || !(window as any).ethereum) {
-    throw new Error('MetaMask (window.ethereum) is not available');
+  export type BecomeDelegateResult = {
+    delegate: string;
+    groupId: number;
+    delegateId: number | null;
+  };
+  // Read-only contract uses RPC provider only (no wallet needed).
+  // This avoids MetaMask popups and allows UI to query data even when not connected.
+  const READ_CONTRACT_ADDRESS = env.PUBLIC_V2_POLLS_ADDRESS;
+  if (!READ_CONTRACT_ADDRESS) {
+    throw new Error('PUBLIC_V2_POLLS_ADDRESS is missing in env');
   }
-  
-  const provider = new BrowserProvider((window as any).ethereum);
-  await provider.send('eth_requestAccounts', []); // Request wallet connection
-  const signer = await provider.getSigner();
-  
-  // Optional: log connected address for debugging
-  // console.log('Connected address:', await signer.getAddress());
-  
-  return signer;
-}
 
-/**
- * Get contract instance (Polls v2 that includes Delegations)
- * @returns {Promise<Contract>} Contract instance for blockchain interaction
- * @throws {Error} If contract address is missing
- */
-async function getContract(): Promise<Contract> {
-  const signer = await getSigner();
-  
-  if (!CONTRACT_ADDRESS) {
-    throw new Error('CONTRACT_ADDRESS is missing');
+  let cachedReadContract: Contract | undefined;
+
+  function getReadContract() {
+    if (!cachedReadContract) {
+      cachedReadContract = new Contract(READ_CONTRACT_ADDRESS, ABI, getReadProvider());
+    }
+    return cachedReadContract;
   }
-  
-  // Return contract instance with ABI and signer
-  //return new Contract(CONTRACT_ADDRESS, pollsAbi as any, signer);
-  return new Contract(CONTRACT_ADDRESS, ABI, signer);
 
-}
-
-async function getReadOnlyContract(): Promise<Contract> {
-  if (typeof window === 'undefined' || !(window as any).ethereum) {
-    throw new Error('MetaMask (window.ethereum) is not available');
-  }
-  const provider = new BrowserProvider((window as any).ethereum);
-  if (!CONTRACT_ADDRESS) {
-    throw new Error('CONTRACT_ADDRESS is missing');
-  }
- // return new Contract(CONTRACT_ADDRESS, pollsAbi as any, provider);
-  return new Contract(CONTRACT_ADDRESS, ABI, provider);
-
-}
 // ============================================================================
 // Write Functions (require transactions and gas)
 // ============================================================================
@@ -104,9 +65,8 @@ async function getReadOnlyContract(): Promise<Contract> {
      const gid = Number(groupId);
 
      try {
-       const signer = await getSigner();
-       // const contract = new Contract(CONTRACT_ADDRESS, pollsAbi as any, signer);
-       const contract = new Contract(CONTRACT_ADDRESS, ABI, signer);
+       const signer = await getSignerV2();
+       const contract = await getPollsContract();
        const tx = await contract.becomeDelegate(gid);
        const receipt = await tx.wait();
 
@@ -145,7 +105,7 @@ async function getReadOnlyContract(): Promise<Contract> {
 /**
  * Delegate your vote to another delegate in a group
  * 
- * ⚠️ Important: Parameter order in v2 is (delegateAddress, groupId)
+ * Important: Parameter order in v2 is (delegateAddress, groupId)
  * This is different from v1!
  * 
  * Requirements:
@@ -165,7 +125,8 @@ export const delegateToDelegate = async (
   const gid = Number(groupId);
   
   try {
-    const c = await getContract();
+    const c = await getPollsContract();
+    // Uses shared contract instance with validated signer + correct network.
     const tx = await c.delegateToDelegate(delegateAddress, gid);
     const receipt = await tx.wait();
     
@@ -193,7 +154,7 @@ export const removeDelegation = async (
   const gid = Number(groupId);
   
   try {
-    const c = await getContract();
+    const c = await getPollsContract();
     const tx = await c.removeDelegation(delegateAddress, gid);
     const receipt = await tx.wait();
     
@@ -207,7 +168,7 @@ export const removeDelegation = async (
 /**
  * Resign as a delegate in a group
  * 
- * ⚠️ Warning: All users who delegated to you will lose their delegations
+ *  Warning: All users who delegated to you will lose their delegations
  * 
  * Requirements:
  * - Must be an active delegate in the group
@@ -219,7 +180,7 @@ export const resignAsDelegate = async (groupId: number | string): Promise<boolea
   const gid = Number(groupId);
   
   try {
-    const c = await getContract();
+    const c = await getPollsContract();
     const tx = await c.resignAsDelegate(gid);
     const receipt = await tx.wait();
     
@@ -251,7 +212,7 @@ export const addressIsDelegate = async (
   const gid = Number(groupId);
   
   try {
-    const c = await getContract();
+    const c = getReadContract();
     return await c.addressIsDelegate(gid, address);
   } catch (err: any) {
     console.error('addressIsDelegate error:', err?.message || err);
@@ -276,7 +237,7 @@ export const getDelegateVoteCount = async (
   const gid = Number(groupId);
   
   try {
-    const c = await getContract();
+    const c = getReadContract();
     const raw = await c.getDelegateVoteCount(gid, delegateAddress);
     
     // ethers v6 returns BigInt - convert to number safely
@@ -296,5 +257,5 @@ export const getDelegateVoteCount = async (
  * Export low-level helpers if needed elsewhere
  * Prefix with underscore to indicate "internal use"
  */
-export const _getSigner = getSigner;
-export const _getContract = getContract;
+export const _getSigner = getSignerV2;
+export const _getContract = getPollsContract;
