@@ -1,9 +1,7 @@
 <script lang="ts">
 	import HeaderIcon from './HeaderIcon.svelte';
-	import { userStore } from '$lib/User/interfaces';
 	import Logo from '$lib/assets/Logo.png';
 	import Reforum from '$lib/assets/ReforumTransparent.png';
-	import DefaultPFP from '$lib/assets/abstract-user-flat-4.svg';
 	import SideHeader from './SideHeader.svelte';
 	import Notifications from './Notifications.svelte';
 	import { darkModeStore, toggleDarkMode } from '$lib/Generic/DarkMode';
@@ -20,10 +18,10 @@
 	import Sun from './Sun.svelte';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
-	import { onThumbnailError } from '$lib/Generic/GenericFunctions';
 	import { chatOpenStore } from '$lib/Chat/functions';
 	import { isMobile } from '$lib/utils/isMobile';
 	import { onNavigate } from '$app/navigation';
+	import SideHeaderIcon from './SideHeaderIcon.svelte';
 
 	let sideHeaderOpen = false,
 		selectedHref = '';
@@ -34,7 +32,7 @@
 </script>
 
 <header
-	class="md:sticky md:top-0 fixed bottom-0 w-full z-[60] md:flex justify-between flex-row items-center p-1.5 px-3 bg-white select-none dark:bg-darkobject shadow-[0_1px_5px_rgba(0,0,0,0.15)] md:shadow"
+	class="md:sticky md:top-0 fixed bottom-0 w-full z-[60] md:flex justify-between flex-row items-center p-1.5 px-3 bg-white select-none dark:bg-darkobject shadow"
 	id="header"
 >
 	<a
@@ -123,19 +121,7 @@
 
 			{#if $isMobile}
 				<div class="flex flex-shrink-0">
-					<button
-						id="side-header"
-						on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
-					>
-						<img
-							src={$userStore?.profile_image
-								? `${env.PUBLIC_API_URL}${$userStore?.profile_image}`
-								: DefaultPFP}
-							class={`w-8 rounded-full cursor-pointer ${sideHeaderOpen && 'ring-blue-500'}`}
-							alt="default pfp"
-							on:error={(e) => onThumbnailError(e, DefaultPFP)}
-						/>
-					</button>
+					<SideHeaderIcon bind:sideHeaderOpen />
 				</div>
 			{/if}
 		</nav>
@@ -146,6 +132,7 @@
 					<button
 						class="dark:text-darkmodeText cursor-pointer pl-2"
 						title={`Enable ${$darkModeStore ? 'lightmode' : 'darkmode'}`}
+						aria-label="Mode Toggle"
 						on:click={toggleDarkMode}
 					>
 						{#if $darkModeStore}
@@ -156,19 +143,7 @@
 					</button>
 					<Notifications />
 				</div>
-				<button
-					id="side-header"
-					on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
-				>
-					<img
-						src={$userStore?.profile_image
-							? `${env.PUBLIC_API_URL}${$userStore?.profile_image}`
-							: DefaultPFP}
-						class={`w-8 rounded-full cursor-pointer ${sideHeaderOpen && 'ring-blue-500 ring-4'}`}
-						alt="default pfp"
-						on:error={(e) => onThumbnailError(e, DefaultPFP)}
-					/>
-				</button>
+				<SideHeaderIcon bind:sideHeaderOpen />
 			</div>
 		{/if}
 	</div>
