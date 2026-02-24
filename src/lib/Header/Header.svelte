@@ -32,7 +32,7 @@
 </script>
 
 <header
-	class="md:sticky md:top-0 fixed bottom-0 w-full z-[60] md:flex justify-between flex-row items-center p-1.5 px-3 bg-white select-none dark:bg-darkobject shadow"
+	class="md:sticky md:top-0 fixed bottom-0 w-full z-[60] md:flex justify-between flex-row items-center px-5 bg-white select-none dark:bg-darkobject top-shadow shadow"
 	id="header"
 >
 	<a
@@ -47,7 +47,7 @@
 	>
 	<div class="!flex justify-between md:w-[80%]">
 		<nav
-			class="flex items-center p-6 justify-center gap-[10%] w-full md:w-[75%]"
+			class="flex items-center p-5 justify-center gap-[10%] w-full md:w-[75%]"
 		>
 			{#if !(env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE')}
 				<HeaderIcon
@@ -151,18 +151,9 @@
 </header>
 
 <style>
-	header:nth-child(1) {
-		align-self: stretch;
-	}
-
-	header {
-		flex-wrap: wrap-reverse;
-		padding: 0rem 1rem;
-	}
-
 	@media only screen and (max-width: 768px) {
-		header {
-			padding: 0.5rem 1.5rem;
+		.top-shadow {
+			box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
 		}
 	}
 </style>
