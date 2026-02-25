@@ -45,7 +45,7 @@
 	const getParams = () => {
 		let api_params = `
 		group_ids=${page.params.groupId ?? ''}&
-		order_by=${filter.order_by}&
+		order_by=created_at_desc&
 		limit=${pollThumbnailsLimit}&
 		title__icontains=${filter.search ?? ''}&
 		tag_id=${filter.tag ?? ''}&
@@ -91,8 +91,7 @@
 			const { res, json } = await fetchRequest('GET', next);
 			if (!res.ok) {
 				ErrorHandlerStore.set({
-					message:
-						'Coulcreated_at	"2026-02-11T08:56:49.553405Z"d not load more polls',
+					message: 'Could not load more polls',
 					success: false
 				});
 			}
@@ -176,10 +175,11 @@
 	});
 
 	$: if (filter) {
+		$posts = [];
+		threads = [];
+		polls = [];
 		setup();
 	}
-
-	$: console.log($posts, threads, polls, 'STUFF');
 
 	const setup = async () => {
 		await fetchPolls();
@@ -194,8 +194,8 @@
 		<div class={`flex flex-col gap-6 w-full`} id="thumbnails">
 			<PollFiltering {infoToGet} bind:filter bind:showThreads bind:showPolls />
 
-			{#if $posts?.length === 0 && !loading}
-				<div class="bg-white dark:bg-darkobject rounded shadow p-8 mt-6">
+			{#if $posts.filter((p) => p.active)?.length === 0 && !loading}
+				<div class="bg-white dark:bg-darkobject rounded shadow p-8 mt-4">
 					{$_('No posts currently here')}
 				</div>
 
