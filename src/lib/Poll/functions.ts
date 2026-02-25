@@ -1,7 +1,14 @@
 import { fetchRequest } from '$lib/FetchRequest';
 import { _ } from 'svelte-i18n';
+import {
+  groupUserStore,
+  groupUserPermissionStore
+} from '$lib/Group/interface';
+import { get } from 'svelte/store';
 import type { Phase, poll } from './interface';
 import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
+import type { Permissions } from '$lib/Group/Permissions/interface';
+import type { GroupUser } from '$lib/Group/interface';
 
 export const formatDate = (dateInput: string) => {
   const date = new Date(dateInput);
@@ -87,7 +94,7 @@ export const getPhaseUserFriendlyNameWithNumber = (phase: Phase, poll_type: numb
       case 'pre_start':
         return `0. ${dateLabels[0]}`;
       case 'proposal':
-        return `1. ${dateLabels[2]}`;
+        return `2. ${dateLabels[2]}`;
       case 'prediction_bet':
         return `3. ${dateLabels[3]}`;
       case 'delegate_vote':
@@ -165,4 +172,22 @@ export const nextPhase = async (poll: poll, phase: Phase) => {
 export const imacFormatting = (imac: number | string) => {
   imac = Number(imac)
   return `${(imac * 100).toFixed(0)}%`
+}
+
+export const multipleOptions = (phase: Phase, poll: poll) => {
+
+  const options = {
+    labels: [get(_)('Delete Poll'), get(_)('Report Poll')]
+  }
+
+  const canFastForward = phase !== 'result' &&
+    phase !== 'prediction_vote' &&
+    poll?.allow_fast_forward &&
+    (get(groupUserPermissionStore).poll_fast_forward ||
+      get(groupUserStore)?.is_admin)
+
+
+  if (canFastForward) options.labels.push(get(_)('Fast Forward'))
+
+  return options;
 }
