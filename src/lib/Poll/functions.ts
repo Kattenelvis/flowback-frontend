@@ -174,10 +174,11 @@ export const imacFormatting = (imac: number | string) => {
   return `${(imac * 100).toFixed(0)}%`
 }
 
-export const multipleOptions = (phase: Phase, poll: poll) => {
+export const getMultipleOptions = (phase: Phase, poll: poll, functions: any[], fast_forward: any) => {
 
   const options = {
-    labels: [get(_)('Delete Poll'), get(_)('Report Poll')]
+    labels: [get(_)('Delete Poll'), get(_)('Report Poll')],
+    functions
   }
 
   const canFastForward = phase !== 'result' &&
@@ -187,7 +188,10 @@ export const multipleOptions = (phase: Phase, poll: poll) => {
       get(groupUserStore)?.is_admin)
 
 
-  if (canFastForward) options.labels.push(get(_)('Fast Forward'))
+  if (canFastForward) {
+    options.labels.push(get(_)('Fast Forward'))
+    options.functions.push(fast_forward)
+  }
 
   return options;
 }
