@@ -86,12 +86,8 @@ export const getPhaseUserFriendlyNameWithNumber = (phase: Phase, poll_type: numb
     switch (phase) {
       case 'pre_start':
         return `0. ${dateLabels[0]}`;
-      case 'area_vote':
-        return `0. ${dateLabels[1]}`;
       case 'proposal':
         return `1. ${dateLabels[2]}`;
-      case 'prediction_statement':
-        return `2. ${dateLabels[3]}`;
       case 'prediction_bet':
         return `3. ${dateLabels[3]}`;
       case 'delegate_vote':
