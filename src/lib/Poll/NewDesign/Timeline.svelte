@@ -94,8 +94,8 @@
 				{$_('Current')}:
 			</span>
 			{$_('Phase')}
-			{currentPhaseIndex + 1}.
-			{$_(dateLabels[currentPhaseIndex + 1])}
+			{currentPhaseIndex + 1}
+			<!-- {$_(dateLabels[currentPhaseIndex + 1])} -->
 		</div>
 	{/if}
 

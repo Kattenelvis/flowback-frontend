@@ -194,7 +194,7 @@
 		<div class={`flex flex-col gap-6 w-full`} id="thumbnails">
 			<PollFiltering {infoToGet} bind:filter bind:showThreads bind:showPolls />
 
-			{#if $posts.filter((p) => p.active)?.length === 0 && !loading}
+			{#if $posts?.length === 0 && !loading}
 				<div class="bg-white dark:bg-darkobject rounded shadow p-8 mt-4">
 					{$_('No posts currently here')}
 				</div>
