@@ -55,6 +55,8 @@
 		created_at__lt=${filter.to}
     `;
 
+		if (filter.status) api_params += `&status=${filter.status}`;
+
 		return api_params;
 	};
 
@@ -159,15 +161,7 @@
 			!filter.workgroup || // If no workgroup filter, show all threads
 			(thread && thread.work_group?.id === Number(filter.workgroup)); // Match thread workgroup
 
-		const matchesStatus =
-			!filter.status || // Show anything if no status selected
-			(post.related_model === 'poll' &&
-				//@ts-ignore
-				((filter.status === 'finished' && post.status === 1) ||
-					//@ts-ignore
-					(filter.status === 'ongoing' && post.status === 0)));
-
-		return (matchesSearch && matchesWorkgroup && matchesStatus) || false;
+		return (matchesSearch && matchesWorkgroup) || false;
 	};
 
 	onMount(() => {
@@ -178,6 +172,7 @@
 		$posts = [];
 		threads = [];
 		polls = [];
+		next = undefined;
 		setup();
 	}
 

@@ -81,7 +81,9 @@
 	});
 
 	// Display purple notification circle whenever there is a message that hasn't been seen.
-	$: notification = $previewStore.some((p) => !p.recent_message?.notified);
+	$: notification = $previewStore.some(
+		(p) => p.recent_message?.notified === false
+	);
 </script>
 
 <svelte:head>
