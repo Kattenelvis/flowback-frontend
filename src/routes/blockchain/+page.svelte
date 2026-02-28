@@ -27,10 +27,12 @@
 		becomeDelegate,
 		delegate,
 	} from '$lib/Blockchain_v1_Ethereum/javascript/delegationsBlockchain';
+	import { connectWallet as connectWalletV2, ensureChain } from "$lib/web3/frontend/wallet";
+	import { env } from "$env/dynamic/public";
 
 
 	onMount(() => {
-		// test(value); // Call test with group
+		refreshNetwork();
 	});
 
 	// function handleChange(event) {
@@ -38,27 +40,49 @@
 	// }
 
 	let userAddress = '';
+	let chainIdHex = '';
+	let chainIdNum = 0;
 	let id = 8;
 	let groupId = 1;
 	let pollId = 8;
 	let proposalId = 1;
 
+	let connecting = false;
+
+	async function refreshNetwork() {
+		if (typeof window === 'undefined' || !window?.ethereum) return;
+		chainIdHex = String(await window.ethereum.request({ method: 'eth_chainId' }));
+		chainIdNum = parseInt(chainIdHex, 16);
+	}
+
 	async function connectWallet() {
-		if (typeof window.ethereum !== 'undefined') {
-			try {
-				const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-				userAddress = accounts[0];
-			} catch (error) {
-				console.error('Error connecting to MetaMask', error);
-			}
-		} else {
-			console.error('MetaMask is not installed!');
-		}
+	  if (connecting) return;
+	  connecting = true;
+
+	  try {
+	    await ensureChain();
+	    userAddress = await connectWalletV2();
+	    await refreshNetwork();
+	  } catch (error) {
+	    const msg =
+		  error && typeof error === "object" && "message" in error
+		    ? String(error.message)
+		    : String(error);
+		  
+	    console.error("Error connecting wallet:", msg, error);
+	  } finally {
+	    connecting = false;
+	  }
 	}
 </script>
 
 <Layout>
-	<button on:click={connectWallet}>
+	<div style="padding:10px;border:1px solid #ccc;border-radius:8px;margin:10px 0;">
+		<div><b>Network</b></div>
+		<div>chainId: {chainIdNum} ({chainIdHex})</div>
+		<div>target: {Number(env.PUBLIC_V2_CHAIN_ID)}</div>
+	</div>
+	<button on:click={connectWallet} disabled={connecting}>
 		{#if userAddress}
 			Connected: {userAddress}
 		{:else}
