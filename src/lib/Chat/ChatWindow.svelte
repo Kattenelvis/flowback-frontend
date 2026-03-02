@@ -246,6 +246,42 @@
 		};
 	};
 
+	const changeName = async () => {
+		const { res, json } = await fetchRequest(
+			'POST',
+			'chat/message/channel/userdata/update',
+			{
+				channel_id: preview.channel_id,
+				title
+			}
+		);
+
+		if (!res.ok)
+			ErrorHandlerStore.set({
+				message: 'Could not change title',
+				success: false
+			});
+
+		preview.channel_title = title;
+
+		$previewStore = [
+			...$previewStore.filter((p) => p.channel_id !== preview.channel_id),
+			preview
+		];
+	};
+
+	const updatePreview = () => {
+		const _preview = $previewStore?.find(
+			(p) => p.channel_id === $chatPartnerStore
+		);
+		if (!_preview) return;
+		if (_preview) preview = _preview;
+
+		title = preview.channel_title ?? '';
+	};
+
+	$: $chatPartnerStore && updatePreview();
+
 	let unsubscribeMessageStore: () => void;
 
 	onMount(() => {
@@ -253,13 +289,6 @@
 		correctHeightRelativeToHeader();
 		window.addEventListener('resize', correctHeightRelativeToHeader);
 		conectToSocket();
-
-		const _preview = $previewStore?.find(
-			(p) => p.channel_id === $chatPartnerStore
-		);
-		if (_preview) preview = _preview;
-
-		title = preview.channel_title ?? '';
 	});
 
 	onDestroy(() => {
@@ -400,6 +429,9 @@
 		{:else}
 			<p>{$_('No participants found.')}</p>
 		{/if}
-		<TextInput autofocus required bind:value={title} label="Chatgroup Name" />
+		<form on:submit|preventDefault={changeName}>
+			<TextInput autofocus required bind:value={title} label="Chatgroup Name" />
+			<Button type="submit">Submit</Button>
+		</form>
 	</div>
 </Modal>
