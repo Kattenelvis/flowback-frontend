@@ -154,6 +154,21 @@
 			}
 		);
 	};
+
+	const clearChoice = async (tag: Tag) => {
+		const delegateRelationToRemove = delegateRelations.find((relation) =>
+			relation.tags.find((_tag) => _tag.id === tag.id)
+		);
+
+		if (delegateRelationToRemove) {
+			await saveDelegation(
+				delegateRelationToRemove.delegate_pool_id,
+				tag.id,
+				'remove'
+			);
+			groupDelegationSetup();
+		}
+	};
 </script>
 
 <Loader bind:loading>
@@ -215,20 +230,9 @@
 						</div>
 						<button
 							class="text-red-700 hover:underline"
-							on:click={async () => {
-								const delegateRelationToRemove = delegateRelations.find(
-									(relation) => relation.tags.find((_tag) => _tag.id === tag.id)
-								);
-
-								if (delegateRelationToRemove) {
-									await saveDelegation(
-										delegateRelationToRemove.delegate_pool_id,
-										tag.id,
-										'remove'
-									);
-									groupDelegationSetup();
-								}
-							}}>{$_('Clear Choice')}</button
+							on:click={() => clearChoice(tag)}
+						>
+							{$_('Clear Choice')}</button
 						>
 						<!-- {:else} -->
 						<!-- <div class="voter-list">Inga rekommenderade väljare.</div> -->
