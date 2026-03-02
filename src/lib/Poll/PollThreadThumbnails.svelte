@@ -52,8 +52,7 @@
 		work_group_ids=${filter.workgroup}&
 		public=${infoToGet === InfoToGet.public ? 'true' : ''}&
 		created_at__gt=${filter.from}&
-		created_at__lt=${filter.to}
-    `;
+		created_at__lt=${filter.to}`;
 
 		if (filter.status) api_params += `&status=${filter.status}`;
 
