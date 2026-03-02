@@ -12,7 +12,11 @@
 	import { browser } from '$app/environment';
 	import TextArea from '$lib/Generic/TextArea.svelte';
 	import Fa from 'svelte-fa';
-	import { faPaperPlane, faUsers } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faPaperPlane,
+		faSmile,
+		faUsers
+	} from '@fortawesome/free-solid-svg-icons';
 	import { messageStore } from './Socket';
 	import { onMount, onDestroy } from 'svelte';
 	import Socket from './Socket';
@@ -100,6 +104,7 @@
 			message,
 			1
 		);
+
 		if (!didSend) {
 			ErrorHandlerStore.set({
 				message: 'Could not send message',
@@ -127,6 +132,7 @@
 			parent: 0,
 			topic_id: 0
 		});
+
 		messages = messages;
 
 		message = '';
@@ -179,35 +185,7 @@
 				topic_id: message.topic_id
 			});
 			messages = messages;
-			// updateUserData($chatPartnerStore, new Date());
-		} else {
-			let previewMessage = preview.find(
-				(p) => p.channel_id === message.channel_id
-			);
-			if (!previewMessage) {
-				// 	previewMessage = {
-				// 		id: message.id,
-				// 		message: message.message,
-				// 		// created_at: message.created_at.toString(),
-				// 		timestamp: new Date().toString(),
-				// 		notified: true,
-				// 		profile_image: message.user?.profile_image,
-				// 		user_id: message.user?.id,
-				// 		user: message.user,
-				// 		channel_id: message.channel_id,
-				// 		...(message.channel_origin_name === 'group'
-				// 			? { group_id: message.channel_id }
-				// 			: { target_id: message.user?.id })
-				// 	};
-				// 	preview.push(previewMessage);
-			} else {
-				// previewMessage.recent_message.message = message.message;
-				// previewMessage.recent_message.created_at = message.created_at.toString();
-				// previewMessage.recent_message.notified = true;
-			}
-			preview = [...preview];
-			// $previewStore = preview;
-		}
+		} else preview = [...preview];
 
 		const _preview = $previewStore?.find(
 			(p) => p.channel_id === $chatPartnerStore
@@ -281,7 +259,6 @@
 		);
 		if (_preview) preview = _preview;
 
-		console.log(preview, 'PREVIEW');
 		title = preview.channel_title ?? '';
 	});
 
@@ -381,14 +358,14 @@
 					Class="justify-center w-full h-2rem"
 					inputClass="border-0 bg-gray-100 placeholder-gray-700 pl-2 pt-1 resize-y min-h-[2rem] max-h-[6rem] overflow-auto"
 				/>
-				<!-- {#if env.PUBLIC_MODE === 'DEV'}
-					<Button
-						onClick={() => (showEmoji = !showEmoji)}
-						Class="rounded-full pl-3 pr-3 pt-3 pb-3 h-1/2"
-					>
-						<Fa icon={faSmile} />
-					</Button>
-				{/if} -->
+
+				<!-- TODO: Emoji Support -->
+				<!-- <Button -->
+				<!-- 	onClick={() => (showEmoji = !showEmoji)} -->
+				<!-- 	Class="rounded-full pl-3 pr-3 pt-3 pb-3 h-1/2" -->
+				<!-- > -->
+				<!-- 	<Fa icon={faSmile} /> -->
+				<!-- </Button> -->
 				<Button
 					type="submit"
 					Class="bg-transparent border-none flex items-center justify-center p-3 h-1/2 hover:bg-gray-100 active:bg-gray-200"
@@ -423,7 +400,6 @@
 		{:else}
 			<p>{$_('No participants found.')}</p>
 		{/if}
-		{title ?? 'hi'}
 		<TextInput autofocus required bind:value={title} label="Chatgroup Name" />
 	</div>
 </Modal>
