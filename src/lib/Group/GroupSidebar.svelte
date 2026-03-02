@@ -23,7 +23,7 @@
 	import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
 	import { faCoins } from '@fortawesome/free-solid-svg-icons';
 	import { goto } from '$app/navigation';
-	import { removeGroupMembership } from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote';
+	import { removeGroupMembership } from '$lib/web3/frontend/membership';
 	import { env } from '$env/dynamic/public';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import {
@@ -58,8 +58,9 @@
 			return;
 		}
 
-		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE')
-			removeGroupMembership(Number($page.params.groupId));
+		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+			await removeGroupMembership(group.blockchain_id);
+		}
 
 		groupStore.set($groupStore.filter((g) => g.id !== group.id));
 		chatPartnerStore.set(0);
@@ -268,7 +269,7 @@
 		{ label: 'No', type: 'default', onClick: () => (areYouSureModal = false) }
 	]}
 >
-	>
+	
 	<div slot="header">{$_('Are you sure?')}</div>
 	<div slot="body">{$_('You are about to leave the group!')}</div>
 </Modal>

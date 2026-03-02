@@ -13,7 +13,7 @@
 	import { faUser } from '@fortawesome/free-solid-svg-icons/faUser';
 	import { faFileImage } from '@fortawesome/free-solid-svg-icons/faFileImage';
 	import { goto } from '$app/navigation';
-	import { becomeMemberOfGroup } from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote';
+	import { becomeMemberOfGroup } from '$lib/web3/frontend/membership';
 	import { env } from '$env/dynamic/public';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import RadioButtons from '$lib/Generic/RadioButtons.svelte';
@@ -91,8 +91,9 @@
 				name: 'Uncategorised'
 			});
 
-			if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE')
-				becomeMemberOfGroup(blockchain_id);
+			if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+				await becomeMemberOfGroup(blockchain_id);
+			}
 			goto(`/groups/${json}`);
 		}
 	};

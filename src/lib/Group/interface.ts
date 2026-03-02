@@ -77,6 +77,7 @@ export interface GroupDetails {
 	name: string;
 	public: boolean;
 	id: number;
+	blockchain_id: number;
 }
 
 export interface Tag {
