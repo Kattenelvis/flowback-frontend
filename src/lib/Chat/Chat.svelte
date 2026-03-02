@@ -34,7 +34,7 @@
 	const getPreview = async () => {
 		const { res, json } = await fetchRequest(
 			'GET',
-			`chat/message/channel/preview/list`
+			`chat/message/channel/preview/list?order_by=timestamp`
 		);
 		if (!res.ok) return [];
 
