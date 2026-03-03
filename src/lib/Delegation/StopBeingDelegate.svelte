@@ -99,6 +99,22 @@
 	};
 </script>
 
-<Button Class={`bg-red-500 ${Class}`} onClick={deleteDelegation}>{$_('Stop being delegate')}</Button
->
-<Button onClick={selfDelegate}>{'Self-Delegate'}</Button>
+<div class="flex flex-col gap-3 {Class}">
+	<!-- Self-delegate -->
+	<div class="p-4 rounded-xl bg-gray-50 dark:bg-darkbackground border border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
+		<div>
+			<p class="text-sm font-medium text-gray-700 dark:text-darkmodeText">{$_('Self-Delegate')}</p>
+			<p class="text-xs text-gray-400 mt-0.5">{$_('Vote automatically as yourself across all topics')}</p>
+		</div>
+		<Button onClick={selfDelegate} buttonStyle="primary-light">{$_('Apply')}</Button>
+	</div>
+
+	<!-- Stop being delegate (destructive) -->
+	<div class="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 flex items-center justify-between gap-3">
+		<div>
+			<p class="text-sm font-medium text-red-700 dark:text-red-400">{$_('Stop being delegate')}</p>
+			<p class="text-xs text-red-400/80 mt-0.5">{$_('Remove your delegate status from this group')}</p>
+		</div>
+		<Button onClick={deleteDelegation} buttonStyle="warning">{$_('Leave')}</Button>
+	</div>
+</div>
