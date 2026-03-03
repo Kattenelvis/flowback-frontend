@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type GroupMembers, type invite } from './interfaces';
+	import { type GroupMembers, type invite, type PreviewMessage } from './interfaces';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { onMount } from 'svelte';
@@ -7,9 +7,11 @@
 	import {
 		chatOpenStore,
 		chatPartnerStore,
+		fixDirectMessageChannelName,
 		getUserChannelId,
 		previewStore
 	} from './functions';
+	import { userStore } from '$lib/User/interfaces';
 	import Button from '$lib/Generic/Button.svelte';
 	import { _ } from 'svelte-i18n';
 	import UserSearch from '$lib/Generic/UserSearch.svelte';
@@ -25,7 +27,63 @@
 	let chatSearch = $state(''),
 		openUserSearch = $state(false),
 		leaveGroupModal = $state(false),
-		leaveGroupChannelId: number | null = $state(null);
+		leaveGroupChannelId: number | null = $state(null),
+		next: string | undefined | null = $state(undefined);
+
+	let previewContainer: HTMLDivElement;
+
+	const getPreviews = async () => {
+		if (next === null) return;
+
+		if (next === undefined) {
+			const { res, json } = await fetchRequest(
+				'GET',
+				`chat/message/channel/preview/list?order_by=timestamp&limit=20`
+			);
+			if (!res.ok) return;
+
+			let previews = json?.results.map((preview: PreviewMessage) => ({
+				...preview,
+				recent_message: {
+					...preview.recent_message,
+					notified:
+						preview.recent_message === null ||
+						new Date(preview.timestamp) > new Date(preview.recent_message?.created_at) ||
+						preview.recent_message?.user.id === $userStore?.id
+				}
+			}));
+
+			fixDirectMessageChannelName(previews, $userStore?.id);
+			previewStore.set(previews);
+			next = json.next;
+		} else {
+			const { res, json } = await fetchRequest('GET', next);
+			if (!res.ok) return;
+
+			let morePreviews = json?.results.map((preview: PreviewMessage) => ({
+				...preview,
+				recent_message: {
+					...preview.recent_message,
+					notified:
+						preview.recent_message === null ||
+						new Date(preview.timestamp) > new Date(preview.recent_message?.created_at) ||
+						preview.recent_message?.user.id === $userStore?.id
+				}
+			}));
+
+			fixDirectMessageChannelName(morePreviews, $userStore?.id);
+			previewStore.update((store) => [...(store || []), ...morePreviews]);
+			next = json.next;
+		}
+	};
+
+	const handleScroll = () => {
+		if (!previewContainer) return;
+		const { scrollTop, clientHeight, scrollHeight } = previewContainer;
+		if (scrollTop + clientHeight >= scrollHeight - 1) {
+			getPreviews();
+		}
+	};
 
 	type Props = {
 		creatingGroup: boolean;
@@ -124,11 +182,12 @@
 
 	onMount(async () => {
 		await UserChatInviteList();
+		await getPreviews();
 		clickedChatter($chatPartnerStore);
 	});
 </script>
 
-<div class="max-h-[100%] pb-2">
+<div bind:this={previewContainer} class="h-full overflow-y-auto pb-2" onscroll={handleScroll}>
 	<div class="border-b-2 w-full">
 		<TextInput
 			placeholder={'Search chatters'}

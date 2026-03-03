@@ -234,9 +234,6 @@
 						>
 							{$_('Clear Choice')}</button
 						>
-						<!-- {:else} -->
-						<!-- <div class="voter-list">Inga rekommenderade väljare.</div> -->
-						<!-- {/if} -->
 					</div>
 				{/if}
 			{/each}
