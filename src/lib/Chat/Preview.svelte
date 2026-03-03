@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { type GroupMembers, type invite, type PreviewMessage } from './interfaces';
+	import {
+		type GroupMembers,
+		type invite,
+		type PreviewMessage
+	} from './interfaces';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { onMount } from 'svelte';
@@ -30,6 +34,7 @@
 
 	let previewContainer: HTMLDivElement;
 
+	// Lazy Loading
 	const getPreviews = async () => {
 		if (next === null) return;
 
@@ -46,7 +51,8 @@
 					...preview.recent_message,
 					notified:
 						preview.recent_message === null ||
-						new Date(preview.timestamp) > new Date(preview.recent_message?.created_at) ||
+						new Date(preview.timestamp) >
+							new Date(preview.recent_message?.created_at) ||
 						preview.recent_message?.user.id === $userStore?.id
 				}
 			}));
@@ -64,7 +70,8 @@
 					...preview.recent_message,
 					notified:
 						preview.recent_message === null ||
-						new Date(preview.timestamp) > new Date(preview.recent_message?.created_at) ||
+						new Date(preview.timestamp) >
+							new Date(preview.recent_message?.created_at) ||
 						preview.recent_message?.user.id === $userStore?.id
 				}
 			}));
@@ -185,7 +192,11 @@
 	});
 </script>
 
-<div bind:this={previewContainer} class="h-full overflow-y-auto pb-2" onscroll={handleScroll}>
+<div
+	bind:this={previewContainer}
+	class="h-full overflow-y-auto pb-2"
+	onscroll={handleScroll}
+>
 	<div class="border-b-2 w-full">
 		<TextInput
 			placeholder={'Search chatters'}
@@ -240,15 +251,19 @@
 					>
 				{/if}
 				<button
-					class="w-full transition-all duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1"
-					class:dark:bg-gray-700={$chatPartnerStore === groupChat.message_channel_id}
+					class="w-full transition-colors duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1"
+					class:dark:bg-gray-700={$chatPartnerStore ===
+						groupChat.message_channel_id}
 					class:dark:hover:bg-gray-700={groupChat.rejected === false}
 					class:hover:bg-gray-100={groupChat.rejected === false}
 					class:active:bg-gray-200={groupChat.rejected === false}
 					class:bg-gray-100={$chatPartnerStore === groupChat.message_channel_id}
-					class:border-l-[3px]={$chatPartnerStore === groupChat.message_channel_id}
-					class:border-primary={$chatPartnerStore === groupChat.message_channel_id}
-					class:rounded-l-none={$chatPartnerStore === groupChat.message_channel_id}
+					class:border-l-[3px]={$chatPartnerStore ===
+						groupChat.message_channel_id}
+					class:border-primary={$chatPartnerStore ===
+						groupChat.message_channel_id}
+					class:rounded-l-none={$chatPartnerStore ===
+						groupChat.message_channel_id}
 					onclick={() => {
 						if (groupChat.rejected === false)
 							clickedChatter(groupChat.message_channel_id);
@@ -274,7 +289,7 @@
 			?.toUpperCase()
 			?.includes(chatSearch.toUpperCase()) && ((chatter?.channel_origin_name === 'user' && creatingGroup) || !creatingGroup)}
 			<button
-				class="w-full transition-all duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600"
+				class="w-full transition-colors duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600"
 				class:bg-gray-100={$chatPartnerStore === chatter.channel_id}
 				class:dark:bg-gray-700={$chatPartnerStore === chatter.channel_id}
 				class:border-l-[3px]={$chatPartnerStore === chatter.channel_id}
