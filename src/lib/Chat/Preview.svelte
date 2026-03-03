@@ -18,10 +18,8 @@
 	import Fa from 'svelte-fa';
 	import {
 		faArrowRightFromBracket,
-		faCircle,
 		faPaperPlane
 	} from '@fortawesome/free-solid-svg-icons';
-	import { elipsis } from '$lib/Generic/GenericFunctions';
 	import Modal from '$lib/Generic/Modal.svelte';
 
 	let chatSearch = $state(''),
@@ -226,6 +224,9 @@
 		<!-- <Button onClick={newDM}>New DM</Button> -->
 	</div>
 
+	{#if inviteList?.some((g) => !g.rejected && g?.title?.split(',')?.length > 2)}
+		<p class="text-xs text-gray-400 px-3 pt-2">{$_('Invites')}</p>
+	{/if}
 	{#if inviteList}
 		{#each inviteList as groupChat}
 			{#if !groupChat.rejected && groupChat?.title?.split(',')?.length > 2}
@@ -239,13 +240,15 @@
 					>
 				{/if}
 				<button
-					class="w-full transition transition-color p-3 flex items-center gap-3 cursor-pointer dark:bg-darkobject"
-					class:dark:bg-gray-700={$chatPartnerStore ===
-						groupChat.message_channel_id}
-					class:dark:hover:bg-darkbackground={groupChat.rejected === false}
-					class:hover:bg-gray-200={groupChat.rejected === false}
-					class:active:bg-gray-500={groupChat.rejected === false}
-					class:bg-gray-200={$chatPartnerStore === groupChat.message_channel_id}
+					class="w-full transition-all duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1"
+					class:dark:bg-gray-700={$chatPartnerStore === groupChat.message_channel_id}
+					class:dark:hover:bg-gray-700={groupChat.rejected === false}
+					class:hover:bg-gray-100={groupChat.rejected === false}
+					class:active:bg-gray-200={groupChat.rejected === false}
+					class:bg-gray-100={$chatPartnerStore === groupChat.message_channel_id}
+					class:border-l-[3px]={$chatPartnerStore === groupChat.message_channel_id}
+					class:border-primary={$chatPartnerStore === groupChat.message_channel_id}
+					class:rounded-l-none={$chatPartnerStore === groupChat.message_channel_id}
 					onclick={() => {
 						if (groupChat.rejected === false)
 							clickedChatter(groupChat.message_channel_id);
@@ -256,10 +259,8 @@
 						username={groupChat.message_channel_name}
 						profilePicture={null}
 					/>
-					<div class="flex flex-col max-w-[40%]">
-						<span
-							class="max-w-full text-left overflow-x-hidden overflow-ellipsis"
-						>
+					<div class="min-w-0 flex-1">
+						<span class="font-medium text-sm truncate block">
 							{groupChat.message_channel_name}
 						</span>
 					</div>
@@ -273,34 +274,32 @@
 			?.toUpperCase()
 			?.includes(chatSearch.toUpperCase()) && ((chatter?.channel_origin_name === 'user' && creatingGroup) || !creatingGroup)}
 			<button
-				class="w-full transition transition-color p-3 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-500 cursor-pointer dark:bg-darkobject dark:hover:bg-darkbackground"
-				class:bg-gray-200={$chatPartnerStore === chatter.channel_id}
+				class="w-full transition-all duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600"
+				class:bg-gray-100={$chatPartnerStore === chatter.channel_id}
 				class:dark:bg-gray-700={$chatPartnerStore === chatter.channel_id}
+				class:border-l-[3px]={$chatPartnerStore === chatter.channel_id}
+				class:border-primary={$chatPartnerStore === chatter.channel_id}
+				class:rounded-l-none={$chatPartnerStore === chatter.channel_id}
 				onclick={() => clickedChatter(chatter.channel_id)}
 			>
 				<ProfilePicture
 					profilePicture={chatter?.recent_message?.profile_image}
 				/>
 
-				<div class="flex justify-between items-center w-full">
-					<div>
-						<div
-							class="max-w-full text-left overflow-x-hidden overflow-ellipsis"
-						>
+				<div class="flex justify-between items-center w-full min-w-0">
+					<div class="min-w-0 flex-1">
+						<div class="font-medium text-sm truncate">
 							{chatter.channel_title ??
 								chatter.recent_message?.channel_title ??
 								'Name not found'}
 						</div>
-						<div class="text-left text-gray-400 text-sm h-[20px]">
-							{elipsis(chatter?.recent_message?.message || '', 15)}
+						<div class="text-gray-400 text-xs truncate mt-0.5">
+							{chatter?.recent_message?.message || ''}
 						</div>
 					</div>
-					<!-- <EveryProperty obj={chatter} /> -->
 					<!-- Purple dot on Chat indicating notification -->
 					{#if chatter?.recent_message?.notified === false}
-						<div class="rounded-full text-purple-300">
-							<Fa size={'xs'} icon={faCircle} />
-						</div>
+						<div class="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0"></div>
 					{/if}
 				</div>
 				{#if chatter?.channel_origin_name === 'user_group'}
