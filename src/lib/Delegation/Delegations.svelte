@@ -6,6 +6,8 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { _ } from 'svelte-i18n';
+	import Fa from 'svelte-fa';
+	import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
 	import { userStore } from '$lib/User/interfaces';
 	import Loader from '$lib/Generic/Loader.svelte';
 
@@ -202,26 +204,36 @@
 										profilePicture={delegate.user.profile_image}
 										href={`/user?id=${delegate.user.id}&delegate_id=${delegate.id}&group_id=${group.id}&is_admin=${delegate.is_admin}`}
 									/>
-									<input
-										disabled={delegates.find(d => d.user.id === $userStore?.id) && delegate.user.id !== $userStore?.id}
-										on:input={async () => {
-											pendingCheck[tag.name] = delegate.pool_id;
-											pendingCheck = pendingCheck;
-											loading = true;
-											await createDelegateRelation(delegate.pool_id);
-											await getDelegateRelations();
-											await updateDelgation(delegate, tag);
-											await notificationSubscribe(delegate.pool_id);
-											await getDelegateRelations();
-											delete pendingCheck[tag.name];
-											pendingCheck = pendingCheck;
-											loading = false;
-										}}
-										type="radio"
-										name={tag.name}
-										checked={isChecked}
-										class="accent-primary w-4 h-4"
-									/>
+									<div class="flex items-center gap-3 shrink-0">
+										<a
+											href={`/user?id=${delegate.user.id}&delegate_id=${delegate.id}&group_id=${group.id}&is_admin=${delegate.is_admin}`}
+											class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary dark:hover:text-secondary transition-colors px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+											on:click|stopPropagation
+										>
+											<Fa icon={faClockRotateLeft} />
+											<span>{$_('History')}</span>
+										</a>
+										<input
+											disabled={delegates.find(d => d.user.id === $userStore?.id) && delegate.user.id !== $userStore?.id}
+											on:input={async () => {
+												pendingCheck[tag.name] = delegate.pool_id;
+												pendingCheck = pendingCheck;
+												loading = true;
+												await createDelegateRelation(delegate.pool_id);
+												await getDelegateRelations();
+												await updateDelgation(delegate, tag);
+												await notificationSubscribe(delegate.pool_id);
+												await getDelegateRelations();
+												delete pendingCheck[tag.name];
+												pendingCheck = pendingCheck;
+												loading = false;
+											}}
+											type="radio"
+											name={tag.name}
+											checked={isChecked}
+											class="accent-primary w-4 h-4"
+										/>
+									</div>
 								</label>
 							{/each}
 						</div>
