@@ -68,8 +68,13 @@
 		);
 
 		loading = false;
+		console.log(
+			json.detail.name[0] === 'group with same name already exists.',
+			json.detail.name[0],
+			'JSON'
+		);
 		if (!res.ok) {
-			if (json.detail.name[0] === 'group with same name already exists.')
+			if (json.detail.name[0] === 'group with this name already exists.')
 				ErrorHandlerStore.set({
 					message: 'Group with this name already exists',
 					success: false
