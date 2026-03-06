@@ -48,10 +48,7 @@ export const getPhase = (poll: poll): Phase => {
 // Labels for the circles on the timeline
 export const dateLabels = [
   'Start Date',
-  'Area voting',
   'Proposals creation',
-  'Prediction statements creation',
-  'Consequence probabilities',
   'Predictions',
   'Delegate voting',
   'Voting for non-delegates',
@@ -95,19 +92,19 @@ export const getPhaseUserFriendlyNameWithNumber = (phase: Phase, poll_type: numb
   if (poll_type === 4)
     switch (phase) {
       case 'pre_start':
-        return `0. ${dateLabels[0]}`;
+        return `1. ${dateLabels[0]}`;
       case 'proposal':
         return `2. ${dateLabels[2]}`;
       case 'prediction_bet':
-        return `3. ${dateLabels[3]}`;
+        return `3. ${dateLabels[4]}`;
       case 'delegate_vote':
-        return `3. ${dateLabels[5]}`;
+        return `3. ${dateLabels[6]}`;
       case 'vote':
-        return `4. ${dateLabels[6]}`;
+        return `4. ${dateLabels[7]}`;
       case 'prediction_vote':
         return `5. ${dateLabels[8]}`;
       case 'result':
-        return `6. ${dateLabels[8]}`;
+        return `5. ${dateLabels[8]}`;
       default:
         return "";
     }
