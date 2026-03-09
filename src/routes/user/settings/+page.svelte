@@ -225,6 +225,7 @@
 							ClassInner="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
 							name="radio1"
 							label="Who can see my profile"
+							labelClass="text-gray-600 dark:text-gray-400"
 							labels={['All', 'Only people in my groups', 'Only group admins']}
 							values={['1', '2', '3']}
 							radioSide="right"
@@ -233,6 +234,7 @@
 							ClassInner="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
 							name="radio2"
 							label="Who can contact me in chat"
+							labelClass="text-gray-600 dark:text-gray-400"
 							labels={['All', 'Only people in my groups', 'Only group admins']}
 							values={['1', '2', '3']}
 							radioSide="right"
@@ -258,13 +260,15 @@
 						</div>
 					{:else if selectedPage === 'notifications' && userConfig?.notificationSettings}
 						{#each Object.entries(userConfig.notificationSettings) as [key1, settings]}
-							<li>
 								<span
 									class="text-lg text-primary dark:text-secondary font-semibold mb-3"
 									>{configToReadable(key1)}</span
 								>
-								<ul class="pt-4 pb-6">
-									<span class="my-4">{$_('Notify me when')}...</span>
+								<span 
+									class="mb-2 block text-gray-600 dark:text-gray-400"
+									>{$_('Notify me when')}...</span
+								>
+								<ul class="mb-6">
 									{#each Object.entries(settings) as [key2, setting]}
 										<li
 											class="flex justify-between p-2 rounded hover:bg-gray-100"
@@ -287,13 +291,12 @@
 										</li>
 									{/each}
 								</ul>
-							</li>
 						{/each}
 					{:else if selectedPage === 'poll-process' && userConfig?.pollSettings}
 						<span class="text-lg text-primary dark:text-secondary font-semibold mb-3"
 							>{$_('Poll Phases')}</span
 						>
-						<span>{$_('Select the phases you want to participate in')}.</span>
+						<div class="mb-2 text-gray-600 dark:text-gray-400">{$_('Select the phases you want to participate in')}.</div>
 						<ul class="gap-2">
 							{#each Object.entries(userConfig.pollSettings) as [key, setting]}
 								<li class="flex justify-between p-2 rounded hover:bg-gray-100">
