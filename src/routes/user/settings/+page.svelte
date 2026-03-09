@@ -262,7 +262,7 @@
 						{#each Object.entries(userConfig.notificationSettings) as [key1, settings]}
 								<span
 									class="text-lg text-primary dark:text-secondary font-semibold mb-3"
-									>{configToReadable(key1)}</span
+									>{$_(configToReadable(key1))}</span
 								>
 								<span 
 									class="mb-2 block text-gray-600 dark:text-gray-400"
@@ -296,7 +296,7 @@
 						<span class="text-lg text-primary dark:text-secondary font-semibold mb-3"
 							>{$_('Poll Phases')}</span
 						>
-						<div class="mb-2 text-gray-600 dark:text-gray-400">{$_('Select the phases you want to participate in')}.</div>
+						<div class="mb-2 text-gray-600 dark:text-gray-400">{$_('Select the phases you want to participate in')}</div>
 						<ul class="gap-2">
 							{#each Object.entries(userConfig.pollSettings) as [key, setting]}
 								<li class="flex justify-between p-2 rounded hover:bg-gray-100">
