@@ -278,7 +278,7 @@
 								<ul class="mb-6">
 									{#each Object.entries(settings) as [key2, setting]}
 										<li
-											class="flex justify-between p-2 rounded hover:bg-gray-100"
+											class="flex justify-between p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
 										>
 											<span>{$_(configToReadable(key2))}</span>
 											<input
@@ -306,7 +306,7 @@
 						<div class="mb-2 text-gray-600 dark:text-gray-400">{$_('Select the phases you want to participate in')}</div>
 						<ul class="gap-2">
 							{#each Object.entries(userConfig.pollSettings) as [key, setting]}
-								<li class="flex justify-between p-2 rounded hover:bg-gray-100">
+								<li class="flex justify-between p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
 									<span>{$_(configToReadable(key))}</span>
 									<input
 										type="checkbox"
