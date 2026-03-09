@@ -163,34 +163,26 @@
 </script>
 
 <Layout centered={!$isMobile}>
-<div class={$isMobile ? "flex flex-col h-screen" : "flex mt-6 gap-6"}>
+	<div class={$isMobile ? "flex flex-col h-screen" : "flex mt-6 gap-6"}>
 		<div
-			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow
-			{$isMobile ? "h-screen w-full flex flex-col" : "w-[300px] h-[800px] rounded border"}"
+			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow	
+			{$isMobile ? "h-full w-full flex flex-col" : "w-[300px] h-[800px] rounded border"}"
+			class:hidden={$isMobile && selectedPage}
 		>
-			<div class={$isMobile ? "panel-title grid grid-cols-3 gap-4 w-full pb-4" : "flex items-center mb-4 gap-4"}>
+			<div class={$isMobile ? "grid grid-cols-3 w-full pb-4 border-b border-gray-200 dark:border-gray-70" : "flex items-center mb-4 gap-4"}>
 				<button
 					class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
-					on:click={() => {
-						if ($isMobile && selectedPage) {
-							selectedPage = null;
-						} else {
-							goto('/home');
-						}
+					on:click={() => { 
+						goto('/home');
 					}}
 				>
 					<Fa icon={faArrowLeft} />
 				</button>
 				<h1 class="text-xl text-left text-primary dark:text-secondary font-semibold text-center">
-					{#if $isMobile && selectedPage}
-						{$_(sidebarItems.find(i => i.page === selectedPage)?.text || 'Settings')}
-					{:else}
-						{$_('Settings')}
-					{/if}
+					{$_('Settings')}
 				</h1>
 			</div>
-
-	 		{#if !$isMobile || ($isMobile && !selectedPage)}
+	 		{#if !$isMobile || !selectedPage}
 				<div class="mt-4">
 					{#each sidebarItems as item}
 						<button
@@ -208,12 +200,27 @@
 			{/if}
 		</div>
 
-		{#if !$isMobile || ($isMobile && selectedPage)}
+		{#if !$isMobile || selectedPage}
 			<div
 				class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow
-				{$isMobile ? "min-h-screen flex flex-col w-full" : "w-[450px] rounded border"}"
+				{$isMobile ? "h-full overflow-y-auto pb-[15vh]" : "w-[450px] rounded border"}"
 			>
-				<ul class="flex flex-col">
+			 	{#if $isMobile}
+					<div class="grid grid-cols-3 w-full pb-4 mb-6 border-b border-gray-200 dark:border-gray-70">
+						<button
+							class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
+							on:click={() => {
+									selectedPage = null;
+							}}
+						>
+							<Fa icon={faArrowLeft} />
+						</button>
+						<h1 class="text-xl text-left text-primary dark:text-secondary font-semibold text-center">
+							{$_(sidebarItems.find(i => i.page === selectedPage)?.text || 'Settings')}
+						</h1>
+					</div>
+				{/if}
+				<ul class="flex flex-col h-full">
 					{#if selectedPage === 'profile'}
 						<li
 							class= "text-lg text-primary dark:text-secondary font-semibold mb-3"
@@ -241,7 +248,7 @@
 						/>
 
 						{#if $isMobile}
-							<div class="flex items-center justify-between mt-6">
+							<div class="flex items-center justify-between my-4 ">
 								<span>{$_('Dark Mode')}</span>
 								<Toggle
 										checked={$darkModeStore}
@@ -250,7 +257,7 @@
 							</div>
 						{/if}
 
-						<div class="pt-4">
+						<div class="pt-4 md:mt-auto">
 							<div class="cursor-pointer hover:underline">
 								{$_('Give me all my data')}
 							</div>
@@ -459,20 +466,3 @@
 		</Button>
 	</div>
 </Modal>
-
-<style>
-	.panel-title {
-			position: relative;
-		}
-		
-	.panel-title::after {
-		content: '';
-		position: absolute;
-		bottom: 0;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 100vw;
-		border-bottom: 2px solid;
-		border-color: #4B5563;
-	}
-</style>
