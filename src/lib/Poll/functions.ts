@@ -8,8 +8,6 @@ import { get } from 'svelte/store';
 import type { Phase, poll } from './interface';
 import { TEXT_POLL_PHASE_CONFIG } from './phases';
 import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
-import type { Permissions } from '$lib/Group/Permissions/interface';
-import type { GroupUser } from '$lib/Group/interface';
 
 export const formatDate = (dateInput: string) => {
   const date = new Date(dateInput);
