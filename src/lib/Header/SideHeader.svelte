@@ -51,6 +51,13 @@
 				goto('/user/settings');
 			}
 		},
+		{
+			title: 'Wallet',
+			action: () => {
+				chatOpenStore.set(false);
+				goto('/user/settings');
+			}
+	    },
 		{ title: 'TOS', action: () => (open_tos = true) },
 		{
 			title: 'Log Out',

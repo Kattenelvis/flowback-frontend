@@ -1,21 +1,27 @@
 <script lang="ts">
+	import { env } from '$env/dynamic/public';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import Button from '$lib/Generic/Button.svelte';
 	import { _ } from 'svelte-i18n';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import type { Delegate } from './interfaces';
 	import type { GroupUser } from '$lib/Group/interface';
+	// V2 on-chain
+	import { resignAsDelegate as resignAsDelegateV2 } from '$lib/web3/frontend/delegations';
 
 	export let groupUser: GroupUser,
 		loading: boolean,
 		groupId: number,
+		groupBlockchainId: number | null = null,
 		delegates: Delegate[],
 		Class = '',
 		tags: number[] = [];
 
+	const canUseBlockchain = () => env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
+
 	const deleteDelegation = async () => {
 		await deleteDelegationPool();
-		getDelegatePools();
+		await getDelegatePools();
 		groupUser.delegate_pool_id = null;
 	};
 
@@ -24,10 +30,43 @@
 	*/
 	const deleteDelegationPool = async () => {
 		loading = true;
+
+		// 1) V2 on-chain first (optional)
+		if (canUseBlockchain()) {
+		  if (groupBlockchainId === null || groupBlockchainId === undefined) {
+		    ErrorHandlerStore.set({
+		      message: 'Missing group blockchain id. Cannot perform on-chain resign.',
+		      success: false
+		    });
+		    loading = false;
+		    return;
+		  }
+	  
+		  try {
+		    await resignAsDelegateV2(groupBlockchainId);
+		  } catch (e: any) {
+		    ErrorHandlerStore.set({
+		      message: e?.shortMessage || e?.message || 'On-chain resignAsDelegate failed',
+		      success: false
+		    });
+		    loading = false;
+		    return;
+		  }
+		}
+
+		// 2) Backend sync
 		const { res } = await fetchRequest('POST', `group/${groupId}/delegate/pool/delete`);
 		loading = false;
 
-		if (!res.ok) return;
+		if (!res.ok) {
+			ErrorHandlerStore.set({
+				message: canUseBlockchain()
+					? 'On-chain succeeded but backend failed (possible desync).'
+					: 'Failed to stop being delegate',
+				success: false
+			});
+			 return;
+		}
 
 		groupUser.delegate_pool_id = null;
 		// userIsDelegateStore.update((value) => (value = false));
@@ -38,7 +77,7 @@
 
 		// Create delegation relation to oneself
 		{
-			const { json, res } = await fetchRequest('POST', `group/${groupId}/delegate/create`, {
+			const { res } = await fetchRequest('POST', `group/${groupId}/delegate/create`, {
 				delegate_pool_id: groupUser.delegate_pool_id
 			});
 
@@ -47,8 +86,6 @@
 
 		// Get Group Tags
 		{
-			// TODO: What happends when limit has been reached?
-			// Potential fix here and at other places: Max number of tags per group?
 			const { res, json } = await fetchRequest('GET', `group/${groupId}/tags?limit=1000`);
 
 			if (!res.ok) {
