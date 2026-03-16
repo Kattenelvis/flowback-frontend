@@ -28,6 +28,8 @@ export const getPhase = (poll: poll): Phase => {
 
 export const dateLabelsDatePoll = ["Hasn't started yet", 'Schedule', 'Results'];
 
+export const dateLabels = TEXT_POLL_PHASE_CONFIG.filter(p => p.endDateField !== null).map(p => p.label);
+
 export const getPhaseUserFriendlyName = (phase: Phase) =>
   TEXT_POLL_PHASE_CONFIG.find(p => p.key === phase)?.label ?? '';
 
