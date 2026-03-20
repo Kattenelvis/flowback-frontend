@@ -103,7 +103,7 @@ export const getMultipleOptions = (phase: Phase, poll: poll, functions: any[], f
   const canFastForward = phase !== 'result' &&
     phase !== 'prediction_vote' &&
     poll?.allow_fast_forward &&
-    (get(groupUserPermissionStore).poll_fast_forward ||
+    (get(groupUserPermissionStore)?.poll_fast_forward ||
       get(groupUserStore)?.is_admin)
 
 

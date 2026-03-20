@@ -88,8 +88,7 @@
 				<!-- Exclamation for current phase, check for finished phases, defaults to unfilled circle for future polls -->
 				{@const icon = (() => {
 					if (i === currentPhaseIndex) return faCircleExclamation;
-					else if (i < currentPhaseIndex || dates[i] <= new Date())
-						return faCircleCheck;
+					else if (i < currentPhaseIndex) return faCircleCheck;
 				})()}
 
 				<HeaderIcon
