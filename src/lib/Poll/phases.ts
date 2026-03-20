@@ -17,5 +17,5 @@ export const TEXT_POLL_PHASE_CONFIG: PollPhaseConfig[] = [
 
 export const DATE_POLL_PHASE_CONFIG: PollPhaseConfig[] = [
   { phase: 'proposal', label: 'Proposals creation', endDateField: 'start_date', id: 0 },
-  { phase: 'prediction_vote', label: 'Results and evaluation', endDateField: 'end_date', id: 1 },
+  { phase: 'result', label: 'Results and evaluation', endDateField: 'end_date', id: 1 },
 ];

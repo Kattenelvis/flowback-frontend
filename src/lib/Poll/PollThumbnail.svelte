@@ -327,7 +327,7 @@
 				</div>
 
 				<!-- PHASE 7: RESULTS AND EVALUATION -->
-			{:else if phase === 'prediction_vote' || phase === 'result'}
+			{:else if phase === 'result'}
 				<div class="flex justify-between">
 					<Button
 						Class="w-[47%]"

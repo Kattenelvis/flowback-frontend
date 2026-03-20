@@ -21,7 +21,7 @@ export const getPhase = (poll: poll): Phase => {
     if (phase.endDateField === null) return phase.phase;
     if (now < new Date(poll[phase.endDateField] as string)) return phase.phase;
   }
-  return 'prediction_vote';
+  return 'result';
 };
 
 export const dateLabelsDatePoll = ["Hasn't started yet", 'Schedule', 'Results'];
@@ -31,6 +31,7 @@ export const dateLabels = TEXT_POLL_PHASE_CONFIG.filter(p => p.endDateField !== 
 export const getPhaseUserFriendlyName = (phase: Phase) =>
   TEXT_POLL_PHASE_CONFIG.find(p => p.phase === phase)?.label ?? '';
 
+// TODO: REMOVE
 export const getPhaseUserFriendlyNameWithNumber = (phase: Phase, poll_type: number = 4) => {
   if (poll_type === 4) {
     const idx = TEXT_POLL_PHASE_CONFIG.findIndex(p => p.phase === phase);
@@ -40,7 +41,7 @@ export const getPhaseUserFriendlyNameWithNumber = (phase: Phase, poll_type: numb
     switch (phase) {
       case 'area_vote':
         return '1. Date Voting';
-      case 'prediction_vote':
+      case 'result':
         return '2. Results';
       default:
         return '';
@@ -101,7 +102,6 @@ export const getMultipleOptions = (phase: Phase, poll: poll, functions: any[], f
   }
 
   const canFastForward = phase !== 'result' &&
-    phase !== 'prediction_vote' &&
     poll?.allow_fast_forward &&
     (get(groupUserPermissionStore)?.poll_fast_forward ||
       get(groupUserStore)?.is_admin)

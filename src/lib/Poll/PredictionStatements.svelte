@@ -65,11 +65,10 @@
 
 <Loader bind:loading>
 	<!-- In results/prediction_vote phase, "selected proposal" is always set as the winning proposal. If no such is found, don't display any predictions  -->
-	{#if (phase === 'prediction_vote' && selectedProposal && selectedProposal?.score > 0) || phase !== 'prediction_vote'}
-		<div class={phase === 'prediction_vote' ? '' : 'border-t-2'}>
+	{#if (phase === 'result' && selectedProposal && selectedProposal?.score > 0) || phase !== 'prediction_vote'}
+		<div>
 			<div
-				class={`font-semibold ${
-					phase === 'prediction_vote' ? ' text-xl mb-4 text-primary' : ' text-gray-500 text-sm pt-3'
+				class={`font-semibold text-xl mb-4 text-primary'
 				}`}
 			>
 				{$_('Consequences')} ({predictions?.length || 0})
@@ -81,11 +80,19 @@
 						class="elipsis border-b-2 flex flex-col break-words py-2 gap-1"
 						class:select-none={phase === 'prediction_bet'}
 					>
-						<span class="text-primary dark:text-secondary font-semibold">{prediction.title}</span>
-						<span class="text-sm text-gray-500">{formatDate(prediction.end_date)}</span>
+						<span class="text-primary dark:text-secondary font-semibold"
+							>{prediction.title}</span
+						>
+						<span class="text-sm text-gray-500"
+							>{formatDate(prediction.end_date)}</span
+						>
 
 						{#if prediction.description}
-							<NewDescription description={prediction.description} limit={2} lengthLimit={110} />
+							<NewDescription
+								description={prediction.description}
+								limit={2}
+								lengthLimit={110}
+							/>
 						{/if}
 						{#if phase === 'delegate_vote' || phase === 'vote'}
 							<span class="text-sm text-right"
