@@ -58,18 +58,14 @@ export const getGroupInfo = async (id: number | string) => {
 
 
 export const nextPhase = async (poll: poll, phase: Phase) => {
-
-  if (phase === 'result' || phase === "prediction_vote") return 'prediction_vote';
-  let _phase: Phase = 'area_vote';
+  let _phase: Phase = 'pre_start';
 
   if (poll.poll_type === 4) {
-    if (phase === 'prediction_bet') poll.status_prediction = 1;
-    else if (phase === 'vote') poll.status = 2;
-
     const idx = TEXT_POLL_PHASE_CONFIG.findIndex(p => p.key === phase);
     const next = TEXT_POLL_PHASE_CONFIG[idx + 1];
-    _phase = next?.key ?? 'prediction_vote';
+    _phase = next?.key;
   }
+
   // Date Poll
   else if (poll.poll_type === 3) _phase = 'result';
 

@@ -13,5 +13,5 @@ export const TEXT_POLL_PHASE_CONFIG: PollPhaseConfig[] = [
   { key: 'prediction_bet', label: 'Predictions', endDateField: 'prediction_bet_end_date', showInTimeline: true },
   { key: 'delegate_vote', label: 'Delegate voting', endDateField: 'delegate_vote_end_date', showInTimeline: true },
   { key: 'vote', label: 'Voting for non-delegates', endDateField: 'end_date', showInTimeline: true },
-  { key: 'prediction_vote', label: 'Results and evaluation', endDateField: null, showInTimeline: false },
+  { key: 'result', label: 'Results and evaluation', endDateField: null, showInTimeline: true },
 ];

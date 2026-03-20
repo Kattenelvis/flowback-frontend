@@ -37,38 +37,17 @@
 
 	let { poll }: { poll: poll } = $props();
 
-	let onHoverGroup = $state(false),
-		phase: Phase = $state('pre_start'),
+	let phase: Phase = $state('pre_start'),
 		// If text poll, have all phases. Date polls have fewer phases to display
 		dates: Date[] = $state([]),
 		tags: TagType[] = $state([]),
 		tag: TagType = $state({ active: false, id: 0, name: '', imac: 0 }),
 		selectedTag: number = $state(0),
 		voting = $state(true),
-		choicesOpen = $state(false),
 		deletePollModalShow = $state(false),
 		reportPollModalShow = $state(false),
 		hovering = $state(false),
 		permissions: Permissions | null = $state(null);
-
-	//When adminn presses the pin tack symbol, pin the poll
-	const pinPoll = async () => {
-		const { json, res } = await fetchRequest(
-			'POST',
-			`group/poll/${poll?.id}/update`,
-			{
-				pinned: !poll?.pinned
-			}
-		);
-
-		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Could not pin poll', success: false });
-			return;
-		}
-
-		poll.pinned = !poll?.pinned;
-		poll = { ...poll };
-	};
 
 	const submitTagVote = async (tag: number) => {
 		const { json, res } = await fetchRequest(
@@ -232,9 +211,7 @@
 		</div>
 	{/snippet}
 
-	{#key phase}
-		<Timeline bind:phase bind:poll enableDetails={false} horizontal />
-	{/key}
+	<Timeline bind:phase bind:poll enableDetails={false} horizontal />
 
 	<div class="!mt-4">
 		<!-- For text polls -->

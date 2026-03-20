@@ -1,12 +1,17 @@
+<!-- TODO: Refactor this file, simplify, make extendible (open-close principle maybe) -->
 <script lang="ts">
 	import { formatDate } from '$lib/Generic/DateFormatter';
 	import HeaderIcon from '$lib/Header/HeaderIcon.svelte';
 	import { faDownLong } from '@fortawesome/free-solid-svg-icons/faDownLong';
 	import Fa from 'svelte-fa';
 	import { _ } from 'svelte-i18n';
-	import { dateLabelsDatePoll, getPhaseUserFriendlyNameWithNumber } from '../functions';
+	import {
+		dateLabelsDatePoll,
+		getPhaseUserFriendlyNameWithNumber
+	} from '../functions';
 	import { TEXT_POLL_PHASE_CONFIG } from '../phases';
 	import {
+		faC,
 		faCircle,
 		faCircleCheck,
 		faCircleExclamation
@@ -34,18 +39,23 @@
 		dates = [];
 
 		if (poll?.poll_type === 4) {
-			const timelinePhases = TEXT_POLL_PHASE_CONFIG.filter(p => p.showInTimeline);
+			const timelinePhases = TEXT_POLL_PHASE_CONFIG.filter(
+				(p) => p.showInTimeline
+			);
 
-			dates = timelinePhases.map(p => new Date(poll[p.endDateField!] as string));
+			dates = timelinePhases.map(
+				(p) => new Date(poll[p.endDateField!] as string)
+			);
 
 			dateLabels = timelinePhases.map((p) => {
-				const configIdx = TEXT_POLL_PHASE_CONFIG.findIndex(c => c.key === p.key);
+				const configIdx = TEXT_POLL_PHASE_CONFIG.findIndex(
+					(c) => c.key === p.key
+				);
 				return TEXT_POLL_PHASE_CONFIG[configIdx + 1]?.label ?? p.label;
 			});
 
-			const now = new Date();
-			currentPhaseIndex = dates.filter(d => d <= now).length;
-			if (phase === 'result' || phase === 'prediction_vote') currentPhaseIndex = dates.length;
+			const idx = TEXT_POLL_PHASE_CONFIG.findIndex((p) => p.key === phase);
+			currentPhaseIndex = idx !== -1 ? idx : dates.length;
 		} else if (poll?.poll_type === 3) {
 			dates = [new Date(poll?.start_date), new Date(poll?.end_date)];
 			dateLabels = [dateLabelsDatePoll[1], dateLabelsDatePoll[2]];
@@ -99,20 +109,17 @@
 			}, rgba(189, 208, 255, 1) ${fraction * 100 - 2}%, rgba(191, 191, 191, 1) ${fraction * 100}%`}
 		>
 			{#each datePlacement as date, i}
-				{@const icon =
-					i === currentPhaseIndex
-						? faCircleExclamation
-						: dates[i] <= new Date()
-							? faCircleCheck
-							: faCircle}
+				{@const icon = (() => {
+					if (i === currentPhaseIndex) return faCircleExclamation;
+					else if (dates[i] <= new Date()) return faCircleCheck;
+				})()}
 
 				<HeaderIcon
 					Class="!cursor-default"
 					size="1x"
-					text={`${i + 1}. ${$_(dateLabels[i])}: ${datesArray[i]}`}
+					text={`${i + 1}. ${$_(TEXT_POLL_PHASE_CONFIG[i].label)}${i !== 5 ? `: ${datesArray[i]}` : ''}`}
 					{icon}
 				/>
-				<!-- color={`${dates[i] <= new Date() ? '#015BC0' : ''}`} -->
 			{/each}
 		</div>
 	{/if}
