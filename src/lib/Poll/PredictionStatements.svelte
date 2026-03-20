@@ -65,7 +65,7 @@
 
 <Loader bind:loading>
 	<!-- In results/prediction_vote phase, "selected proposal" is always set as the winning proposal. If no such is found, don't display any predictions  -->
-	{#if (phase === 'result' && selectedProposal && selectedProposal?.score > 0) || phase !== 'prediction_vote'}
+	{#if phase === 'result' && selectedProposal && selectedProposal?.score > 0}
 		<div>
 			<div
 				class={`font-semibold text-xl mb-4 text-primary'
@@ -76,10 +76,7 @@
 
 			{#if predictions?.length > 0}
 				{#each predictions as prediction}
-					<div
-						class="elipsis border-b-2 flex flex-col break-words py-2 gap-1"
-						class:select-none={phase === 'prediction_bet'}
-					>
+					<div class="elipsis border-b-2 flex flex-col break-words py-2 gap-1">
 						<span class="text-primary dark:text-secondary font-semibold"
 							>{prediction.title}</span
 						>
@@ -105,7 +102,7 @@
 									{$_('None')}
 								{/if}
 							</span>
-						{:else if phase === 'prediction_bet' || phase === 'result' || phase === 'prediction_vote'}
+						{:else if phase === 'prediction_bet' || phase === 'result'}
 							<Prediction Class="mt-4" bind:phase bind:poll bind:prediction />
 						{/if}
 					</div>
