@@ -210,7 +210,7 @@
 		</div>
 	{/snippet}
 
-	<Timeline bind:phase bind:poll enableDetails={false} horizontal />
+	<Timeline bind:phase bind:poll enableDetails={true} horizontal />
 
 	<div class="!mt-4">
 		<!-- For text polls -->

@@ -6,22 +6,15 @@
 	import Fa from 'svelte-fa';
 	import { _ } from 'svelte-i18n';
 	import {
-		dateLabelsDatePoll,
-		getPhaseUserFriendlyNameWithNumber
-	} from '../functions';
-	import {
 		DATE_POLL_PHASE_CONFIG,
 		TEXT_POLL_PHASE_CONFIG,
 		type PollPhaseConfig
 	} from '../phases';
 	import {
-		faC,
-		faCircle,
 		faCircleCheck,
 		faCircleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { Phase, poll } from '../interface';
-	import { onMount } from 'svelte';
 
 	export let enableDetails = false,
 		displayTimeline = true,
@@ -34,7 +27,6 @@
 
 	let datesArray: string[] = [],
 		displayDetails = false,
-		dateLabels: string[] = [],
 		currentPhaseIndex: number,
 		fraction: number,
 		datePlacement: number[] = [],
@@ -48,8 +40,8 @@
 		// DATE POLL
 		else if (poll?.poll_type === 3) pollPhases = DATE_POLL_PHASE_CONFIG;
 
-		currentPhaseIndex = pollPhases.findIndex((p) => p.phase === phase);
-		dates = pollPhases.map((p) => new Date(poll[p.endDateField!] as string));
+		currentPhaseIndex = pollPhases.find((p) => p.phase === phase)?.id ?? 5;
+		dates = pollPhases.map((p) => new Date(poll[p.endDateField] as string));
 
 		// Timeline isn't needed for polls with 1 phase, so this shouldn't be an issue
 		fraction = currentPhaseIndex / (pollPhases.length - 1);
@@ -93,6 +85,7 @@
 			}, rgba(189, 208, 255, 1) ${fraction * 100 - 2}%, rgba(191, 191, 191, 1) ${fraction * 100}%`}
 		>
 			{#each datePlacement as date, i}
+				<!-- Exclamation for current phase, check for finished phases, defaults to unfilled circle for future polls -->
 				{@const icon = (() => {
 					if (i === currentPhaseIndex) return faCircleExclamation;
 					else if (i < currentPhaseIndex || dates[i] <= new Date())
@@ -102,12 +95,14 @@
 				<HeaderIcon
 					Class="!cursor-default"
 					size="1x"
-					text={`${i + 1}. ${$_(TEXT_POLL_PHASE_CONFIG[i].label)}${i !== 5 ? `: ${datesArray[i]}` : ''}`}
+					text={`${i + 1}. ${$_(pollPhases[i].label)}${i !== 5 ? `: ${datesArray[i]}` : ''}`}
 					{icon}
 				/>
 			{/each}
 		</div>
 	{/if}
+
+	<!-- TODO: Fix for thumbnails -->
 	{#if enableDetails && displayDetails}
 		<button
 			class="hover:underline flex items-center gap-1 text-xs"
@@ -121,7 +116,7 @@
 				<li
 					class="border-b md:border-b-0 flex justify-between flex-col md:flex-row text-center"
 				>
-					<div class="mb-4 md:mb-0">{$_(dateLabels[i])}:</div>
+					<div class="mb-4 md:mb-0">{$_(pollPhases[i].label)}:</div>
 					<div class="mb-4 md:mb-0">{date}</div>
 				</li>
 			{/each}
