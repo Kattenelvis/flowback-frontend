@@ -37,7 +37,7 @@
 
 	let { poll }: { poll: poll } = $props();
 
-	let phase: Phase = $state('pre_start'),
+	let phase: Phase = $state(getPhase(poll)),
 		// If text poll, have all phases. Date polls have fewer phases to display
 		dates: Date[] = $state([]),
 		tags: TagType[] = $state([]),
@@ -100,7 +100,6 @@
 	};
 
 	onMount(async () => {
-		phase = getPhase(poll);
 		if (phase === 'area_vote') {
 			tags = await getTags(poll?.group_id);
 			getAreaVote();

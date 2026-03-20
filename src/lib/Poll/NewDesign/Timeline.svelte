@@ -9,7 +9,11 @@
 		dateLabelsDatePoll,
 		getPhaseUserFriendlyNameWithNumber
 	} from '../functions';
-	import { TEXT_POLL_PHASE_CONFIG } from '../phases';
+	import {
+		DATE_POLL_PHASE_CONFIG,
+		TEXT_POLL_PHASE_CONFIG,
+		type PollPhaseConfig
+	} from '../phases';
 	import {
 		faC,
 		faCircle,
@@ -17,6 +21,7 @@
 		faCircleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { Phase, poll } from '../interface';
+	import { onMount } from 'svelte';
 
 	export let enableDetails = false,
 		displayTimeline = true,
@@ -32,43 +37,22 @@
 		dateLabels: string[] = [],
 		currentPhaseIndex: number,
 		fraction: number,
-		datePlacement: number[] = [];
+		datePlacement: number[] = [],
+		pollPhases: PollPhaseConfig[] = [];
 
 	const setupDates = () => {
-		//Code has been setup to make it really easy to add or remove dates. Perhaps expand on that?
-		dates = [];
+		currentPhaseIndex = 0;
 
-		if (poll?.poll_type === 4) {
-			const timelinePhases = TEXT_POLL_PHASE_CONFIG.filter(
-				(p) => p.showInTimeline
-			);
+		// TEXT POLL
+		if (poll?.poll_type === 4) pollPhases = TEXT_POLL_PHASE_CONFIG;
+		// DATE POLL
+		else if (poll?.poll_type === 3) pollPhases = DATE_POLL_PHASE_CONFIG;
 
-			dates = timelinePhases.map(
-				(p) => new Date(poll[p.endDateField!] as string)
-			);
+		currentPhaseIndex = pollPhases.findIndex((p) => p.phase === phase);
+		dates = pollPhases.map((p) => new Date(poll[p.endDateField!] as string));
 
-			dateLabels = timelinePhases.map((p) => {
-				const configIdx = TEXT_POLL_PHASE_CONFIG.findIndex(
-					(c) => c.key === p.key
-				);
-				return TEXT_POLL_PHASE_CONFIG[configIdx + 1]?.label ?? p.label;
-			});
-
-			const idx = TEXT_POLL_PHASE_CONFIG.findIndex((p) => p.key === phase);
-			currentPhaseIndex = idx !== -1 ? idx : dates.length;
-		} else if (poll?.poll_type === 3) {
-			dates = [new Date(poll?.start_date), new Date(poll?.end_date)];
-			dateLabels = [dateLabelsDatePoll[1], dateLabelsDatePoll[2]];
-
-			//TODO: Refactor so this works by making it easy for varying number of phases.
-			if (dates[1] > new Date()) {
-				currentPhaseIndex = 0;
-			} else {
-				currentPhaseIndex = 1;
-			}
-		}
-
-		fraction = currentPhaseIndex / dates.length;
+		// Timeline isn't needed for polls with 1 phase, so this shouldn't be an issue
+		fraction = currentPhaseIndex / (pollPhases.length - 1);
 
 		let totalTime = dates[dates.length - 1].getTime() - dates[0].getTime();
 
@@ -92,7 +76,7 @@
 				{$_('Current')}:
 			</span>
 			{$_('Phase')}
-			{getPhaseUserFriendlyNameWithNumber(phase, poll.poll_type)}
+			{pollPhases.find((p) => p.id === currentPhaseIndex)?.label}
 		</div>
 	{/if}
 
@@ -111,7 +95,8 @@
 			{#each datePlacement as date, i}
 				{@const icon = (() => {
 					if (i === currentPhaseIndex) return faCircleExclamation;
-					else if (dates[i] <= new Date()) return faCircleCheck;
+					else if (i < currentPhaseIndex || dates[i] <= new Date())
+						return faCircleCheck;
 				})()}
 
 				<HeaderIcon
