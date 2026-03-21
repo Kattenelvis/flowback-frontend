@@ -56,25 +56,27 @@
 
 	onMount(() => {
 		getTag();
-		multipleChoices = getMultipleOptions(
-			phase,
-			poll,
-			[
-				() => {
-					deletePollModalShow = true;
-					choicesOpen = false;
-				},
-				() => {
-					reportPollModalShow = true;
-					choicesOpen = false;
-				}
-			],
-			async () => (phase = await nextPhase(poll, phase))
-		);
 	});
 
 	$: pictureSize = $isMobile ? 2 : 1;
 	$: poll && getTag();
+	$: multipleChoices = getMultipleOptions(
+		phase,
+		poll,
+		[
+			() => {
+				deletePollModalShow = true;
+				choicesOpen = false;
+			},
+			() => {
+				reportPollModalShow = true;
+				choicesOpen = false;
+			}
+		],
+		async () => (phase = await nextPhase(poll, phase)),
+		$groupUserPermissionStore,
+		$groupUserStore
+	);
 </script>
 
 <div

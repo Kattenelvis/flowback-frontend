@@ -97,7 +97,14 @@ export const imacFormatting = (imac: number | string) => {
   return `${(imac * 100).toFixed(0)}%`
 }
 
-export const getMultipleOptions = (phase: Phase, poll: poll, functions: any[], fast_forward: any) => {
+export const getMultipleOptions = (
+  phase: Phase,
+  poll: poll,
+  functions: any[],
+  fast_forward: any,
+  permissions = get(groupUserPermissionStore),
+  groupUser = get(groupUserStore)
+) => {
 
   const options = {
     labels: [get(_)('Delete Poll'), get(_)('Report Poll')],
@@ -106,9 +113,7 @@ export const getMultipleOptions = (phase: Phase, poll: poll, functions: any[], f
 
   const canFastForward = phase !== 'result' &&
     poll?.allow_fast_forward &&
-    (get(groupUserPermissionStore)?.poll_fast_forward ||
-      get(groupUserStore)?.is_admin)
-
+    (permissions?.poll_fast_forward || groupUser?.is_admin)
 
   if (canFastForward) {
     options.labels.push(get(_)('Fast Forward'))
