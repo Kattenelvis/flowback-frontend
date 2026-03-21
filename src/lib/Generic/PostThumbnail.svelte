@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { page } from '$app/state';
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
@@ -24,17 +24,23 @@
 		post,
 		children,
 		icons,
-		api = 'poll'
+		api = 'poll',
+		fast_forward = () => {}
 	}: {
 		post: Thread | poll;
 		children?: Snippet;
 		icons?: Snippet;
 		api?: 'thread' | 'poll';
+		fast_forward?: () => void;
 	} = $props();
 
 	let reportModalShow = $state(false),
 		deleteModalShow = $state(false),
-		choicesOpen = $state(false);
+		choicesOpen = $state(false),
+		multipleChoices = $state({
+			labels: [],
+			functions: []
+		});
 
 	//When adminn presses the pin tack symbol, pin the post
 	const pinPost = async (_post: Thread | poll) => {
@@ -51,6 +57,14 @@
 		_post.pinned = !_post?.pinned;
 		post = { ..._post };
 	};
+
+	onMount(() => {
+		//@ts-ignore
+		if (post?.fast_forward)
+			multipleChoices = {
+				labels: [$_('Fast Forward Poll'), $_('Repo')]
+			};
+	});
 </script>
 
 <div
@@ -102,16 +116,34 @@
 						</button>
 					{/if}
 
-					<MultipleChoices
-						bind:choicesOpen
-						labels={[$_('Delete Post'), $_('Report Post')]}
-						functions={[
-							() => (deleteModalShow = true),
-							() => ((reportModalShow = true), (choicesOpen = false))
-						]}
-						Class="text-black justify-self-center"
-						ClassInner="-translate-x-2/3 md:translate-x-0"
-					/>
+					{#if api === 'poll'}
+						<MultipleChoices
+							bind:choicesOpen
+							labels={[
+								$_('Delete Post'),
+								$_('Report Post'),
+								$_('Fast Forward')
+							]}
+							functions={[
+								() => (deleteModalShow = true),
+								() => ((reportModalShow = true), (choicesOpen = false)),
+								() => fast_forward()
+							]}
+							Class="text-black justify-self-center"
+							ClassInner="-translate-x-2/3 md:translate-x-0"
+						/>
+					{:else}
+						<MultipleChoices
+							bind:choicesOpen
+							labels={[$_('Delete Post'), $_('Report Post')]}
+							functions={[
+								() => (deleteModalShow = true),
+								() => ((reportModalShow = true), (choicesOpen = false))
+							]}
+							Class="text-black justify-self-center"
+							ClassInner="-translate-x-2/3 md:translate-x-0"
+						/>
+					{/if}
 				</div>
 			{/if}
 		</div>

@@ -5,9 +5,9 @@
 	import type { Delegate, DelegateRelation } from './interfaces';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
-	import Fa from 'svelte-fa';
-	import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 	import { _ } from 'svelte-i18n';
+	import Fa from 'svelte-fa';
+	import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
 	import { userStore } from '$lib/User/interfaces';
 	import Loader from '$lib/Generic/Loader.svelte';
 
@@ -15,9 +15,10 @@
 		delegates: Delegate[] = [];
 
 	let tags: Tag[] = [],
-		expandedSection: any = null,
+		expandedSection: any = true,
 		delegateRelations: DelegateRelation[] = [],
-		loading = false;
+		loading = false,
+		pendingCheck: Record<string, number | null> = {};
 
 	onMount(async () => {
 		groupDelegationSetup();
@@ -49,24 +50,36 @@
 	const getGroupTags = async () => {
 		// TODO: What happends when limit has been reached?
 		// Potential fix here and at other places: Max number of tags per group?
-		const { res, json } = await fetchRequest('GET', `group/${group.id}/tags?limit=1000`);
+		const { res, json } = await fetchRequest(
+			'GET',
+			`group/${group.id}/tags?limit=1000`
+		);
 		if (!res.ok) return;
 		tags = json?.results;
 	};
 
 	const getDelegates = async () => {
-		const { json, res } = await fetchRequest('GET', `group/${group.id}/delegate/pools?limit=1000`);
+		const { json, res } = await fetchRequest(
+			'GET',
+			`group/${group.id}/delegate/pools?limit=1000`
+		);
 		if (!res.ok) return;
 
 		// Temporary fix to make each delegate pool be associated with one user.
 		// TODO: Remove pools in the backend
 		delegates = json?.results.map((delegatePool: any) => {
-			return { ...delegatePool.delegates[0].group_user, pool_id: delegatePool.id };
+			return {
+				...delegatePool.delegates[0].group_user,
+				pool_id: delegatePool.id
+			};
 		});
 	};
 
 	const getDelegateRelations = async () => {
-		const { json, res } = await fetchRequest('GET', `group/${group.id}/delegates?limit=1000`);
+		const { json, res } = await fetchRequest(
+			'GET',
+			`group/${group.id}/delegates?limit=1000`
+		);
 
 		if (!res.ok) return;
 
@@ -74,9 +87,13 @@
 	};
 
 	const createDelegateRelation = async (delegate_pool_id: number) => {
-		const { json, res } = await fetchRequest('POST', `group/${group.id}/delegate/create`, {
-			delegate_pool_id
-		});
+		const { json, res } = await fetchRequest(
+			'POST',
+			`group/${group.id}/delegate/create`,
+			{
+				delegate_pool_id
+			}
+		);
 	};
 
 	// When a user clicks on a tag they want to delegate to, delegate to that tag
@@ -98,20 +115,34 @@
 				action === 'add'
 					? [...relation.tags.map((_tag) => _tag.id), tag]
 					: // If remove, filter it away
-						[...relation.tags.filter((_tag) => _tag.id !== tag).map((_tag) => _tag.id)]
+						[
+							...relation.tags
+								.filter((_tag) => _tag.id !== tag)
+								.map((_tag) => _tag.id)
+						]
 		};
 
-		const { res } = await fetchRequest('POST', `group/${group.id}/delegate/update`, payload);
+		const { res } = await fetchRequest(
+			'POST',
+			`group/${group.id}/delegate/update`,
+			payload
+		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to save new delegation', success: false });
+			ErrorHandlerStore.set({
+				message: 'Failed to save new delegation',
+				success: false
+			});
 			return;
 		}
 
 		// Because of scuffness in the code, saveDelegation is called twice, once to remove an earlier delegation and once more to add the new one.
 		// As such, two messages appear if we don't do this.
 		if (successMessage)
-			ErrorHandlerStore.set({ message: 'Successfully saved delegation', success: true });
+			ErrorHandlerStore.set({
+				message: 'Successfully saved delegation',
+				success: true
+			});
 	};
 
 	const notificationSubscribe = async (pool_id: number) => {
@@ -124,30 +155,48 @@
 			}
 		);
 	};
+
+	const clearChoice = async (tag: Tag) => {
+		const delegateRelationToRemove = delegateRelations.find((relation) =>
+			relation.tags.find((_tag) => _tag.id === tag.id)
+		);
+
+		if (delegateRelationToRemove) {
+			pendingCheck[tag.name] = null;
+			pendingCheck = pendingCheck;
+			await saveDelegation(
+				delegateRelationToRemove.delegate_pool_id,
+				tag.id,
+				'remove'
+			);
+			delete pendingCheck[tag.name];
+			pendingCheck = pendingCheck;
+			groupDelegationSetup();
+		}
+	};
 </script>
 
 <Loader bind:loading>
 	<div>
 		{#if delegates.length > 0}
 			{#each tags as tag, index}
-				<div class="section">
-					<button
-						type="button"
-						class="transition-all flex text-primary dark:text-secondary justify-between w-full section-title"
-						on:click={() => (expandedSection = expandedSection === index ? null : index)}
-					>
-						<span class="break-word text-left">{tag.name}</span>
+				{#if index === 0}
+					<div>
+						<span class="text-primary dark:text-secondary font-medium">{$_('Delegates')}</span>
 
-						<!-- Always use chevron-down and rotate when expanded -->
-						<div class="chevron {expandedSection === index ? 'expanded' : ''}">
-							<Fa icon={faChevronDown} />
-						</div>
-					</button>
-
-					{#if expandedSection === index}
-						<div class="voter-list">
+						<div class="flex flex-col gap-2 mt-2">
 							{#each delegates as delegate}
-								<div class="voter-item">
+								{@const isChecked = tag.name in pendingCheck
+									? pendingCheck[tag.name] === delegate.pool_id
+									: delegateRelations
+										.find(r => r.delegate_pool_id === delegate.pool_id)
+										?.tags.find(_tag => _tag.id === tag.id) !== undefined}
+								<label
+									class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors
+										{isChecked
+											? 'bg-primary/5 border-primary/30 dark:bg-primary/10 dark:border-primary/40'
+											: 'border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-darkbackground'}"
+								>
 									<ProfilePicture
 										displayName
 										username={delegate.user.username}
@@ -155,86 +204,50 @@
 										profilePicture={delegate.user.profile_image}
 										href={`/user?id=${delegate.user.id}&delegate_id=${delegate.id}&group_id=${group.id}&is_admin=${delegate.is_admin}`}
 									/>
-
-									<span>
+									<div class="flex items-center gap-3 shrink-0">
+										<a
+											href={`/user?id=${delegate.user.id}&delegate_id=${delegate.id}&group_id=${group.id}&is_admin=${delegate.is_admin}`}
+											class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary dark:hover:text-secondary transition-colors px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+											on:click|stopPropagation
+										>
+											<Fa icon={faClockRotateLeft} />
+											<span>{$_('History')}</span>
+										</a>
 										<input
-											disabled={delegates.find((delegate) => delegate.user.id === $userStore?.id) &&
-												delegate.user.id !== $userStore?.id}
+											disabled={delegates.find(d => d.user.id === $userStore?.id) && delegate.user.id !== $userStore?.id}
 											on:input={async () => {
+												pendingCheck[tag.name] = delegate.pool_id;
+												pendingCheck = pendingCheck;
 												loading = true;
 												await createDelegateRelation(delegate.pool_id);
 												await getDelegateRelations();
 												await updateDelgation(delegate, tag);
 												await notificationSubscribe(delegate.pool_id);
-												// Refresh relations to ensure consistency with backend
 												await getDelegateRelations();
+												delete pendingCheck[tag.name];
+												pendingCheck = pendingCheck;
 												loading = false;
 											}}
 											type="radio"
 											name={tag.name}
-											checked={delegateRelations
-												.find((relation) => relation.delegate_pool_id === delegate.pool_id)
-												?.tags.find((_tag) => _tag.id === tag.id) !== undefined}
+											checked={isChecked}
+											class="accent-primary w-4 h-4"
 										/>
-									</span>
-								</div>
+									</div>
+								</label>
 							{/each}
 						</div>
 						<button
-							class="text-red-700 hover:underline"
-							on:click={async () => {
-								const delegateRelationToRemove = delegateRelations.find((relation) =>
-									relation.tags.find((_tag) => _tag.id === tag.id)
-								);
-
-								if (delegateRelationToRemove) {
-									await saveDelegation(delegateRelationToRemove.delegate_pool_id, tag.id, 'remove');
-									groupDelegationSetup();
-								}
-							}}>{$_('Clear Choice')}</button
+							class="text-xs text-red-400 hover:text-red-600 hover:underline transition-colors mt-2"
+							on:click={() => clearChoice(tag)}
 						>
-					{:else}
-						<!-- <div class="voter-list">Inga rekommenderade väljare.</div> -->
-					{/if}
-				</div>
+							{$_('Clear Choice')}
+						</button>
+					</div>
+				{/if}
 			{/each}
 		{:else}
 			<span>{$_('There are currently no delegates for this group')}</span>
 		{/if}
 	</div>
 </Loader>
-
-<style>
-	.section {
-		margin-bottom: 1rem;
-		border-bottom: 1px solid #ccc;
-	}
-	.section-title {
-		cursor: pointer;
-		font-size: 1.2rem;
-		padding: 0.5rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	.voter-list {
-		padding-left: 1rem;
-	}
-	.voter-item {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 0.5rem;
-	}
-	.voter-item input[type='radio'] {
-		margin-left: 0.5rem;
-	}
-
-	.chevron {
-		transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
-	}
-
-	.expanded {
-		transform: rotate(180deg);
-	}
-</style>

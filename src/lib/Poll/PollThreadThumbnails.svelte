@@ -15,15 +15,17 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { posts } from './stores';
 	import ThreadThumbnail from '$lib/Thread/ThreadThumbnail.svelte';
-	import { lazyLoading } from '$lib/Generic/GenericFunctions';
+	import { deepCopy, lazyLoading } from '$lib/Generic/GenericFunctions';
 	import { fetchRequest } from '$lib/FetchRequest';
 
 	// Props
 	export let Class = '',
 		infoToGet: InfoToGet;
+
 	let polls: poll[] = [],
 		threads: Thread[] = [],
 		workGroups: WorkGroup[] = [],
+		recentlyAdded: Post[] = [],
 		loading = false,
 		next: null | undefined | string,
 		filter: Filter = {
@@ -40,23 +42,27 @@
 		showThreads = true,
 		showPolls = true;
 
-	async function fetchPolls() {
-		let api_params = `
-		group_ids=${page.params.groupId ?? ''}&
-		order_by=${filter.order_by}&
-		limit=${pollThumbnailsLimit}&
-		title__icontains=${filter.search ?? ''}&
-		tag_id=${filter.tag ?? ''}&
-		work_group_ids=${filter.workgroup}&
-		public=${infoToGet === InfoToGet.public ? 'true' : ''}&
-		created_at__gt=${filter.from}&
-		created_at__lt=${filter.to}&status=${filter.status}
-    `;
+	const getParams = () => {
+		let api_params = `group_ids=${page.params.groupId ?? ''}&limit=${pollThumbnailsLimit}&order_by=${filter.order_by}`;
 
+		if (filter.search) api_params += `&title__icontains=${filter.search}`;
+		if (filter.tag) api_params += `&tag_id=${filter.tag}`;
+		if (filter.workgroup) api_params += `&work_group_ids=${filter.workgroup}`;
+		if (infoToGet === InfoToGet.public) api_params += `&public=true`;
+		if (filter.from) api_params += `&created_at__gt=${filter.from}`;
+		if (filter.to) api_params += `&created_at__lt=${filter.to}`;
+		if (filter.status !== null) api_params += `&status=${filter.status}`;
+
+		return api_params;
+	};
+
+	const fetchPolls = async () => {
+		if (loading) return;
+
+		let api_params = getParams();
 		// When first time loading, or when first time changing the filter, next is undefined.
 		// The starting point for the pollthread thumbnails list.
 		if (next === undefined) {
-			// if (true) {
 			loading = true;
 
 			const { res, json } = await fetchRequest(
@@ -73,9 +79,11 @@
 
 			$posts = json.results ?? [];
 			next = json.next ?? null;
-
-			// Next is null whenever one has reached the last next-page for the api
+			recentlyAdded = $posts;
+			// The backend returns next as null when it has reached the end of what can be queried
+			// In that case, do nothing
 		} else if (next === null) return;
+		// Lastly, when scrolling, do lazy loading
 		else {
 			loading = true;
 			const { res, json } = await fetchRequest('GET', next);
@@ -85,37 +93,50 @@
 					success: false
 				});
 			}
-			$posts = [...$posts, ...json.results];
+
 			next = json.next;
+			recentlyAdded = json.results.filter(
+				(post: Post) => !(post.id in $posts.map((p) => p.id))
+			);
+
+			$posts = [...$posts, ...recentlyAdded];
 		}
 		loading = false;
-	}
+	};
 
 	const fetchRelatedContent = async () => {
-		const threadIds = $posts
+		let api_params = getParams();
+
+		const threadIds = recentlyAdded
 			.filter((post) => post.related_model === 'thread')
 			.map((post) => post.id);
 
-		const { res, json } = await fetchRequest('GET', `home/polls?limit=1000`);
-		polls = json.results;
+		const pollIds = recentlyAdded
+			.filter((post) => post.related_model === 'poll')
+			.map((post) => post.id);
 
-		if (threadIds.length) {
-			const response =
-				infoToGet === InfoToGet.home
-					? await ThreadsApi.getHomeThreads(filter.order_by)
-					: await ThreadsApi.getGroupThreads(
-							page.params.groupId ?? '-1',
-							threadIds,
-							filter.order_by
-						);
-			threads = response.results;
+		{
+			const { res, json } = await fetchRequest(
+				'GET',
+				`home/polls?id_list=${pollIds.join(',')}&${api_params}`
+			);
+
+			polls = [...polls, ...json.results];
+		}
+
+		{
+			const { res, json } = await fetchRequest(
+				'GET',
+				`group/thread/list?id_list=${threadIds.join(',')}&${api_params}`
+			);
+			threads = [...threads, ...json.results];
 		}
 	};
 
-	async function fetchWorkGroups() {
+	const fetchWorkGroups = async () => {
 		const { results } = await PollsApi.getWorkGroups();
 		workGroups = results;
-	}
+	};
 
 	const matchesFilter = (post: Post): boolean => {
 		// Find the corresponding thread (only needed for workgroup filtering on threads)
@@ -136,28 +157,28 @@
 			!filter.workgroup || // If no workgroup filter, show all threads
 			(thread && thread.work_group?.id === Number(filter.workgroup)); // Match thread workgroup
 
-		// return false;
 		return (matchesSearch && matchesWorkgroup) || false;
 	};
 
-	onMount(async () => {
-		await fetchPolls();
-
-		if (env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE') {
-			await fetchWorkGroups();
-		} else {
-			await fetchRelatedContent();
-		}
+	onMount(() => {
+		setup();
 	});
 
 	$: if (filter) {
+		$posts = [];
+		threads = [];
+		polls = [];
 		next = undefined;
-		fetchPolls();
-		fetchRelatedContent();
+		setup();
 	}
+
+	const setup = async () => {
+		await fetchPolls();
+		if ($posts.length > 0) await fetchRelatedContent();
+	};
 </script>
 
-<svelte:window onscroll={() => lazyLoading(fetchPolls)} />
+<svelte:window onscroll={() => lazyLoading(setup)} />
 
 <div class={`${Class} dark:text-darkmodeText`}>
 	<Loader bind:loading>
@@ -165,28 +186,36 @@
 			<PollFiltering {infoToGet} bind:filter bind:showThreads bind:showPolls />
 
 			{#if $posts?.length === 0 && !loading}
-				<div class="bg-white dark:bg-darkobject rounded shadow p-8 mt-6">
+				<div class="bg-white dark:bg-darkobject rounded shadow p-8 mt-4">
 					{$_('No posts currently here')}
 				</div>
-			{:else if $posts?.length > 0 && (polls?.length > 0 || threads?.length > 0)}
+
+				<!-- Iterate over all posts. If the post is a poll, show the poll thumbnail, if the post is a thread, show the thread thumbnail.  -->
+			{:else if $posts.length > 0 && (polls.length > 0 || threads.length > 0)}
 				{#each $posts as post}
-					{#if post?.related_model === 'thread' && showThreads && matchesFilter(post)}
-						<ThreadThumbnail
-							thread={threads?.find((thread) => thread?.id === post?.id) ||
-								threads[0]}
-						/>
-					{:else if post?.related_model === 'poll' && showPolls && matchesFilter(post)}
-						<PollThumbnail
-							poll={polls?.find((poll) => poll?.id === post?.id) || polls[0]}
-						/>
+					{#if post.related_model === 'thread' && showThreads && matchesFilter(post)}
+						{@const the_thread = deepCopy(threads).filter(
+							(thread) => thread.id === post.id
+						)[0]}
+
+						{#if the_thread}
+							<ThreadThumbnail thread={the_thread} />
+						{/if}
+					{:else if post.related_model === 'poll' && showPolls && matchesFilter(post)}
+						{@const the_poll = deepCopy(polls).filter(
+							(poll) => poll.id === post.id
+						)[0]}
+
+						{#if the_poll}
+							<PollThumbnail poll={the_poll} />
+						{/if}
 					{/if}
 				{/each}
-			{:else if !loading}
-				<div class="bg-white rounded shadow p-8 dark:bg-darkobject">
-					{$_('No posts currently here')}
-				</div>
 			{/if}
 		</div>
+
+		<!-- TODO: Fix pagination for when lazyloading doesn't work  -->
+
 		<!-- <Pagination
 			bind:next
 			bind:prev
