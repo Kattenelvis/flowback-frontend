@@ -6,28 +6,31 @@ import {
 } from '$lib/Group/interface';
 import { get } from 'svelte/store';
 import type { Phase, poll } from './interface';
-import { TEXT_POLL_PHASE_CONFIG } from './phases';
+import { DATE_POLL_PHASE_CONFIG, TEXT_POLL_PHASE_CONFIG } from './phases';
 import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 
 export const formatDate = (dateInput: string) => {
   const date = new Date(dateInput);
+  // TODO: Fix hardcoded swedish localization
   return `${date.getDay()}/${date.getMonth()} ${date.getFullYear()} klockan ${date.getHours() > 9 ? date.getHours() : `0${date.getHours()}`
     }:${date.getMinutes() > 9 ? date.getMinutes() : `0${date.getMinutes()}`}`;
 };
 
+// TODO: Fix this mess
 export const getPhase = (poll: poll): Phase => {
-  const now = new Date();
-  for (const phase of TEXT_POLL_PHASE_CONFIG) {
-    if (phase.endDateField === null) return phase.phase;
-    if (now < new Date(poll[phase.endDateField] as string)) return phase.phase;
-  }
-  return 'result';
+  if (poll.phase === 'schedule') return 'proposal'
+  else if (poll.phase === 'area_vote') return 'proposal'
+  else if (poll.phase === 'prediction_statement') return 'prediction_bet'
+  else if (poll.phase === 'prediction_vote') return 'result'
+  //@ts-ignore
+  else return poll.phase
+
 };
 
-export const dateLabelsDatePoll = ["Hasn't started yet", 'Schedule', 'Results'];
-
+// TODO: REMOVE
 export const dateLabels = TEXT_POLL_PHASE_CONFIG.filter(p => p.endDateField !== null).map(p => p.label);
 
+// TODO: REMOVE
 export const getPhaseUserFriendlyName = (phase: Phase) =>
   TEXT_POLL_PHASE_CONFIG.find(p => p.phase === phase)?.label ?? '';
 
