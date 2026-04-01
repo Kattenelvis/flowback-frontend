@@ -162,19 +162,17 @@
 	});
 </script>
 
-<Layout centered={!$isMobile}>
-	<div class={$isMobile ? "flex flex-col h-screen" : "flex mt-6 gap-6"}>
+<Layout centered>
+	<div class={$isMobile ? "flex flex-col w-full h-screen" : "flex mt-6 gap-6"}>
 		<div
 			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow	
-			{$isMobile ? "h-full w-full flex flex-col" : "w-[300px] h-[800px] rounded border"}"
+			{$isMobile ? "h-full" : "w-[300px] h-[800px] rounded border"}"
 			class:hidden={$isMobile && selectedPage}
 		>
 			<div class={$isMobile ? "grid grid-cols-3 w-full pb-4 border-b border-gray-200 dark:border-gray-70" : "flex items-center mb-4 gap-4"}>
 				<button
 					class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
-					on:click={() => { 
-						goto('/home');
-					}}
+					on:click={() => goto('/home')}
 				>
 					<Fa icon={faArrowLeft} />
 				</button>
@@ -203,7 +201,7 @@
 		{#if !$isMobile || selectedPage}
 			<div
 				class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow
-				{$isMobile ? "h-full overflow-y-auto pb-[15vh]" : "w-[450px] rounded border"}"
+				{$isMobile ? "h-full" : "w-[450px] rounded border"}"
 			>
 			 	{#if $isMobile}
 					<div class="grid grid-cols-3 w-full pb-4 mb-6 border-b border-gray-200 dark:border-gray-70">
