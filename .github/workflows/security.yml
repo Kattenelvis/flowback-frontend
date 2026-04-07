@@ -1,9 +1,10 @@
-name: SonarQube Scan
+name: Semgrep Scan
 
 on:
   push:
     branches:
       - main
+      - dev
   pull_request:
 
 jobs:
