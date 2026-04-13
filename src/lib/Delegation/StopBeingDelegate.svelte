@@ -6,7 +6,6 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import type { Delegate } from './interfaces';
 	import type { GroupUser } from '$lib/Group/interface';
-	// V2 on-chain
 	import { resignAsDelegate as resignAsDelegateV2 } from '$lib/web3/frontend/delegations';
 
 	export let groupUser: GroupUser,
@@ -17,40 +16,42 @@
 		Class = '',
 		tags: number[] = [];
 
-	const canUseBlockchain = () => env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
+	const canUseBlockchain = env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
 
 	const deleteDelegation = async () => {
-		await deleteDelegationPool();
+		const success = await deleteDelegationPool();
+		if (!success) return;
 		await getDelegatePools();
-		groupUser.delegate_pool_id = null;
 	};
 
 	/*
 		Makes the currently logged in user no longer a delegate(pool)
 	*/
-	const deleteDelegationPool = async () => {
+	const deleteDelegationPool = async (): Promise<boolean> => {
 		loading = true;
+		let onChainSucceeded = false;
 
 		// 1) V2 on-chain first (optional)
-		if (canUseBlockchain()) {
-			if (groupBlockchainId === null || groupBlockchainId === undefined) {
+		if (canUseBlockchain) {
+			if (groupBlockchainId == null) {
 				ErrorHandlerStore.set({
 					message: 'Missing group blockchain id. Cannot perform on-chain resign.',
 					success: false
 				});
 				loading = false;
-				return;
+				return false;
 			}
 
 			try {
 				await resignAsDelegateV2(groupBlockchainId);
+				onChainSucceeded = true;
 			} catch (e: any) {
 				ErrorHandlerStore.set({
 					message: e?.shortMessage || e?.message || 'On-chain resignAsDelegate failed',
 					success: false
 				});
 				loading = false;
-				return;
+				return false;
 			}
 		}
 
@@ -63,15 +64,16 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message: canUseBlockchain()
+				message: onChainSucceeded
 					? 'On-chain succeeded but backend failed (possible desync).'
 					: 'Failed to stop being delegate',
 				success: false
 			});
-			 return;
+			 return  false;
 		}
 
 		groupUser.delegate_pool_id = null;
+		return true;
 		// userIsDelegateStore.update((value) => (value = false));
 	};
 
@@ -88,7 +90,14 @@
 				}
 			);
 
-			if (!res.ok) loading = false;
+			if (!res.ok) {
+				ErrorHandlerStore.set({
+					message: "Couldn't create self-delegation",
+					success: false
+				});
+				loading = false;
+				return;
+			}
 		}
 
 		// Get Group Tags
@@ -156,6 +165,7 @@
 				message: "Couldn't get delegation pools",
 				success: false
 			});
+			loading = false;
 			return;
 		}
 
