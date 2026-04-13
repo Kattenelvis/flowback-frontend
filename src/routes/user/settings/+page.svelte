@@ -21,6 +21,7 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import { goto } from '$app/navigation';
 	import { connectWallet, ensureChain } from '$lib/web3/frontend/wallet';
+	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	type PageType =
 		| 'profile'
 		| 'notifications'
@@ -104,6 +105,8 @@
 		serverConfig: any = {},
 		version = '75',
 		open = false,
+		walletAddress = '',
+		walletLoading = false,
 		selectedRepport: report = {
 			description: '',
 			group_id: 0,
@@ -115,9 +118,7 @@
 			admin_action: 'nothing'
 		};
 
-	let walletAddress = '';
-	let walletLoading = false;
-	let walletError = '';
+	
 	const shortWalletAddress = (address: string) =>
 	address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
@@ -157,13 +158,15 @@
 
 	const handleConnectWallet = async () => {
 		walletLoading = true;
-		walletError = '';
 		try {
 			const address = await connectWallet();
 			await ensureChain();
 			walletAddress = address;
 		} catch (error: any) {
-			walletError = error?.message || 'Failed to connect wallet.';
+		ErrorHandlerStore.set({
+				message: error?.message || 'Failed to connect wallet.',
+				success: false
+			});
 		} finally {
 			walletLoading = false;
 		}
@@ -350,11 +353,6 @@
 								</div>
 							{/if}
 							
-							{#if walletError}
-								<div class="text-sm text-red-600">
-									{walletError}
-								</div>
-							{/if}
 						</div>
 					</div>
 				{:else if selectedPage === 'info'}
