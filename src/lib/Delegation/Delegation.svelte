@@ -23,17 +23,11 @@
 	import { getPermissionsFast } from '$lib/Generic/GenericFunctions';
 	import TextInput from '$lib/Generic/TextInput.svelte';
 
-	// V2 on-chain
-	import {
-	  becomeDelegate as becomeDelegateV2,
-	  addressIsDelegate as addressIsDelegateV2
-	} from '$lib/web3/frontend/delegations';
+	import { becomeDelegateOnChain } from '$lib/Delegation/delegationBlockchain';
 
-	import { isUserMemberOfGroup as isUserMemberOfGroupV2 } from '$lib/web3/frontend/membership';
-
-	let group: Group,
-		groups: Group[],
-		groupUser: GroupUser,
+	let group: Group | undefined,
+		groups: Group[] = [],
+		groupUser: GroupUser | undefined,
 		autovote = false,
 		loading = false,
 		delegates: Delegate[] = [],
@@ -65,6 +59,8 @@
 	};
 
 	const getUserInfo = async () => {
+		if (!group) return;
+
 		const { res, json } = await fetchRequest(
 			'GET',
 			`group/${group.id}/users?user_id=${$userStore?.id || -1}`
@@ -81,98 +77,51 @@
 		groupUser = json?.results[0];
 	};
 
-	function canUseBlockchain(): boolean {
-		return env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
-	}
+	const canUseBlockchain = env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
 
-	function getGroupBlockchainIdOrNull(): number | null {
-		const id = (group as any)?.blockchain_id;
-		if (typeof id === 'number' && Number.isFinite(id) && id >= 0) return id;
-		return null;
-	}
 
 	/*
 	 	Makes the currently logged in user into a delegate(pool)
 	 */
 	const createDelegationPool = async () => {
-  	  loading = true;
+		if (!group) {
+			ErrorHandlerStore.set({
+				message: 'Missing group. Cannot create delegation pool.',
+				success: false
+			});
+			return;
+		}
 
-  	  try {
-  	// 1) Optional: V2 on-chain gate + action
-  	if (canUseBlockchain()) {
-  	  const groupBlockchainId = getGroupBlockchainIdOrNull();
-	  
-  	  if (!groupBlockchainId) {
-  	    ErrorHandlerStore.set({
-  	      message: 'Missing group blockchain id. Cannot perform on-chain delegation.',
-  	      success: false
-  	    });
-  	    return;
-  	  }
-	
-  	  // 1.1) Must already be a member (no auto-join here)
-  	  let isMember = false;
-  	  try {
-  	    isMember = await isUserMemberOfGroupV2(groupBlockchainId);
-  	  } catch (e: any) {
-  	    ErrorHandlerStore.set({
-  	      message: e?.shortMessage || e?.message || 'Failed to check membership on-chain',
-  	      success: false
-  	    });
-  	    return;
-  	  }
-	
-  	  if (!isMember) {
-  	    ErrorHandlerStore.set({
-  	      message: 'You must be a member of this group first. Join the group, then try again.',
-  	      success: false
-  	    });
-  	    return;
-  	  }
-	
-  	  // 1.2) Check if already a delegate (avoid sending a tx, no MetaMask)
-  	  const accounts = await window.ethereum?.request?.({ method: 'eth_accounts' });
-  	  const addr = Array.isArray(accounts) ? accounts[0] : null;
-	
-  	  if (!addr) {
-  	    ErrorHandlerStore.set({
-  	      message: 'Wallet not connected. Please connect your wallet first.',
-  	      success: false
-  	    });
-  	    return;
-  	  }
-	
-  	  let alreadyDelegate = false;
-  	  try {
-  	    alreadyDelegate = await addressIsDelegateV2(groupBlockchainId, addr);
-  	  } catch (e: any) {
-  	    ErrorHandlerStore.set({
-  	      message: e?.shortMessage || e?.message || 'Failed to check delegate status on-chain',
-  	      success: false
-  	    });
-  	    return;
-  	  }
-	
-  	  // 1.3) Only send tx if not already delegate
-  	  if (!alreadyDelegate) {
-  	    try {
-  	      await becomeDelegateV2(groupBlockchainId);
-  	    } catch (e: any) {
-  	      const msg = (e?.shortMessage || e?.message || '').toString();
-		  
-  	      // If it was actually "already delegate" but not decoded, treat it gracefully
-  	      if (msg.toLowerCase().includes('alreadydelegate') || msg.toLowerCase().includes('d_alreadydelegate')) {
-  	        // swallow and continue to backend sync
-  	      } else {
-  	        ErrorHandlerStore.set({
-  	          message: e?.shortMessage || e?.message || 'On-chain becomeDelegate failed',
-  	          success: false
-  	        });
-  	        return;
-  	      }
-  	    }
-  	  }
-  	}
+  	    loading = true;
+		let onChainSucceeded = false;
+  			// 1) Optional: V2 on-chain gate + action
+			if (canUseBlockchain) {
+				const groupBlockchainId = group?.blockchain_id ?? null;
+
+				if (groupBlockchainId === null) {
+					ErrorHandlerStore.set({
+						message: 'Missing group blockchain id. Cannot perform on-chain delegation.',
+						success: false
+					});
+					loading = false;
+					return;
+				}
+
+				try {
+					await becomeDelegateOnChain(groupBlockchainId);
+					onChainSucceeded = true;
+				} catch (error) {
+					ErrorHandlerStore.set({
+						message:
+							error instanceof Error
+								? error.message
+								: 'On-chain becomeDelegate failed',
+						success: false
+					});
+					loading = false;
+					return;
+				}
+			}
 
 		// 2) Backend sync
 		const { res, json } = await fetchRequest(
@@ -181,15 +130,14 @@
 			{}
 		);
 
-		loading = false;
-
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message: canUseBlockchain()
+				message: onChainSucceeded
 					? 'On-chain succeeded but backend failed (possible desync).'
 					: 'Error when trying to become delegate',
 				success: false
 			});
+			loading = false;
 			return;
 		}
 
@@ -197,10 +145,10 @@
 			message: 'Successfully became delegate',
 			success: true
 		});
+		if (groupUser) {
 		groupUser.delegate_pool_id = json;
-	   } finally {
-	     loading = false;
-	   }
+		}
+		loading = false;
 	};
 
 	const removeAllDelegations = async (group: Group) => {
@@ -217,6 +165,8 @@
 	};
 
 	const getDelegatePools = async () => {
+		if (!group) return;
+
 		const { json, res } = await fetchRequest(
 			'GET',
 			`group/${group.id}/delegate/pools?limit=1000`
@@ -335,7 +285,7 @@
 								onInput={(checked) => {
 									selectedPage = checked ? 'delegate' : 'none';
 									localStorage.setItem('autovote', selectedPage);
-									if (!checked) removeAllDelegations(group);
+									if (!checked && group) removeAllDelegations(group);
 								}}
 								checked={autovote}
 							/>
@@ -379,13 +329,13 @@
 						{$_('As a delegate, you choose to publicly show everyone how you vote. Other users can delegate their vote to you, meaning you vote on their behalf.')}
 					</p>
 
-					{#if groupUser?.delegate_pool_id !== null}
+					{#if group && groupUser && groupUser.delegate_pool_id !== null}
 						<StopBeingDelegate
 							Class="w-full mt-3"
 							bind:delegates
 							bind:groupUser
 							groupId={group.id}
-							groupBlockchainId={(group as any)?.blockchain_id ?? null}
+							groupBlockchainId={group?.blockchain_id ?? null}
 							bind:loading
 						/>
 					{:else}
