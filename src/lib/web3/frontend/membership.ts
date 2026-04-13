@@ -1,13 +1,37 @@
 import { env } from '$env/dynamic/public';
-import { Contract } from 'ethers';
+import { Contract,
+	type ContractTransactionReceipt,
+	type InterfaceAbi } from 'ethers';
 
 import { ensureChain, getSigner } from './wallet';
 import PollsAbi from './abis/Polls.v2.abi.json';
 
 type GroupIdLike = bigint | number | string;
+type MembershipWriteAction = 'becomeMemberOfGroup' | 'removeGroupMembership';
+type PollsMembershipContract = Contract & {
+	becomeMemberOfGroup?: (
+		groupId: bigint
+	) => Promise<{ wait: () => Promise<ContractTransactionReceipt | null> }>;
+	removeGroupMembership?: (
+		groupId: bigint
+	) => Promise<{ wait: () => Promise<ContractTransactionReceipt | null> }>;
+	isUserMemberInGroup?: (groupId: bigint) => Promise<boolean>;
+	isUserMemberOfGroup?: (groupId: bigint) => Promise<boolean>;
+	isAddressMemberInGroup?: (
+		address: string,
+		groupId: bigint
+	) => Promise<boolean>;
+	isAddressMemberOfGroup?: (
+		address: string,
+		groupId: bigint
+	) => Promise<boolean>;
+	isUserMemberInGroupForAddress?: (
+		address: string,
+		groupId: bigint
+	) => Promise<boolean>;
+};
 
-function toGroupId(value: GroupIdLike): bigint {
-  // Enforce integer-like values only
+const toGroupId = (value: GroupIdLike): bigint => {
   if (typeof value === 'bigint') return value;
 
   if (typeof value === 'number') {
@@ -18,11 +42,9 @@ function toGroupId(value: GroupIdLike): bigint {
     return BigInt(value);
   }
 
-  // string
   const trimmed = value.trim();
   if (!trimmed) throw new Error('groupBlockchainId must be a non-empty string');
 
-  // Allow decimal or hex string (0x...)
   try {
     const asBigInt = BigInt(trimmed);
     if (asBigInt < 0n) throw new Error('groupBlockchainId must be non-negative');
@@ -30,22 +52,38 @@ function toGroupId(value: GroupIdLike): bigint {
   } catch {
     throw new Error('groupBlockchainId must be a valid bigint string (decimal or 0x hex)');
   }
-}
+};
 
-function requirePollsAddress(): string {
+const requirePollsAddress = (): string => {
   const addr = env.PUBLIC_V2_POLLS_ADDRESS?.trim();
   if (!addr) {
     throw new Error('Missing PUBLIC_V2_POLLS_ADDRESS in public env');
   }
   return addr;
-}
+};
 
-async function getPollsContract(): Promise<Contract> {
+const getPollsContract = async (): Promise<PollsMembershipContract> => {
   await ensureChain();
   const signer = await getSigner();
   const address = requirePollsAddress();
-  return new Contract(address, PollsAbi as any, signer);
-}
+  return new Contract(address, PollsAbi as InterfaceAbi, signer) as unknown as PollsMembershipContract;
+};
+
+const executeMembershipWrite = async (
+	action: MembershipWriteAction,
+	groupBlockchainId: GroupIdLike
+): Promise<ContractTransactionReceipt | null> => {
+	const contract = await getPollsContract();
+	const id = toGroupId(groupBlockchainId);
+
+	const fn = contract[action];
+	if (typeof fn !== 'function') {
+		throw new Error(`Polls ABI does not expose ${action}`);
+	}
+
+	const tx = await fn(id);
+	return tx.wait();
+};
 
 /**
  * V2 Membership
@@ -55,57 +93,39 @@ async function getPollsContract(): Promise<Contract> {
  *
  * We keep runtime checks to fail fast with clear errors if ABI differs.
  */
-export async function becomeMemberOfGroup(groupBlockchainId: GroupIdLike) {
-  const contract = await getPollsContract();
-  const id = toGroupId(groupBlockchainId);
+export const becomeMemberOfGroup = async (groupBlockchainId: GroupIdLike) => {
+  return executeMembershipWrite('becomeMemberOfGroup', groupBlockchainId);
+};
 
-  const fn = (contract as any).becomeMemberOfGroup;
-  if (typeof fn !== 'function') {
-    throw new Error('Polls ABI does not expose becomeMemberOfGroup');
-  }
-
-  const tx = await fn(id);
-  return await tx.wait();
-}
-
-export async function removeGroupMembership(groupBlockchainId: GroupIdLike) {
-  const contract = await getPollsContract();
-  const id = toGroupId(groupBlockchainId);
-
-  const fn = (contract as any).removeGroupMembership;
-  if (typeof fn !== 'function') {
-    throw new Error('Polls ABI does not expose removeGroupMembership');
-  }
-
-  const tx = await fn(id);
-  return await tx.wait();
-}
+export const removeGroupMembership = async (groupBlockchainId: GroupIdLike) => {
+  return executeMembershipWrite('removeGroupMembership', groupBlockchainId);
+};
 
 /**
  * Optional helpers (only if available in ABI).
  * We expose them but they will throw a clear error if the function is missing.
  */
-export async function isUserMemberOfGroup(groupBlockchainId: GroupIdLike): Promise<boolean> {
+export const isUserMemberOfGroup = async (groupBlockchainId: GroupIdLike): Promise<boolean> => {
   const contract = await getPollsContract();
   const id = toGroupId(groupBlockchainId);
 
-  const fn = (contract as any).isUserMemberInGroup ?? (contract as any).isUserMemberOfGroup;
+  const fn = contract.isUserMemberInGroup ?? contract.isUserMemberOfGroup;
   if (typeof fn !== 'function') {
     throw new Error('Polls ABI does not expose isUserMemberInGroup/isUserMemberOfGroup');
   }
 
   const result = await fn(id);
   return Boolean(result);
-}
+};
 
-export async function isAddressMemberOfGroup(address: string, groupBlockchainId: GroupIdLike): Promise<boolean> {
+export const isAddressMemberOfGroup = async (address: string, groupBlockchainId: GroupIdLike): Promise<boolean> => {
   const contract = await getPollsContract();
   const id = toGroupId(groupBlockchainId);
 
   const fn =
-    (contract as any).isAddressMemberInGroup ??
-    (contract as any).isAddressMemberOfGroup ??
-    (contract as any).isUserMemberInGroupForAddress;
+    contract.isAddressMemberInGroup ??
+		contract.isAddressMemberOfGroup ??
+		contract.isUserMemberInGroupForAddress;
 
   if (typeof fn !== 'function') {
     throw new Error('Polls ABI does not expose an address-based membership check');
@@ -113,4 +133,4 @@ export async function isAddressMemberOfGroup(address: string, groupBlockchainId:
 
   const result = await fn(address, id);
   return Boolean(result);
-}
+};
