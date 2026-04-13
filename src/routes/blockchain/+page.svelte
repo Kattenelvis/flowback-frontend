@@ -39,13 +39,13 @@
 	//     value = event.target.valueAsNumber; // Converts input string to number
 	// }
 
-	let userAddress = '';
-	let chainIdHex = '';
-	let chainIdNum = 0;
-	let id = 8;
-	let groupId = 1;
-	let pollId = 8;
-	let proposalId = 1;
+	let userAddress = '',
+	chainIdHex = '',
+	chainIdNum = 0,
+	id = 8,
+	groupId = 1,
+	pollId = 8,
+	proposalId = 1;
 
 	let connecting = false;
 
@@ -77,7 +77,7 @@
 </script>
 
 <Layout>
-	<div style="padding:10px;border:1px solid #ccc;border-radius:8px;margin:10px 0;">
+	<div class="p-2.5 border border-gray-300 rounded-lg my-2.5">
 		<div><b>Network</b></div>
 		<div>chainId: {chainIdNum} ({chainIdHex})</div>
 		<div>target: {Number(env.PUBLIC_V2_CHAIN_ID)}</div>
