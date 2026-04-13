@@ -14,35 +14,34 @@ const EXPLORER_URL = (env.PUBLIC_V2_EXPLORER_URL as string | undefined) ?? '';
 const CHAIN_NAME =
 	(env.PUBLIC_V2_CHAIN_NAME as string | undefined) ?? 'Target Network';
 
-function getEthereum(): Eip1193Provider {
+const getEthereum = (): Eip1193Provider => {
 	if (typeof window === 'undefined')
 		throw new Error('Wallet not available (SSR).');
 	const eth = window.ethereum as Eip1193Provider | undefined;
 	if (!eth) throw new Error('No injected wallet found (window.ethereum).');
 	return eth;
-}
+};
 
-function toHex(chainId: number) {
+const toHex = (chainId: number): string => {
 	return '0x' + chainId.toString(16);
-}
+};
 
-export async function connectWallet(): Promise<string> {
+export const connectWallet = async (): Promise<string> => {
 	const eth = getEthereum();
 	const accounts = (await eth.request({
 		method: 'eth_requestAccounts'
 	})) as string[];
 	if (!accounts?.[0]) throw new Error('Wallet returned no accounts.');
 	return accounts[0];
-}
+};
 
-export async function ensureChain(): Promise<void> {
+export const ensureChain = async (): Promise<void> => {
 	if (!Number.isFinite(CHAIN_ID))
 		throw new Error('PUBLIC_V2_CHAIN_ID is missing/invalid.');
 
 	const eth = getEthereum();
 	const chainIdHex = (await eth.request({ method: 'eth_chainId' })) as string;
 	const current = parseInt(chainIdHex, 16);
-    console.log("ensureChain", { current, target: CHAIN_ID });
 	if (current === CHAIN_ID) return;
 
 	try {
@@ -79,13 +78,13 @@ export async function ensureChain(): Promise<void> {
 
 		throw new Error(`Wrong network. Please switch to chainId ${CHAIN_ID}.`);
 	}
-}
+};
 
-export async function getSigner(): Promise<ethers.Signer> {
+export const getSigner = async (): Promise<ethers.Signer> => {
 	await connectWallet();
 	await ensureChain();
 
 	const eth = getEthereum();
 	const provider = new ethers.BrowserProvider(eth as any);
 	return provider.getSigner();
-}
+};

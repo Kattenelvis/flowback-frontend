@@ -6,7 +6,7 @@ import PollsAbi from './abis/Polls.v2.abi.json';
 
 type GroupIdLike = bigint | number | string;
 
-function toGroupId(value: GroupIdLike): bigint {
+const toGroupId = (value: GroupIdLike): bigint => {
 	if (typeof value === 'bigint') return value;
 
 	if (typeof value === 'number') {
@@ -27,19 +27,19 @@ function toGroupId(value: GroupIdLike): bigint {
 	} catch {
 		throw new Error('groupBlockchainId must be a valid bigint string (decimal or 0x hex)');
 	}
-}
+};
 
-function requirePollsAddress(): string {
+const requirePollsAddress = (): string => {
 	const addr = env.PUBLIC_V2_POLLS_ADDRESS?.trim();
 	if (!addr) throw new Error('Missing PUBLIC_V2_POLLS_ADDRESS in public env');
 	return addr;
-}
+};
 
-async function getPollsContract(): Promise<Contract> {
+const getPollsContract = async (): Promise<Contract> => {
 	await ensureChain();
 	const signer = await getSigner();
 	return new Contract(requirePollsAddress(), PollsAbi as any, signer);
-}
+};
 
 /**
  * V2 Delegations
@@ -56,7 +56,7 @@ async function getPollsContract(): Promise<Contract> {
  * - groupDelegates(uint256 groupId, uint256 index)
  */
 
-export async function becomeDelegate(groupBlockchainId: GroupIdLike) {
+export const becomeDelegate = async (groupBlockchainId: GroupIdLike) => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -65,9 +65,9 @@ export async function becomeDelegate(groupBlockchainId: GroupIdLike) {
 
 	const tx = await fn(id);
 	return await tx.wait();
-}
+};
 
-export async function resignAsDelegate(groupBlockchainId: GroupIdLike) {
+export const resignAsDelegate = async (groupBlockchainId: GroupIdLike) => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -76,9 +76,9 @@ export async function resignAsDelegate(groupBlockchainId: GroupIdLike) {
 
 	const tx = await fn(id);
 	return await tx.wait();
-}
+};
 
-export async function delegateTo(delegateAddress: string, groupBlockchainId: GroupIdLike) {
+export const delegateTo = async (delegateAddress: string, groupBlockchainId: GroupIdLike) => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -87,9 +87,9 @@ export async function delegateTo(delegateAddress: string, groupBlockchainId: Gro
 
 	const tx = await fn(delegateAddress, id);
 	return await tx.wait();
-}
+};
 
-export async function removeDelegation(delegateAddress: string, groupBlockchainId: GroupIdLike) {
+export const removeDelegation = async (delegateAddress: string, groupBlockchainId: GroupIdLike) => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -98,11 +98,11 @@ export async function removeDelegation(delegateAddress: string, groupBlockchainI
 
 	const tx = await fn(delegateAddress, id);
 	return await tx.wait();
-}
+};
 
 // ---- Read-only helpers ----
 
-export async function addressIsDelegate(groupBlockchainId: GroupIdLike, userAddress: string): Promise<boolean> {
+export const addressIsDelegate = async (groupBlockchainId: GroupIdLike, userAddress: string): Promise<boolean> => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -110,9 +110,9 @@ export async function addressIsDelegate(groupBlockchainId: GroupIdLike, userAddr
 	if (typeof fn !== 'function') throw new Error('Polls ABI missing addressIsDelegate(uint256,address)');
 
 	return Boolean(await fn(id, userAddress));
-}
+};
 
-export async function hasDelegatedInGroup(groupBlockchainId: GroupIdLike): Promise<boolean> {
+export const hasDelegatedInGroup = async (groupBlockchainId: GroupIdLike): Promise<boolean> => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -120,12 +120,12 @@ export async function hasDelegatedInGroup(groupBlockchainId: GroupIdLike): Promi
 	if (typeof fn !== 'function') throw new Error('Polls ABI missing hasDelegatedInGroup(uint256)');
 
 	return Boolean(await fn(id));
-}
+};
 
-export async function hasDelegatedToDelegateInGroup(
+export const hasDelegatedToDelegateInGroup = async (
 	groupBlockchainId: GroupIdLike,
 	delegateAddress: string
-): Promise<boolean> {
+): Promise<boolean> => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -135,9 +135,9 @@ export async function hasDelegatedToDelegateInGroup(
 	}
 
 	return Boolean(await fn(id, delegateAddress));
-}
+};
 
-export async function getDelegateCount(groupBlockchainId: GroupIdLike): Promise<bigint> {
+export const getDelegateCount = async (groupBlockchainId: GroupIdLike): Promise<bigint> => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -145,9 +145,9 @@ export async function getDelegateCount(groupBlockchainId: GroupIdLike): Promise<
 	if (typeof fn !== 'function') throw new Error('Polls ABI missing getDelegateCount(uint256)');
 
 	return (await fn(id)) as bigint;
-}
+};
 
-export async function getDelegateVoteCount(groupBlockchainId: GroupIdLike, delegateAddress: string): Promise<bigint> {
+export const getDelegateVoteCount = async (groupBlockchainId: GroupIdLike, delegateAddress: string): Promise<bigint> => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 
@@ -155,7 +155,7 @@ export async function getDelegateVoteCount(groupBlockchainId: GroupIdLike, deleg
 	if (typeof fn !== 'function') throw new Error('Polls ABI missing getDelegateVoteCount(uint256,address)');
 
 	return (await fn(id, delegateAddress)) as bigint;
-}
+};
 
 export type GroupDelegateEntry = {
 	delegate: string;
@@ -164,10 +164,10 @@ export type GroupDelegateEntry = {
 	b: bigint;
 };
 
-export async function groupDelegates(
+export const groupDelegates = async (
 	groupBlockchainId: GroupIdLike,
 	index: GroupIdLike
-): Promise<GroupDelegateEntry> {
+): Promise<GroupDelegateEntry> => {
 	const c = await getPollsContract();
 	const id = toGroupId(groupBlockchainId);
 	const i = toGroupId(index);
@@ -183,12 +183,12 @@ export async function groupDelegates(
 		a: r[2] as bigint,
 		b: r[3] as bigint
 	};
-}
+};
 
-export async function isAddressInGroupDelegates(
+export const isAddressInGroupDelegates = async (
 	groupBlockchainId: GroupIdLike,
 	userAddress: string
-): Promise<boolean> {
+): Promise<boolean> => {
 	const target = userAddress.toLowerCase();
 	const count = await getDelegateCount(groupBlockchainId);
 
@@ -200,4 +200,4 @@ export async function isAddressInGroupDelegates(
 	}
 
 	return false;
-}
+};
