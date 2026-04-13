@@ -7,6 +7,7 @@
 	import type { Delegate } from './interfaces';
 	import type { GroupUser } from '$lib/Group/interface';
 	import { resignAsDelegate as resignAsDelegateV2 } from '$lib/web3/frontend/delegations';
+	import { onMount } from 'svelte';
 
 	export let groupUser: GroupUser,
 		loading: boolean,
@@ -17,11 +18,42 @@
 		tags: number[] = [];
 
 	const canUseBlockchain = env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
+	let selfDelegated = false;
+
+	const getSelfDelegationStatus = async () => {
+		if (!groupUser?.delegate_pool_id) {
+			selfDelegated = false;
+			return;
+		}
+
+		const { json, res } = await fetchRequest(
+			'GET',
+			`group/${groupId}/delegates?limit=1000`
+		);
+
+		if (!res.ok) return;
+
+		selfDelegated = json?.results.some(
+			(relation: { delegate_pool_id: number; tags: { id: number }[] }) =>
+				relation.delegate_pool_id === groupUser.delegate_pool_id &&
+				relation.tags.length > 0
+		);
+	};
+
+	onMount(() => {
+		getSelfDelegationStatus();
+	});
+
+	$: if (groupId && groupUser?.delegate_pool_id) {
+		getSelfDelegationStatus();
+	}
 
 	const deleteDelegation = async () => {
 		const success = await deleteDelegationPool();
 		if (!success) return;
+		
 		await getDelegatePools();
+		selfDelegated = false;
 	};
 
 	/*
@@ -78,6 +110,8 @@
 	};
 
 	const selfDelegate = async () => {
+		if (loading || selfDelegated) return;
+
 		loading = true;
 
 		// Create delegation relation to oneself
@@ -146,6 +180,7 @@
 			message: 'Successfully self-delegated',
 			success: true
 		});
+		selfDelegated = true;
 		loading = false;
 	};
 
@@ -194,7 +229,8 @@
 			</p>
 		</div>
 		<Button onClick={selfDelegate} buttonStyle="primary-light"
-			>{$_('Apply')}</Button
+			disabled={loading || selfDelegated}
+			>{$_(selfDelegated ? 'Applied' : 'Apply')}</Button
 		>
 	</div>
 
