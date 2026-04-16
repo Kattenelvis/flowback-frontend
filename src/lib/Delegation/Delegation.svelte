@@ -23,9 +23,11 @@
 	import { getPermissionsFast } from '$lib/Generic/GenericFunctions';
 	import TextInput from '$lib/Generic/TextInput.svelte';
 
-	let group: Group,
-		groups: Group[],
-		groupUser: GroupUser,
+	import { becomeDelegateOnChain } from '$lib/Delegation/delegationBlockchain';
+
+	let group: Group | undefined,
+		groups: Group[] = [],
+		groupUser: GroupUser | undefined,
 		autovote = false,
 		loading = false,
 		delegates: Delegate[] = [],
@@ -57,6 +59,8 @@
 	};
 
 	const getUserInfo = async () => {
+		if (!group) return;
+
 		const { res, json } = await fetchRequest(
 			'GET',
 			`group/${group.id}/users?user_id=${$userStore?.id || -1}`
@@ -73,10 +77,53 @@
 		groupUser = json?.results[0];
 	};
 
+	const canUseBlockchain = env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
+
+
 	/*
 	 	Makes the currently logged in user into a delegate(pool)
 	 */
 	const createDelegationPool = async () => {
+		if (!group) {
+			ErrorHandlerStore.set({
+				message: 'Missing group. Cannot create delegation pool.',
+				success: false
+			});
+			return;
+		}
+
+  	    loading = true;
+		let onChainSucceeded = false;
+  			// 1) Optional: V2 on-chain gate + action
+			if (canUseBlockchain) {
+				const groupBlockchainId = group?.blockchain_id ?? null;
+
+				if (groupBlockchainId === null) {
+					ErrorHandlerStore.set({
+						message: 'Missing group blockchain id. Cannot perform on-chain delegation.',
+						success: false
+					});
+					loading = false;
+					return;
+				}
+
+				try {
+					await becomeDelegateOnChain(groupBlockchainId);
+					onChainSucceeded = true;
+				} catch (error) {
+					ErrorHandlerStore.set({
+						message:
+							error instanceof Error
+								? error.message
+								: 'On-chain becomeDelegate failed',
+						success: false
+					});
+					loading = false;
+					return;
+				}
+			}
+
+		// 2) Backend sync
 		const { res, json } = await fetchRequest(
 			'POST',
 			`group/${group.id}/delegate/pool/create`,
@@ -85,9 +132,12 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message: 'Error when trying to become delegate',
+				message: onChainSucceeded
+					? 'On-chain succeeded but backend failed (possible desync).'
+					: 'Error when trying to become delegate',
 				success: false
 			});
+			loading = false;
 			return;
 		}
 
@@ -95,7 +145,10 @@
 			message: 'Successfully became delegate',
 			success: true
 		});
+		if (groupUser) {
 		groupUser.delegate_pool_id = json;
+		}
+		loading = false;
 	};
 
 	const removeAllDelegations = async (group: Group) => {
@@ -112,6 +165,8 @@
 	};
 
 	const getDelegatePools = async () => {
+		if (!group) return;
+
 		const { json, res } = await fetchRequest(
 			'GET',
 			`group/${group.id}/delegate/pools?limit=1000`
@@ -230,7 +285,7 @@
 								onInput={(checked) => {
 									selectedPage = checked ? 'delegate' : 'none';
 									localStorage.setItem('autovote', selectedPage);
-									if (!checked) removeAllDelegations(group);
+									if (!checked && group) removeAllDelegations(group);
 								}}
 								checked={autovote}
 							/>
@@ -274,22 +329,28 @@
 						{$_('As a delegate, you choose to publicly show everyone how you vote. Other users can delegate their vote to you, meaning you vote on their behalf.')}
 					</p>
 
-					{#if groupUser?.delegate_pool_id !== null}
+					{#if group && groupUser && groupUser.delegate_pool_id !== null}
 						<StopBeingDelegate
+							Class="w-full mt-3"
 							bind:delegates
 							bind:groupUser
 							groupId={group.id}
+							groupBlockchainId={group?.blockchain_id ?? null}
 							bind:loading
 						/>
 					{:else}
-						<Button Class="w-full" onClick={createDelegationPool} buttonStyle="primary-light">
+						<Button
+							Class="w-full mt-3"
+							onClick={createDelegationPool}
+							buttonStyle="primary-light"
+						>
 							{$_('Become delegate')}
 						</Button>
 					{/if}
 
 					<button
 						class="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-center"
-						onclick={() => (selectedPage = 'delegate')}
+						on:click={() => (selectedPage = 'delegate')}
 					>
 						{$_('Cancel')}
 					</button>

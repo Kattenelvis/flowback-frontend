@@ -1,19 +1,23 @@
 <script lang="ts">
+	import { env } from '$env/dynamic/public';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import Button from '$lib/Generic/Button.svelte';
 	import { _ } from 'svelte-i18n';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import type { Delegate } from './interfaces';
 	import type { GroupUser } from '$lib/Group/interface';
+	import { resignAsDelegate as resignAsDelegateV2 } from '$lib/web3/frontend/delegations';
 	import { onMount } from 'svelte';
 
 	export let groupUser: GroupUser,
 		loading: boolean,
 		groupId: number,
+		groupBlockchainId: number | null = null,
 		delegates: Delegate[],
 		Class = '',
 		tags: number[] = [];
 
+	const canUseBlockchain = env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE';
 	let selfDelegated = false;
 
 	const getSelfDelegationStatus = async () => {
@@ -45,26 +49,63 @@
 	}
 
 	const deleteDelegation = async () => {
-		await deleteDelegationPool();
+		const success = await deleteDelegationPool();
+		if (!success) return;
+		
 		await getDelegatePools();
-		groupUser.delegate_pool_id = null;
 		selfDelegated = false;
 	};
 
 	/*
 		Makes the currently logged in user no longer a delegate(pool)
 	*/
-	const deleteDelegationPool = async () => {
+	const deleteDelegationPool = async (): Promise<boolean> => {
 		loading = true;
+		let onChainSucceeded = false;
+
+		// 1) V2 on-chain first (optional)
+		if (canUseBlockchain) {
+			if (groupBlockchainId == null) {
+				ErrorHandlerStore.set({
+					message: 'Missing group blockchain id. Cannot perform on-chain resign.',
+					success: false
+				});
+				loading = false;
+				return false;
+			}
+
+			try {
+				await resignAsDelegateV2(groupBlockchainId);
+				onChainSucceeded = true;
+			} catch (e: any) {
+				ErrorHandlerStore.set({
+					message: e?.shortMessage || e?.message || 'On-chain resignAsDelegate failed',
+					success: false
+				});
+				loading = false;
+				return false;
+			}
+		}
+
+		// 2) Backend sync
 		const { res } = await fetchRequest(
 			'POST',
 			`group/${groupId}/delegate/pool/delete`
 		);
 		loading = false;
 
-		if (!res.ok) return;
+		if (!res.ok) {
+			ErrorHandlerStore.set({
+				message: onChainSucceeded
+					? 'On-chain succeeded but backend failed (possible desync).'
+					: 'Failed to stop being delegate',
+				success: false
+			});
+			 return  false;
+		}
 
 		groupUser.delegate_pool_id = null;
+		return true;
 		// userIsDelegateStore.update((value) => (value = false));
 	};
 
@@ -84,6 +125,10 @@
 			);
 
 			if (!res.ok) {
+				ErrorHandlerStore.set({
+					message: "Couldn't create self-delegation",
+					success: false
+				});
 				loading = false;
 				return;
 			}

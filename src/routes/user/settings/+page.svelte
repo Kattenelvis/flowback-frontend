@@ -7,7 +7,8 @@
 		faPieChart,
 		faArrowLeft,
 		faInfo,
-		faWarning
+		faWarning,
+		faWallet
 	} from '@fortawesome/free-solid-svg-icons';
 	import { _ } from 'svelte-i18n';
 	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
@@ -19,6 +20,8 @@
 	import Modal from '$lib/Generic/Modal.svelte';
 	import Button from '$lib/Generic/Button.svelte';
 	import { goto } from '$app/navigation';
+	import { connectWallet, ensureChain } from '$lib/web3/frontend/wallet';
+	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { isMobile } from '$lib/utils/isMobile';
 	import Toggle from '$lib/Generic/Toggle.svelte';
 	import { darkModeStore, toggleDarkMode } from '$lib/Generic/DarkMode';
@@ -27,6 +30,7 @@
 		| 'profile'
 		| 'notifications'
 		| 'poll-process'
+		| 'wallet'
 		| 'info'
 		| 'reports';
 
@@ -51,6 +55,11 @@
 			page: 'poll-process',
 			icon: faPieChart,
 			text: 'Poll Process'
+		},
+		{
+			page: 'wallet',
+			icon: faWallet,
+			text: 'Wallet'
 		},
 		{
 			page: 'info',
@@ -101,6 +110,8 @@
 		serverConfig: any = {},
 		version = '76',
 		open = false,
+		walletAddress = '',
+		walletLoading = false,
 		selectedRepport: report = {
 			description: '',
 			group_id: 0,
@@ -111,6 +122,10 @@
 			title: '',
 			admin_action: 'nothing'
 		};
+
+	
+	const shortWalletAddress = (address: string) =>
+	address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
 	const userUpdate = async () => {
 		const { res, json } = await fetchRequest('POST', 'user/update', {
@@ -144,6 +159,22 @@
 		if (!res.ok) return;
 
 		reports = json?.results;
+	};
+
+	const handleConnectWallet = async () => {
+		walletLoading = true;
+		try {
+			const address = await connectWallet();
+			await ensureChain();
+			walletAddress = address;
+		} catch (error: any) {
+		ErrorHandlerStore.set({
+				message: error?.message || 'Failed to connect wallet.',
+				success: false
+			});
+		} finally {
+			walletLoading = false;
+		}
 	};
 
 	const a = (key1: string, key2: string = '') => {
@@ -323,6 +354,43 @@
 								</li>
 							{/each}
 						</ul>
+					{:else if selectedPage === 'wallet'}
+						<div class="flex flex-col gap-4">
+							<span class="text-xl text-primary dark:text-secondary font-semibold">
+								{$_('Wallet')}
+							</span>
+						
+							<span>{$_('Connect and manage your wallet here.')}</span>
+						
+							<div class="p-4 rounded border bg-gray-50 dark:bg-gray-800 flex flex-col gap-3">
+								<button
+									class="px-4 py-2 rounded text-white transition disabled:opacity-60 {walletAddress ? 'bg-green-600 cursor-default' : 'bg-primary hover:opacity-90'}"
+									on:click={handleConnectWallet}
+									disabled={walletLoading || !!walletAddress}
+								>
+									{#if walletLoading}
+										{$_('Connecting...')}
+									{:else if walletAddress}
+										{$_('Connected')}
+									{:else}
+										{$_('Connect Wallet')}
+									{/if}
+								</button>
+							
+								{#if walletAddress}
+									<div class="flex flex-col gap-1">
+										<span class="font-semibold">{$_('Connected wallet')}</span>
+										<span class="break-all text-sm">{shortWalletAddress(walletAddress)}</span>
+									</div>
+								{/if}
+								
+								{#if !walletAddress && !walletLoading}
+									<div class="text-sm text-gray-600 dark:text-gray-300">
+										{$_('Not connected')}
+									</div>
+								{/if}
+							</div>
+						</div>
 					{:else if selectedPage === 'info'}
 						<div>{$_('Frontend version')}: {version}</div>
 						<div>{$_('Backend version')}: {serverConfig.VERSION}</div>

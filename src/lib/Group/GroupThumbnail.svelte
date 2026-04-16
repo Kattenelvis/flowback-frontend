@@ -3,7 +3,7 @@
 	import {
 		becomeMemberOfGroup,
 		removeGroupMembership
-	} from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote';
+	} from '$lib/web3/frontend/membership';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import Button from '$lib/Generic/Button.svelte';
 	import type { Group } from './interface';
@@ -21,11 +21,13 @@
 
 	let areYouSureModal = $state(false);
 
-	const goToGroup = (e: event) => {
+	const goToGroup = (e: Event) => {
 		if (e.target.id === 'group-join-button') return; // Prevent navigation when clicking the join button
 
 		if (group.joined) goto(`/groups/${group.id}`);
 	};
+
+	console.log('group ids', { id: group.id, blockchain_id: group.blockchain_id });
 
 	const joinGroup = async (directJoin: boolean) => {
 		const { res } = await fetchRequest('POST', `group/${group.id}/join`, {
@@ -45,8 +47,9 @@
 			ErrorHandlerStore.set({ message: 'Pending invite', success: true });
 		} else group.joined = !group.joined;
 
-		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE')
-			becomeMemberOfGroup(group.blockchain_id);
+		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+			await becomeMemberOfGroup(group.blockchain_id);
+		}
 
 		//TODO: Edit groupStore instead of appending dupliucate groups
 		groupStore.set([...$groupStore, group]);
@@ -66,8 +69,9 @@
 			return;
 		}
 
-		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE')
-			removeGroupMembership(group.id);
+		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE') {
+			await removeGroupMembership(group.blockchain_id);
+		}
 		areYouSureModal = false;
 		group.joined = false;
 		group.pending_join = false;
@@ -152,7 +156,7 @@
 		{ label: 'No', type: 'default', onClick: () => (areYouSureModal = false) }
 	]}
 >
-	>
+	
 	<div slot="header">{$_('Are you sure?')}</div>
 	<div slot="body">{$_('You are about to leave the group!')}</div>
 </Modal>
