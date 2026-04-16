@@ -20,4 +20,4 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           push: ${{ github.event_name == 'push' }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/your-image-name:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
