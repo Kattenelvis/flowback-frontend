@@ -4,7 +4,6 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { _ } from 'svelte-i18n';
 	import Loader from '$lib/Generic/Loader.svelte';
-	import { statusMessageFormatter } from '$lib/Generic/StatusMessage';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/Generic/Button.svelte';
 	import CheckboxButtons from '$lib/Generic/CheckboxButtons.svelte';
@@ -58,9 +57,10 @@
 
 			goto('/home');
 		} else {
-			ErrorHandlerStore.set(
-				statusMessageFormatter(res, json, 'There was a problem logging in')
-			);
+			ErrorHandlerStore.set({
+				success: false,
+				message: 'There was a problem logging in'
+			});
 		}
 	};
 </script>
