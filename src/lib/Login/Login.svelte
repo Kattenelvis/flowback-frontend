@@ -23,17 +23,23 @@
 			'POST',
 			'login',
 			{ username, password },
-			false
+			false,
+			true,
+			true
 		);
 		loading = false;
 
 		if (!res.ok)
 			ErrorHandlerStore.set({
-				message: json.detail.non_field_errors[0] ?? 'Something went wrong',
+				message:
+					(typeof json?.detail === 'string' ? json.detail : null) ??
+					json?.non_field_errors?.[0] ??
+					json?.detail?.non_field_errors?.[0] ??
+					'Something went wrong',
 				success: false
 			});
-		else if (json?.token) {
-			await localStorage.setItem('token', json.token);
+		else if (json?.token || typeof json === 'string') {
+			await localStorage.setItem('token', json?.token ?? json);
 
 			//Checks if user has selected the "Remain logged in" button and acts accordingly
 			if (remainLoggedIn)
@@ -64,7 +70,12 @@
 		class="p-6 gap-6 flex flex-col items-center"
 		on:submit|preventDefault={logIn}
 	>
-		<TextInput label={'Email'} bind:value={username} required name="email" />
+		<TextInput
+			label={'Username'}
+			bind:value={username}
+			required
+			name="username"
+		/>
 		<div class="w-full">
 			<TextInput
 				label={'Password'}
