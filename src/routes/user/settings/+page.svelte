@@ -159,6 +159,10 @@
 		getUserConfig();
 		getServerConfig();
 		getReportList();
+
+		window.addEventListener('popstate', () => {
+			selectedPage = null;
+		});
 	});
 </script>
 
@@ -184,7 +188,7 @@
 				<div class="mt-4">
 					{#each sidebarItems as item}
 						<button
-							on:click={() => (selectedPage = item.page)}
+							on:click={() => { selectedPage = item.page; history.pushState({}, ''); }}
 							class={optionsDesign}
 							class:bg-gray-100={selectedPage === item.page}
 							class:dark:bg-gray-800={selectedPage === item.page}
