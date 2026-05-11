@@ -46,7 +46,7 @@
       {$_(pageTitles[selectedHref] || 'Flowback')}
     </h1>
 
-    <div class="relative justify-self-end">
+    <div class="justify-self-end">
       <SideHeaderIcon bind:sideHeaderOpen />
       <SideHeader bind:sideHeaderOpen />
     </div>
