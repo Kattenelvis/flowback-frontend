@@ -73,7 +73,7 @@
 
 <div
 	class:hidden={!sideHeaderOpen}
-	class="absolute bottom-full md:bottom-auto md:top-full right-0 z-[110] select-none shadow slide-animation bg-white dark:bg-darkobject dark:text-darkmodeText flex flex-col"
+	class="absolute bottom-auto top-full right-0 z-[110] select-none shadow slide-animation bg-white dark:bg-darkobject dark:text-darkmodeText flex flex-col"
 	id="side-header"
 	role="button"
 	tabindex="0"
@@ -135,12 +135,8 @@
 
 <style>
 	@keyframes slide-animation {
-		from {
-			right: -1000px;
-		}
-		to {
-			right: 0;
-		}
+		from { transform: translateX(100%); }
+		to   { transform: translateX(0); }
 	}
 
 	.slide-animation {

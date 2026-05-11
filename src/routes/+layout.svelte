@@ -19,6 +19,8 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { setUserGroupPermissionInfo } from '$lib/Group/functions';
 	import { workgroupStore } from '$lib/Group/Kanban/Kanban';
+	import TopHeader from '$lib/Header/TopHeader.svelte';
+	import { isMobile } from '$lib/utils/isMobile';
 
 	let showUI = false,
 		scrolledY = '',
@@ -200,6 +202,9 @@
 
 <main class="min-h-[100vh] pb-[15vh] md:pb-0">
 	{#if showUI}
+		{#if $isMobile}
+			<TopHeader />
+		{/if}
 		<!-- <Chat /> -->
 		<Header />
 	{/if}
