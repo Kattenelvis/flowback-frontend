@@ -159,6 +159,10 @@
 		getUserConfig();
 		getServerConfig();
 		getReportList();
+
+		window.addEventListener('popstate', () => {
+			selectedPage = null;
+		});
 	});
 </script>
 
@@ -169,7 +173,7 @@
 			{$isMobile ? "h-full" : "w-[300px] h-[800px] rounded border"}"
 			class:hidden={$isMobile && selectedPage}
 		>
-			<div class={$isMobile ? "grid grid-cols-3 w-full pb-4 border-b border-gray-200 dark:border-gray-70" : "flex items-center mb-4 gap-4"}>
+			<div class={$isMobile ? "hidden" : "flex items-center mb-4 gap-4"}>
 				<button
 					class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
 					on:click={() => goto('/home')}
@@ -184,7 +188,7 @@
 				<div class="mt-4">
 					{#each sidebarItems as item}
 						<button
-							on:click={() => (selectedPage = item.page)}
+							on:click={() => { selectedPage = item.page; history.pushState({}, ''); }}
 							class={optionsDesign}
 							class:bg-gray-100={selectedPage === item.page}
 							class:dark:bg-gray-800={selectedPage === item.page}
@@ -203,21 +207,6 @@
 				class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow
 				{$isMobile ? "h-full" : "w-[450px] rounded border"}"
 			>
-			 	{#if $isMobile}
-					<div class="grid grid-cols-3 w-full pb-4 mb-6 border-b border-gray-200 dark:border-gray-70">
-						<button
-							class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
-							on:click={() => {
-									selectedPage = null;
-							}}
-						>
-							<Fa icon={faArrowLeft} />
-						</button>
-						<h1 class="text-xl text-left text-primary dark:text-secondary font-semibold text-center">
-							{$_(sidebarItems.find(i => i.page === selectedPage)?.text || 'Settings')}
-						</h1>
-					</div>
-				{/if}
 				<ul class="flex flex-col h-full">
 					{#if selectedPage === 'profile'}
 						<li
