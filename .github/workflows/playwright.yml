@@ -22,6 +22,7 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:latest
 
   publish:
+    needs: build
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +38,7 @@ jobs:
             docker compose pull && docker compose up -d
 
   testing:
+    needs: publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
