@@ -25,7 +25,8 @@
 
 	const closeWindowWhenClickingOutside = () => {
 		window.addEventListener('click', function (e) {
-			const notificationListElement = document.getElementById(`side-header`);
+			const notificationListElement =
+				document.getElementById(`side-header-icon`);
 			if (
 				sideHeaderOpen &&
 				//@ts-ignore
@@ -63,12 +64,17 @@
 
 	onMount(() => {
 		if (env.PUBLIC_SUPPORT_PHONE || env.PUBLIC_SUPPORT_MAIL) {
-			navs.splice(2, 0, { title: 'Support', action: () => (open_support = true) });
+			navs.splice(2, 0, {
+				title: 'Support',
+				action: () => (open_support = true)
+			});
 			navs = navs;
 		}
 
 		closeWindowWhenClickingOutside();
 	});
+
+	$: console.log(sideHeaderOpen);
 </script>
 
 <div
@@ -98,7 +104,7 @@
 
 		<div slot="body" class="text-left">
 			{#if env.PUBLIC_SUPPORT_PHONE}
-	<div>{$_('Phone support is only between 15:30 and 17:30 CET')}</div>
+				<div>{$_('Phone support is only between 15:30 and 17:30 CET')}</div>
 				<div>{$_(`Number: ${env.PUBLIC_SUPPORT_PHONE}`)}</div>
 			{/if}
 			{#if env.PUBLIC_SUPPORT_MAIL}
@@ -121,7 +127,9 @@
 		</div>
 		<div class="grupper-card row g-2 clickable">
 			<div class="text-center my-2 noSelect">
-				<button on:keydown on:click={handleCoDocumentCreation}>+ {$_('Create Co-Document')}</button>
+				<button on:keydown on:click={handleCoDocumentCreation}
+					>+ {$_('Create Co-Document')}</button
+				>
 			</div>
 		</div>
 	</div>

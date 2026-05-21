@@ -14,12 +14,13 @@
   class={Class}
   on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
 >
-  <img
-    src={$userStore?.profile_image
-      ? `${env.PUBLIC_API_URL}${$userStore?.profile_image}`
-      : DefaultPFP}
-    class={`w-8 rounded-full cursor-pointer ${sideHeaderOpen && 'ring-blue-500'}`}
-    alt="default pfp"
-    on:error={(e) => onThumbnailError(e, DefaultPFP)}
-  />
+	<img
+		src={$userStore?.profile_image
+			? `${env.PUBLIC_API_URL}${$userStore?.profile_image}`
+			: DefaultPFP}
+		class={`w-8 rounded-full cursor-pointer ${sideHeaderOpen && 'ring-blue-500'}`}
+		alt="default pfp"
+		on:error={(e) => onThumbnailError(e, DefaultPFP)}
+	/>
 </button>
+
