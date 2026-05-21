@@ -16,7 +16,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
+          port: 22
           script: whoami
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,4 +34,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-
