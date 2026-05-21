@@ -19,7 +19,7 @@ jobs:
           port: 22
           script: |
             cd flowback/flowback_server_setup/
-            sudo bash update.bash immr
+            bash update.bash immr
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
