@@ -7,9 +7,9 @@ export async function fetchRequest(
   api: string,
   data: any = null,
   needs_authorization = true,
-  needs_json = true
+  needs_json = true,
+  trailingBackslash = false
 ) {
-  const trailingBackslash = true
   if (method === 'GET' && data !== null)
     console.error(
       "Method 'GET' does not take any data, use query parameters instead. For example: /api?id=5"
