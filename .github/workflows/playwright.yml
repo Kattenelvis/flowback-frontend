@@ -42,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: Kattenelvis/flowback-interface-testing
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
