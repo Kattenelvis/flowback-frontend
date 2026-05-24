@@ -23,10 +23,10 @@
 	//TODO: Implement codocument creation
 	const handleCoDocumentCreation = () => {};
 
+	// Close the sidepanel when clicking anywhere else on the screen
 	const closeWindowWhenClickingOutside = () => {
 		window.addEventListener('click', function (e) {
-			const notificationListElement =
-				document.getElementById(`side-header-icon`);
+			const notificationListElement = document.getElementById(`side-header`);
 			if (
 				sideHeaderOpen &&
 				//@ts-ignore
@@ -73,18 +73,12 @@
 
 		closeWindowWhenClickingOutside();
 	});
-
-	$: console.log(sideHeaderOpen);
 </script>
 
 <div
 	class:hidden={!sideHeaderOpen}
 	class="absolute bottom-auto top-full right-0 z-[110] select-none shadow slide-animation bg-white dark:bg-darkobject dark:text-darkmodeText flex flex-col"
 	id="side-header"
-	role="button"
-	tabindex="0"
-	on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
-	on:keydown={(e) => e.key === 'Enter' && (sideHeaderOpen = !sideHeaderOpen)}
 >
 	{#each navs as nav}
 		<button

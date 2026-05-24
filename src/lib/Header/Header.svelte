@@ -29,6 +29,8 @@
 	onNavigate(() => {
 		selectedHref = window.location.pathname.slice(1);
 	});
+
+	$: console.log(sideHeaderOpen);
 </script>
 
 <header

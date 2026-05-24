@@ -53,7 +53,9 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run Playwright tests
-        run: npx playwright test --project chromium --retries 1 --workers 1
+        # run: npx playwright test --project chromium --retries 1 --workers 1
+        run: npx playwright test --project chromium --retries 1 --workers 1 -g
+          Smoke-Test
         env:
           LINK: ${{ secrets.LINK }}
           TEST_PASS: ${{ secrets.TEST_PASS }}

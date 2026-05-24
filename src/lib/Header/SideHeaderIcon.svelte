@@ -4,15 +4,15 @@
 	import { env } from '$env/dynamic/public';
 	import { onThumbnailError } from '$lib/Generic/GenericFunctions';
 
-	export let sideHeaderOpen = false, 
-  Class = "";
+	export let sideHeaderOpen = false,
+		Class = '';
 </script>
 
 <button
-  id="side-header"
-  aria-label="Side Header Toggle"
-  class={Class}
-  on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
+	id="side-header"
+	aria-label="Side Header Toggle"
+	class={Class}
+	on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
 >
 	<img
 		src={$userStore?.profile_image
@@ -23,4 +23,3 @@
 		on:error={(e) => onThumbnailError(e, DefaultPFP)}
 	/>
 </button>
-
