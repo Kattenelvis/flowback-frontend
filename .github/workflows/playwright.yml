@@ -5,6 +5,22 @@ on:
   pull_request:
     branches: [dev]
 
+env:
+  LINK: ${{ secrets.LINK }}
+  TEST_PASS: ${{ secrets.TEST_PASS }}
+  MAINUSER_PASS: "a"
+  MAINUSER_MAIL: "a@a.se"
+  MAINUSER_NAME: "a"
+  SECONDUSER_PASS: "b"
+  SECONDUSER_MAIL: "b@b.se"
+  SECONDUSER_NAME: "b"
+  THIRDUSER_PASS: "c"
+  THIRDUSER_MAIL: "c@c.org"
+  THIRDUSER_NAME: "c"
+  FOURTHUSER_PASS: "d"
+  FOURTHUSER_MAIL: "d@d.org"
+  FOURTHUSER_NAME: "d"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -58,21 +74,6 @@ jobs:
       - name: Run the rest of the tests
         run: npx playwright test . --project chromium --retries 0 --workers 1
           --grep-invert "Smoke-Test"
-        env:
-          LINK: ${{ secrets.LINK }}
-          TEST_PASS: ${{ secrets.TEST_PASS }}
-          MAINUSER_PASS: "a"
-          MAINUSER_MAIL: "a@a.se"
-          MAINUSER_NAME: "a"
-          SECONDUSER_PASS: "b"
-          SECONDUSER_MAIL: "b@b.se"
-          SECONDUSER_NAME: "b"
-          THIRDUSER_PASS: "c"
-          THIRDUSER_MAIL: "c@c.org"
-          THIRDUSER_NAME: "c"
-          FOURTHUSER_PASS: "d"
-          FOURTHUSER_MAIL: "d@d.org"
-          FOURTHUSER_NAME: "d"
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
