@@ -9,10 +9,10 @@
 </script>
 
 <button
-	id="side-header"
+	id="side-header-icon"
 	aria-label="Side Header Toggle"
 	class={Class}
-	on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
+	on:click|stopPropagation={() => (sideHeaderOpen = !sideHeaderOpen)}
 >
 	<img
 		src={$userStore?.profile_image
