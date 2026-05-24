@@ -34,7 +34,7 @@ jobs:
           key: ${{ secrets.KEY }}
           port: 22
           script: |
-            cd flowback/flowback-docker
+            cd flowback/flowback-testing-docker
             docker compose pull && docker compose up -d
 
   testing:
@@ -78,3 +78,19 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  publish-prod:
+    needs: build
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute remote SSH commands using password
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script: |
+            cd flowback/flowback-docker
+            docker compose pull && docker compose up -d
