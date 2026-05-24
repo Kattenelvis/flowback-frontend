@@ -34,7 +34,7 @@ jobs:
           key: ${{ secrets.KEY }}
           port: 22
           script: |
-            cd flowback/flowback-testing-docker
+            cd flowback/flowback-docker-testing
             docker compose pull && docker compose up -d
 
   testing:
@@ -80,7 +80,7 @@ jobs:
           retention-days: 30
 
   publish-prod:
-    needs: build
+    needs: testing
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
