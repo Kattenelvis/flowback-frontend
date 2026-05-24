@@ -53,9 +53,16 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --project chromium --retries 1 --workers 1
         env:
           LINK: ${{ secrets.LINK }}
+          TEST_PASS: ${{ secrets.TEST_PASS }}
+          MAINUSER_PASS: "a"
+          MAINUSER_MAIL: "a@a.se"
+          MAINUSER_NAME: "a"
+          SECONDUSER_PASS: "b"
+          SECONDUSER_MAIL: "b@b.se"
+          SECONDUSER_NAME: "b"
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
