@@ -51,11 +51,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-      - name: Run Playwright tests
-        # run: npx playwright test --project chromium --retries 1 --workers 1
+        run: npx playwright install --with-deps chromium
+      - name: Run Smoke tests (basic login functionality for all default users)
         run: npx playwright test -g "Smoke-Test" --project chromium --retries 0
           --workers 1
+      - name: Run the rest of the tests
+        run: npx playwright test . --project chromium --retries 0 --workers 1
+          --grep-invert "Smoke-Test"
         env:
           LINK: ${{ secrets.LINK }}
           TEST_PASS: ${{ secrets.TEST_PASS }}
