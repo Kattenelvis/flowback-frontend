@@ -54,7 +54,7 @@ jobs:
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         # run: npx playwright test --project chromium --retries 1 --workers 1
-        run: npx playwright test -g "Smoke-Test" --project chromium --retries 1
+        run: npx playwright test -g "Smoke-Test" --project chromium --retries 0
           --workers 1
         env:
           LINK: ${{ secrets.LINK }}
@@ -65,6 +65,13 @@ jobs:
           SECONDUSER_PASS: "b"
           SECONDUSER_MAIL: "b@b.se"
           SECONDUSER_NAME: "b"
+          THIRDUSER_PASS: "c"
+          THIRDUSER_MAIL: "c@c.org"
+          THIRDUSER_NAME: "c"
+          FOURTHUSER_PASS: "d"
+          FOURTHUSER_MAIL: "d@d.org"
+          FOURTHUSER_NAME: "d"
+
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
