@@ -283,7 +283,7 @@
 						/>
 					{:else}
 						<Button Class="w-full" onClick={createDelegationPool} buttonStyle="primary-light">
-							{$_('Become delegate')}
+							{$_('Confirm')}
 						</Button>
 					{/if}
 
