@@ -169,6 +169,9 @@
 	initializeLocalization();
 
 	onMount(async () => {
+		document.body.classList.remove('invisible');
+		document.body.style.visibility = 'visible';
+
 		await setUserInfo();
 		await setUserGroupInfo();
 		groupUserPermissionStore.set(
@@ -195,9 +198,6 @@
 				success: _errorhandler.success
 			});
 		});
-
-		document.body.classList.remove('invisible');
-		document.body.style.visibility = 'visible';
 	});
 </script>
 
