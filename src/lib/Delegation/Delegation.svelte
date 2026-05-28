@@ -22,8 +22,7 @@
 	import type { Permissions } from '$lib/Group/Permissions/interface';
 	import { getPermissionsFast } from '$lib/Generic/GenericFunctions';
 	import TextInput from '$lib/Generic/TextInput.svelte';
-	import Pagination from '$lib/Generic/Pagination.svelte';
-	import { groups as groupsLimit } from '$lib/Generic/APILimits.json';
+	import { delegation as groupsLimit } from '$lib/Generic/APILimits.json';
 
 	let group: Group,
 		groups: Group[],
@@ -33,9 +32,7 @@
 		delegates: Delegate[] = [],
 		selectedPage: 'become-delegate' | 'delegate' | 'none' = 'none',
 		userPermissions: Permissions,
-		search = '',
-		next: string,
-		prev: string;
+		search = '';
 
 	const getGroups = async () => {
 		const { res, json } = await fetchRequest(
@@ -51,8 +48,6 @@
 			return;
 		}
 		groups = json?.results;
-		next = json?.next;
-		prev = json?.previous;
 
 		group =
 			groups.find(
@@ -220,7 +215,6 @@
 					disableFirstChoice
 					id="delegate-group-select"
 				/>
-				<Pagination bind:next bind:prev bind:iterable={groups} Class="flex gap-2 mt-2" />
 			{/if}
 
 			<div class="flex flex-col gap-4 my-4">
