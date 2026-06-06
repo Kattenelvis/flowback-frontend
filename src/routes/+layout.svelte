@@ -201,12 +201,12 @@
 	});
 </script>
 
-<main class="min-h-[100vh] pb-[15vh] md:pb-0">
+<main class="min-h-[100vh] pb-[15vh] md:pb">
 	{#if showUI}
 		{#if $isMobile}
 			<TopHeader />
 		{/if}
-		<!-- <Chat /> -->
+		<Chat />
 		<Header />
 	{/if}
 
