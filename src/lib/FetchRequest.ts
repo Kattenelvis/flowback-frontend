@@ -8,7 +8,7 @@ export async function fetchRequest(
   data: any = null,
   needs_authorization = true,
   needs_json = true,
-  trailingBackslash = false
+  trailingBackslash = true
 ) {
   if (method === 'GET' && data !== null)
     console.error(
