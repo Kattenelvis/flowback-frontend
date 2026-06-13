@@ -177,6 +177,7 @@
 <div class={`${Class} notifications-clickable-region relative z-100 `}>
 	<button
 		type="button"
+		id={`notification-bell-${type}`}
 		class={``}
 		onclick={() => {
 			notificationOpen = !notificationOpen;

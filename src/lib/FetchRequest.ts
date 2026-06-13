@@ -7,8 +7,7 @@ export async function fetchRequest(
   api: string,
   data: any = null,
   needs_authorization = true,
-  needs_json = true,
-  trailingBackslash = true
+  needs_json = true
 ) {
   if (method === 'GET' && data !== null)
     console.error(
@@ -41,8 +40,8 @@ export async function fetchRequest(
     // `${env.PUBLIC_API_URL || ''}/${env.PUBLIC_HAS_API === 'TRUE' ? 'api/' : ''}${api}`,
     // toSend
     api.includes(env.PUBLIC_API_URL)
-      ? `${api}${trailingBackslash ? '/' : ''}`
-      : `${env.PUBLIC_API_URL}/${api}${trailingBackslash ? '/' : ''}`,
+      ? api
+      : `${env.PUBLIC_API_URL}/${api}`,
     toSend
   );
 
