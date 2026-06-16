@@ -82,7 +82,7 @@
 				return;
 			case 'poll_comment':
 				await goto(
-					`/groups/${notification.data.group_id}/poll/${notification.data.poll_id}?section=comments&source=notification`
+					`/groups/${notification.data.group_id}/polls/${notification.data.poll_id}?section=comments&source=notification`
 				);
 				return;
 			case 'thread':
