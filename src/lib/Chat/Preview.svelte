@@ -235,12 +235,12 @@
 		<!-- <Button onClick={newDM}>New DM</Button> -->
 	</div>
 
-	{#if inviteList?.some((g) => !g.rejected && g?.title?.split(',')?.length > 2)}
+	{#if inviteList?.some((g) => !g.rejected && g?.message_channel_name?.split(',')?.length > 2)}
 		<p class="text-xs text-gray-400 px-3 pt-2">{$_('Invites')}</p>
 	{/if}
 	{#if inviteList}
 		{#each inviteList as groupChat}
-			{#if !groupChat.rejected && groupChat?.title?.split(',')?.length > 2}
+			{#if !groupChat.rejected && groupChat?.message_channel_name?.split(',')?.length > 2}
 				{#if groupChat.rejected === null}
 					<span>{$_("You've been invited to this chat:")}</span>
 					<Button onClick={() => UserChatInvite(true, groupChat.id)}
