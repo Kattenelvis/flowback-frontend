@@ -68,8 +68,8 @@ jobs:
 
       - name: Run the rest of the tests
         working-directory: flowback-interface-testing
-        run: npx playwright test . --project chromium --retries 2 --workers 2 --reporter list
-          --grep-invert "Smoke-Test"
+        run: npx playwright test . --project chromium --retries 2 --workers 3 --reporter
+          list --grep-invert "Smoke-Test"
 
       - name: Dump docker logs on failure
         if: ${{ failure() }}
@@ -99,9 +99,9 @@ jobs:
             cd flowback/flowback-docker-testing
             docker compose pull && docker compose up -d
 
-  # Manually gated
+  # Works only on main branch
   publish-prod:
-    needs: testing
+    needs: publish-dev
     timeout-minutes: 10
     runs-on: ubuntu-latest
     environment: production
