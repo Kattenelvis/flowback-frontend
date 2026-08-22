@@ -114,11 +114,8 @@
 											style="width: {betValue.toFixed(1) * 100}%"
 										></div>
 										<span
-											class="absolute inset-0 flex items-center text-xs font-semibold tabular-nums
-												{barWidth > 25 ? 'text-white px-3' : 'text-purple-700 dark:text-purple-200'}"
-											style="padding-left: {barWidth > 25
-												? '0.75rem'
-												: `max(${barWidth}% + 0.5rem, 3rem)`}"
+											class="absolute inset-0 flex items-center px-3 text-xs font-semibold tabular-nums
+												{barWidth > 25 ? 'text-white' : 'text-purple-700 dark:text-purple-200'}"
 										>
 											{betValue.toFixed(1) * 100}%
 										</span>

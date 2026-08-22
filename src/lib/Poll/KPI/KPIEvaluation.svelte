@@ -29,7 +29,7 @@
 			return;
 		}
 
-		kpis = json ?? [];
+		kpis = (json ?? []).filter((kpi: KPI) => kpi.active);
 	};
 
 	const getKPIVoteList = async () => {
