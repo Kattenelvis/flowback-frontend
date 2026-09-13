@@ -48,7 +48,7 @@
 		kpiEvaluations = json.results ?? [];
 	};
 
-	const evaluateKPI = async (kpi: KPI, value: number) => {
+	const evaluateKPI = async (kpi: KPI, value: string) => {
 		loading = true;
 		const { res, json } = await fetchRequest(
 			'POST',

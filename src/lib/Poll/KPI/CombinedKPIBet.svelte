@@ -94,6 +94,7 @@
 							{@const barWidth = (betValue / maxBet) * 100}
 							<div
 								class="flex items-center gap-3 w-full kpi-row"
+								id={`kpi-bet-value-${bet.value}`}
 								style="animation-delay: {kpiIndex * 80 + i * 40}ms"
 							>
 								<span
