@@ -36,14 +36,13 @@ export async function fetchRequest(
 
   if (method !== 'GET') toSend.body = data;
 
-  const res = await fetch(
-    // `${env.PUBLIC_API_URL || ''}/${env.PUBLIC_HAS_API === 'TRUE' ? 'api/' : ''}${api}`,
-    // toSend
-    api.includes(env.PUBLIC_API_URL)
-      ? api
-      : `${env.PUBLIC_API_URL}/${api}`,
-    toSend
-  );
+  // Pagination URLs returned by the API are absolute URLs. Keep them intact;
+  // otherwise they get prefixed with PUBLIC_API_URL a second time.
+  const requestUrl = /^https?:\/\//i.test(api)
+    ? api
+    : `${env.PUBLIC_API_URL}/${api}`;
+
+  const res = await fetch(requestUrl, toSend);
 
   const relativePath = new URL(location.href).pathname;
   if (res.status === 401 && !relativePath.includes('/login')) {
