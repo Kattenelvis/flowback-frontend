@@ -8,20 +8,20 @@
 	import FileUploads from '$lib/Generic/File/FileUploads.svelte';
 	import type { GroupUser } from '../interface';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import type { WorkGroup } from '../WorkingGroups/interface';
-	import { elipsis } from '$lib/Generic/GenericFunctions';
-	import { groupStore, workgroupStore, type kanban } from './Kanban';
+	import type { WorkGroup, WorkGroupUser } from '../WorkingGroups/interface';
 	import Select from '$lib/Generic/Select.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
-	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
+	import GroupSelection from '$lib/Generic/GroupSelection.svelte';
+	import { groupMembers as groupMembersLimit } from '$lib/Generic/APILimits.json';
 
 	export let open: boolean = false,
-		users: GroupUser[] = [],
 		workGroups: WorkGroup[] = [],
 		lane: number = 1,
 		getKanbanEntries: () => Promise<void>;
 
-	let description = '',
+	let users: GroupUser[] = [],
+		workgroupUsers: GroupUser[] = [],
+		description = '',
 		title = '',
 		assignee: number | null = null,
 		priorities = [5, 4, 3, 2, 1],
@@ -36,9 +36,8 @@
 		end_date: string | null = new Date().toISOString().slice(0, 16),
 		loading = false,
 		images: File[] = [],
-		workGroupId: number | null = null,
-		groupId: number | null = null,
-		groupSelection = 0;
+		selectedWorkgroupId: number | null = null,
+		selectedGroupId: number | null = null;
 
 	const createKanbanEntry = async () => {
 		loading = true;
@@ -51,10 +50,12 @@
 
 		if (assignee) formData.append('assignee_id', assignee.toString());
 		if (priority) formData.append('priority', priority.toString());
-		if (workGroupId) formData.append('work_group_id', workGroupId.toString());
+		if (selectedWorkgroupId)
+			formData.append('work_group_id', selectedWorkgroupId.toString());
 		if (end_date) formData.append('end_date', end_date);
 
-		description = description.trim() === '' ? $_('No description provided') : description;
+		description =
+			description.trim() === '' ? $_('No description provided') : description;
 
 		formData.append('description', description);
 		images.forEach((image) => {
@@ -63,7 +64,9 @@
 
 		const { res, json } = await fetchRequest(
 			'POST',
-			groupSelection ? `group/${groupId}/kanban/entry/create` : 'user/kanban/entry/create',
+			selectedGroupId
+				? `group/${selectedGroupId}/kanban/entry/create`
+				: 'user/kanban/entry/create',
 			formData,
 			true, // Needs authorization
 			false // Formadata doesn't need to be JSON-fied
@@ -72,11 +75,17 @@
 		loading = false;
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to create kanban task', success: false });
+			ErrorHandlerStore.set({
+				message: 'Failed to create kanban task',
+				success: false
+			});
 			return;
 		}
 
-		ErrorHandlerStore.set({ message: 'Successfully created kanban task', success: true });
+		ErrorHandlerStore.set({
+			message: 'Successfully created kanban task',
+			success: true
+		});
 
 		open = false;
 
@@ -87,7 +96,7 @@
 		priority = 3;
 		end_date = new Date().toISOString().slice(0, 16); // Reset to current date/time
 		images = [];
-		workGroupId = workGroups[0]?.id ?? null;
+		selectedWorkgroupId = workGroups[0]?.id ?? null;
 
 		await getKanbanEntries();
 	};
@@ -99,6 +108,43 @@
 	const handleChangePriority = (e: any) => {
 		priority = Number(e.target.value);
 	};
+
+	const getUsers = async () => {
+		if (!selectedGroupId) {
+			users = [];
+			return;
+		}
+
+		const { res, json } = await fetchRequest(
+			'GET',
+			`group/${selectedGroupId}/users?limit=${groupMembersLimit}`
+		);
+
+		if (res.ok) users = json?.results ?? [];
+	};
+
+	const getWorkgroupUsers = async () => {
+		if (!selectedWorkgroupId || !selectedGroupId) {
+			workgroupUsers = [];
+			return;
+		}
+
+		const { res, json } = await fetchRequest(
+			'GET',
+			`group/workgroup/${selectedWorkgroupId}/list?limit=${groupMembersLimit}`
+		);
+
+		if (res.ok) {
+			workgroupUsers =
+				json?.results?.map((u: WorkGroupUser) => u.group_user) ?? [];
+			users = users.filter((u: GroupUser) =>
+				workgroupUsers.find((k) => k.id === u.id)
+			);
+		}
+	};
+
+	$: selectedGroupId, getUsers();
+	$: selectedWorkgroupId, getWorkgroupUsers();
 </script>
 
 <Modal
@@ -130,55 +176,14 @@
 					bind:value={description}
 				/>
 
-				<RadioButtons2
-					label="Hello"
-					name="groupSelection"
-					labels={['Group', 'Personal']}
-					values={[1, 0]}
-					bind:value={groupSelection}
-				/>
-
-				{#if groupSelection}
-					<div class="text-left">
-						<label class="block text-md" for="work-group">
-							{$_('Groups')}
-						</label>
-						<Select
-							Class="w-full"
-							classInner="rounded p-1 border border-gray-300 dark:border-gray-600 dark:bg-darkobject"
-							labels={$groupStore.map((group) => elipsis(group.name))}
-							values={$groupStore.map((group) => group.id)}
-							bind:value={groupId}
-							innerLabel={$_('No group assigned')}
-							innerLabelOn={true}
-						/>
-					</div>
-					<div class="text-left">
-						<label class="block text-md" for="work-group">
-							{$_('Work Group')}
-						</label>
-						<Select
-							Class="w-full"
-							classInner="rounded p-1 border border-gray-300 dark:border-gray-600 dark:bg-darkobject"
-							labels={$workgroupStore
-								.filter((g) => g.group_id === groupId)
-								.map((g) => elipsis(g.name))}
-							values={$workgroupStore
-								.filter((g) => g.group_id === groupId)
-								.map((group) => group.id)}
-							bind:value={workGroupId}
-							innerLabel={$_('No workgroup assigned')}
-							innerLabelOn={true}
-						/>
-					</div>
-				{/if}
+				<GroupSelection bind:selectedGroupId bind:selectedWorkgroupId />
 				<div class="text-left">
 					<label class="block text-md pt-2" for="end_date">
 						{$_('End date')}
 					</label>
 					<input
 						bind:value={end_date}
-						class="w-full border rounded p-1 border-gray-300 dark:border-gray-600 dark:bg-darkobject
+						class="w-full border rounded p-1 border-gray-300 dark:border-gray-600 bg-white dark:bg-darkobject
 						   {end_date ? 'text-black' : 'text-gray-500'}"
 						type="datetime-local"
 						id="end_date"
@@ -191,31 +196,34 @@
 					</label>
 					<Select
 						Class="w-full"
-						classInner="rounded p-1 border border-gray-300 dark:border-gray-600 dark:bg-darkobject"
-						labels={priorities.map((i) => $_(priorityText[priorityText.length - i]))}
+						classInner="rounded p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkobject"
+						labels={priorities.map((i) =>
+							$_(priorityText[priorityText.length - i])
+						)}
 						values={priorities}
 						bind:value={priority}
 						onInput={handleChangePriority}
 						innerLabel=""
 					/>
 
-					{#if groupSelection}
-						<div class="text-left">
-							<label class="block text-md" for="handle-change-assignee">
-								{$_('Assignee')}
-							</label>
-							<Select
-								Class="w-full"
-								classInner="rounded p-1 border border-gray-300 dark:border-gray-600 dark:bg-darkobject"
-								labels={users.map((user) => user.user.username)}
-								values={users.map((user) => user.user.id)}
-								bind:value={assignee}
-								onInput={handleChangeAssignee}
-								innerLabel={$_('No assignee')}
-								innerLabelOn={true}
-							/>
-						</div>
-					{/if}
+					<div class="text-left">
+						<label class="block text-md" for="handle-change-assignee">
+							{$_('Assignee')}
+						</label>
+
+						<Select
+							Class="w-full"
+							classInner="rounded p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkobject"
+							labels={users.map((user) => user.user.username)}
+							values={users.map((user) => user.user.id)}
+							bind:value={assignee}
+							onInput={handleChangeAssignee}
+							innerLabel={$_('No assignee')}
+							innerLabelOn={true}
+							innerLabelValue={null}
+						/>
+					</div>
+
 					<div class="text-left">
 						<span class="block text-md">
 							{$_('Attachments')}
@@ -228,8 +236,13 @@
 	</div>
 
 	<div slot="footer" class="flex">
-		<Button Class="py-1 flex-1" buttonStyle="primary" type="submit">{$_('Confirm')}</Button>
-		<Button Class="py-1 flex-1" buttonStyle="warning" onClick={() => (open = false)}
+		<Button Class="py-1 flex-1" buttonStyle="primary" type="submit"
+			>{$_('Confirm')}</Button
+		>
+		<Button
+			Class="py-1 flex-1"
+			buttonStyle="warning"
+			onClick={() => (open = false)}
 			>{$_('kanbanEntry.Cancel', { default: 'Cancel' })}</Button
 		>
 	</div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Phase, poll } from './interface';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Tag from '$lib/Group/Tag.svelte';
 	import HeaderIcon from '$lib/Header/HeaderIcon.svelte';
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
@@ -10,29 +10,77 @@
 	import Fa from 'svelte-fa';
 	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 	import { goto } from '$app/navigation';
-	import { getPhaseUserFriendlyName, imacFormatting, nextPhase } from './functions';
+	import {
+		getPhaseUserFriendlyName,
+		imacFormatting,
+		nextPhase
+	} from './functions';
 	import { _ } from 'svelte-i18n';
 	import NewDescription from './NewDescription.svelte';
 	import MultipleChoices from '$lib/Generic/MultipleChoices.svelte';
 	import ReportPostModal from './ReportPostModal.svelte';
-	import { groupUserStore, groupUserPermissionStore } from '$lib/Group/interface';
+	import {
+		groupUserStore,
+		groupUserPermissionStore
+	} from '$lib/Group/interface';
 	import DeletePostModal from './DeletePostModal.svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import type { Tag as TagType } from '$lib/Group/interface';
-	import { onMount } from 'svelte';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { isMobile } from '$lib/utils/isMobile';
+	import { getMultipleOptions } from '$lib/Poll/functions';
+	import { onMount } from 'svelte';
+	import {
+		POLL_TYPE,
+		isSchedulePoll,
+		isScorePoll,
+		type PollType
+	} from './pollType';
 
-	export let poll: poll,
+	let {
+		poll,
 		displayTag = false,
-		phase: Phase,
-		pollType: 3 | 4 = 3;
+		phase = $bindable(),
+		pollType = POLL_TYPE.SCHEDULE
+	}: {
+		poll: poll;
+		displayTag?: boolean;
+		phase: Phase;
+		pollType?: PollType;
+	} = $props();
 
-	let deletePollModalShow = false,
-		reportPollModalShow = false,
-		choicesOpen = false,
-		source = new URLSearchParams(window.location.search).get('source'),
-		tag: TagType;
+	let deletePollModalShow = $state(false),
+		reportPollModalShow = $state(false),
+		choicesOpen = $state(false),
+		tag: TagType | undefined = $state(undefined),
+		disableNextPhase = $state(false);
+
+	let pictureSize = $derived($isMobile ? 2 : 1);
+	let multipleChoices = $derived(
+		getMultipleOptions(
+			phase,
+			poll,
+			[
+				() => {
+					deletePollModalShow = true;
+					choicesOpen = false;
+				},
+				() => {
+					reportPollModalShow = true;
+					choicesOpen = false;
+				}
+			],
+			async () => {
+				if (disableNextPhase) return;
+				disableNextPhase = true;
+				phase = await nextPhase(poll, phase);
+			},
+			$groupUserPermissionStore,
+			$groupUserStore
+		)
+	);
+
+	const source = new URLSearchParams(window.location.search).get('source');
 
 	const getTag = async () => {
 		const { json, res } = await fetchRequest(
@@ -45,77 +93,75 @@
 		tag = json.results[0];
 	};
 
-	onMount(() => {
-		getTag();
+	$effect(() => {
+		if (poll) getTag();
 	});
-	
- 	$: pictureSize = $isMobile ? 2 : 1;
-	$: poll && getTag();
+
+	$effect(() => {
+		if (phase) disableNextPhase = false;
+	});
 </script>
 
 <div
 	class="bg-white dark:bg-darkobject dark:text-darkmodeText rounded shadow poll-header-grid py-8 w-full max-w-[1200px]"
 >
 	<button
-		class="cursor-pointer bg-white dark:bg-darkobject dark:text-darkmodeText justify-center m-0 px-4"
-		on:click={() => {
+		class="cursor-pointer dark:bg-darkobject dark:text-darkmodeText px-4 mt-1"
+		onclick={() => {
 			if (source === 'home') goto('/home');
-			else if (source === 'group') goto(`/groups/${$page.params.groupId}?page=flow`);
-			else if (source === 'delegate-history') history.back();
+			else if (source === 'group')
+				goto(`/groups/${page.params.groupId}?page=flow`);
+			else if (
+				source === 'delegate-history' ||
+				source === 'notification' ||
+				source === 'create'
+			)
+				history.back();
 		}}
 	>
 		<!-- NOTE: In +layout, rote folder, there are URL related behaviours which are affected by this. -->
 		<Fa icon={faArrowLeft} />
 	</button>
 
-	<h1 class="text-left text-2xl text-primary dark:text-secondary font-semibold break-words">
+	<h1
+		class="text-left text-2xl text-primary dark:text-secondary font-semibold break-words"
+	>
 		{poll?.title}
 	</h1>
 
-	<div class="flex gap-3 justify-center m-auto pr-4">
+	<div class="flex gap-3 items-center mt-1 justify-end pr-3">
 		<NotificationOptions
 			type="poll"
 			id={poll?.id}
 			api={`group/poll/${poll?.id}/subscribe`}
 			categories={['poll', 'poll_comment', 'poll_phase']}
 			labels={['Poll', 'Timeline', 'Comments']}
-			Class="justify-self-center mt-2"
 			ClassOpen="right-0"
 		/>
 
 		<MultipleChoices
 			bind:choicesOpen
-			labels={phase !== 'result' &&
-			phase !== 'prediction_vote' &&
-			poll?.allow_fast_forward &&
-			($groupUserPermissionStore?.poll_fast_forward || $groupUserStore?.is_admin)
-				? [$_('Delete Poll'), $_('Report Poll'), $_('Fast Forward')]
-				: [$_('Delete Poll'), $_('Report Poll')]}
-			functions={[
-				() => ((deletePollModalShow = true), (choicesOpen = false)),
-				() => ((reportPollModalShow = true), (choicesOpen = false)),
-				...($groupUserStore?.is_admin ? [async () => (phase = await nextPhase(poll, phase))] : [])
-			]}
-			Class="justify-self-center mt-2"
+			labels={multipleChoices.labels}
+			functions={multipleChoices.functions}
+			ClassInner="-translate-x-3/4"
 			id="poll-header-multiple-choices"
 		/>
 	</div>
 
-	<div class="flex gap-4 items-center grid-area-items my-1 border-b py-4">
+	<div class="flex gap-4 items-center grid-area-items border-b py-4">
 		{#if env.PUBLIC_ONE_GROUP_FLOWBACK !== 'TRUE'}
 			<a
-				href={`/groups/${$page.params.groupId}`}
+				href={`/groups/${page.params.groupId}`}
 				class:hover:underline={poll?.group_joined}
 				class="text-black dark:text-darkmodeText"
 			>
-				<ProfilePicture 
-					Class={!$isMobile ? '' : 'w-10 h-10'} 
-  				displayName={!$isMobile}
+				<ProfilePicture
+					Class={!$isMobile ? '' : 'w-10 h-10'}
+					displayName={!$isMobile}
 					profilePicture={poll?.group_image}
 					username={poll?.group_name}
 					type="group"
-					size={pictureSize} 
-					
+					size={pictureSize}
 				/>
 			</a>
 
@@ -127,7 +173,7 @@
 				{/if}
 			</div>
 
-			{#if pollType === 4}
+			{#if isScorePoll(pollType)}
 				<div>
 					{$_('Current phase')}:
 					{$_(getPhaseUserFriendlyName(phase))}
@@ -139,24 +185,38 @@
 			{/if}
 
 			{#if poll?.interval_mean_absolute_correctness}
-				{$_('Historical imac value')}: {imacFormatting(poll.interval_mean_absolute_correctness)}
+				{$_('Historical imac value')}: {imacFormatting(
+					poll.interval_mean_absolute_correctness
+				)}
 			{/if}
 
-			{#if poll?.poll_type === 4}
-				<HeaderIcon Class="cursor-default" icon={faAlignLeft} text={'Text Poll'} />
-			{:else if poll?.poll_type === 3}
-				<HeaderIcon Class="cursor-default" icon={faCalendarAlt} text={'Date Poll'} />
+			{#if isScorePoll(poll?.poll_type)}
+				<HeaderIcon
+					Class="cursor-default"
+					icon={faAlignLeft}
+					text={'Score Poll'}
+				/>
+			{:else if isSchedulePoll(poll?.poll_type)}
+				<HeaderIcon
+					Class="cursor-default"
+					icon={faCalendarAlt}
+					text={'Date Poll'}
+				/>
 			{/if}
 
-			{#if displayTag && tag}
+			{#if displayTag && tag && env.PUBLIC_POLL_VERSION === '1'}
 				<Tag id={'poll-tag'} bind:tag />
 			{/if}
 		{/if}
 	</div>
 
 	{#if poll?.description.length > 0}
-		<div class="grid-area-description break-words w-[90vw] max-w-[1100px] mt-4">
-			<NewDescription limit={3} lengthLimit={300} description={poll?.description} />
+		<div class="grid-area-description break-words mt-4">
+			<NewDescription
+				limit={3}
+				lengthLimit={300}
+				description={poll?.description}
+			/>
 		</div>
 	{/if}
 </div>
@@ -181,7 +241,10 @@
 	</div>
 {/if}
 
-<DeletePostModal bind:deleteModalShow={deletePollModalShow} postId={$page.params.pollId ?? ''} />
+<DeletePostModal
+	bind:deleteModalShow={deletePollModalShow}
+	postId={page.params.pollId ?? ''}
+/>
 
 <ReportPostModal
 	post_type="poll"
@@ -206,14 +269,12 @@
 		grid-area: 3 / 2 / 4 / 3;
 	}
 
-	 @media (max-width: 768px) {
-    .poll-header-grid {
-      max-width: 100vw;
-    }
-
-    .grid-area-description {
-      width: 100%;
-      word-break: break-word;
-    }
-  }
+	@media (max-width: 760px) {
+		.grid-area-items,
+		.grid-area-description {
+			grid-column: 1 / -1;
+			padding-left: 1rem;
+			padding-right: 1rem;
+		}
+	}
 </style>

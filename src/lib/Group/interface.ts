@@ -15,8 +15,7 @@ export type SelectablePage =
 	| 'schedule'
 	| 'threads'
 	| 'working-groups'
-	| 'delegation'
-	;
+	| 'delegation';
 
 export interface User {
 	username: string;
@@ -45,7 +44,6 @@ export interface DelegateMinimal {
 	profile_image: string;
 
 	tags: Tag[];
-
 }
 
 export interface Group {
@@ -144,8 +142,8 @@ export interface Thread {
 	description: string;
 	pinned: boolean;
 	attachments: string[];
-	user_vote: null | boolean
-	score: number,
+	user_vote: null | boolean;
+	score: number;
 	created_at: string;
 	work_group?: {
 		id: number;
@@ -154,8 +152,11 @@ export interface Thread {
 	group_name: string;
 	group_id: number;
 	group_image: string;
-	public:boolean;
+	group_joined: boolean;
+	public: boolean;
 }
 
-export interface GroupFilter { joined: 'all' | 'member' | 'not-member', search: string }
-
+export interface GroupFilter {
+	joined: 'all' | 'member' | 'not-member';
+	search: string;
+}

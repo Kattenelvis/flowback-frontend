@@ -9,28 +9,31 @@
 	export let files: (File | _File)[] = [],
 		minimalist = false,
 		Class = '',
-		disableCropping = false;
+		disableCropping = false,
+		toRemove: number[] = [];
 
+	// TODO: Refactor this
 	let file: File | _File | null = null;
 
-	const removeFile = (index: number) => {
+	const removeFile = (index: number, file: _File | File) => {
 		files.splice(index, 1);
 		files = files;
+		//@ts-ignore
+		toRemove.push(file.id);
 	};
-
 </script>
 
-{#if files.length ?? 0 > 0}
+{#if files?.length > 0}
 	<div>
 		{#each files as file, i}
 			<div
 				class="flex justify-between items-center p-2 border dark:border-gray-500 border-gray-300"
 			>
-				{elipsis(file?.file_name ?? file?.name)}
+				{elipsis(file.file_name ?? file.name ?? '')}
 
 				<button
 					class="ml-2 text-red-500 hover:text-red-700"
-					on:click={() => removeFile(i)}
+					on:click={() => removeFile(i, file)}
 					type="button"
 				>
 					<Fa icon={faTimes} />

@@ -1,12 +1,21 @@
+<!-- TODO: Refactor this file, simplify, make extendible (open-close principle maybe) -->
 <script lang="ts">
 	import { formatDate } from '$lib/Generic/DateFormatter';
 	import HeaderIcon from '$lib/Header/HeaderIcon.svelte';
 	import { faDownLong } from '@fortawesome/free-solid-svg-icons/faDownLong';
 	import Fa from 'svelte-fa';
 	import { _ } from 'svelte-i18n';
-	import { dateLabels as dateLabelsTextPoll, dateLabelsDatePoll } from '../functions';
-	import { faCircle, faCircleCheck, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
+	import {
+		SCHEDULE_POLL_PHASE_CONFIG,
+		SCORE_POLL_PHASE_CONFIG,
+		type PollPhaseConfig
+	} from '../phases';
+	import {
+		faCircleCheck,
+		faCircleExclamation
+	} from '@fortawesome/free-solid-svg-icons';
 	import type { Phase, poll } from '../interface';
+	import { isSchedulePoll, isScorePoll } from '../pollType';
 
 	export let enableDetails = false,
 		displayTimeline = true,
@@ -19,54 +28,26 @@
 
 	let datesArray: string[] = [],
 		displayDetails = false,
-		dateLabels = poll?.poll_type === 4 ? dateLabelsTextPoll : dateLabelsDatePoll,
 		currentPhaseIndex: number,
 		fraction: number,
-		datePlacement: number[] = [];
+		datePlacement: number[] = [],
+		pollPhases: PollPhaseConfig[] = [];
 
 	const setupDates = () => {
-		//Code has been setup to make it really easy to add or remove dates. Perhaps expand on that?
-		dates = [];
+		currentPhaseIndex = 0;
 
-		if (poll?.poll_type === 4) {
-			dates = [
-				new Date(poll?.start_date),
-				new Date(poll?.area_vote_end_date),
-				new Date(poll?.proposal_end_date),
-				new Date(poll?.prediction_statement_end_date),
-				new Date(poll?.prediction_bet_end_date),
-				new Date(poll?.delegate_vote_end_date),
-				new Date(poll?.end_date)
-			];
+		if (isScorePoll(poll?.poll_type)) pollPhases = SCORE_POLL_PHASE_CONFIG;
+		else if (isSchedulePoll(poll?.poll_type))
+			pollPhases = SCHEDULE_POLL_PHASE_CONFIG;
+		else return;
 
-			//TODO: Refactor so this works by making it easy for varying number of phases.
-			if (phase === 'area_vote' || phase === 'pre_start') {
-				currentPhaseIndex = 0;
-			} else if (phase === 'proposal') {
-				currentPhaseIndex = 1;
-			} else if (phase === 'prediction_statement') {
-				currentPhaseIndex = 2;
-			} else if (phase === 'prediction_bet') {
-				currentPhaseIndex = 3;
-			} else if (phase === 'delegate_vote') {
-				currentPhaseIndex = 4;
-			} else if (phase === 'vote') {
-				currentPhaseIndex = 5;
-			} else if (phase === 'result' || phase === 'prediction_vote') {
-				currentPhaseIndex = 6;
-			}
-		} else if (poll?.poll_type === 3) {
-			dates = [new Date(poll?.start_date), new Date(poll?.end_date)];
+		currentPhaseIndex = pollPhases.find((p) => p.phase === phase)?.id ?? 5;
+		dates = pollPhases.map((p) => new Date(poll[p.endDateField] as string));
 
-			//TODO: Refactor so this works by making it easy for varying number of phases.
-			if (dates[1] > new Date()) {
-				currentPhaseIndex = 0;
-			} else {
-				currentPhaseIndex = 1;
-			}
-		}
+		if (dates.length === 0) return;
 
-		fraction = (currentPhaseIndex + 1) / dates.length;
+		// Timeline isn't needed for polls with 1 phase, so this shouldn't be an issue
+		fraction = currentPhaseIndex / (pollPhases.length - 1);
 
 		let totalTime = dates[dates.length - 1].getTime() - dates[0].getTime();
 
@@ -74,7 +55,9 @@
 			// Date placement on Timeline
 			const toDateTime = date.getTime() - dates[0].getTime();
 			datePlacement[i] = (100 * toDateTime) / totalTime;
-			datesArray[i] = formatDate(date.toString());
+			datesArray[i] = poll[pollPhases[i].endDateField]
+				? formatDate(date.toString())
+				: '-';
 		});
 	};
 
@@ -90,8 +73,7 @@
 				{$_('Current')}:
 			</span>
 			{$_('Phase')}
-			{currentPhaseIndex + 1}.
-			{$_(dateLabels[currentPhaseIndex + 1])}
+			{pollPhases.find((p) => p.id === currentPhaseIndex)?.label}
 		</div>
 	{/if}
 
@@ -108,23 +90,23 @@
 			}, rgba(189, 208, 255, 1) ${fraction * 100 - 2}%, rgba(191, 191, 191, 1) ${fraction * 100}%`}
 		>
 			{#each datePlacement as date, i}
-				{@const icon =
-					i === currentPhaseIndex
-						? faCircleExclamation
-						: dates[i] <= new Date()
-						? faCircleCheck
-						: faCircle}
+				<!-- Exclamation for current phase, check for finished phases, defaults to unfilled circle for future polls -->
+				{@const icon = (() => {
+					if (i === currentPhaseIndex) return faCircleExclamation;
+					else if (i < currentPhaseIndex) return faCircleCheck;
+				})()}
 
 				<HeaderIcon
 					Class="!cursor-default"
 					size="1x"
-					text={`${i + 1}. ${$_(dateLabels[i + 1])}: ${datesArray[i]}`}
+					text={`${i + 1}. ${$_(pollPhases[i].label)}${i !== 5 ? `: ${datesArray[i]}` : ''}`}
 					{icon}
 				/>
-				<!-- color={`${dates[i] <= new Date() ? '#015BC0' : ''}`} -->
 			{/each}
 		</div>
 	{/if}
+
+	<!-- TODO: Fix for thumbnails -->
 	{#if enableDetails && displayDetails}
 		<button
 			class="hover:underline flex items-center gap-1 text-xs"
@@ -133,14 +115,12 @@
 			<Fa icon={faDownLong} flip />
 			{$_('Time details')}
 		</button>
-		<ul class="p-2">
-			{#each dateLabels as label, i}
-				{#if i !== 0}
-					<li class="border-b md:border-b-0 flex justify-between flex-col md:flex-row text-center">
-						<div class="mb-4 md:mb-0">{$_(label)}:</div>
-						<div class="mb-4 md:mb-0">{datesArray[i - 1]}</div>
-					</li>
-				{/if}
+		<ul class="p-2 grid grid-cols-1 md:grid-cols-[auto_auto] gap-x-4 gap-y-2">
+			{#each datesArray as date, i}
+				<li class="contents">
+					<div>{$_(pollPhases[i].label)}:</div>
+					<div>{date}</div>
+				</li>
 			{/each}
 		</ul>
 	{:else if enableDetails}

@@ -1,18 +1,15 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"strict": true,
-		"ignoreDeprecations": "5.0",
-		// "verbatimModuleSyntax":true,
-		// "allowImportingTsExtensions":true
-		// "moduleResolution": "NodeNext"
-		"allowImportingTsExtensions":true
-	}	
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "ignoreDeprecations": "5.0",
+    "allowImportingTsExtensions": true
+  }
 }

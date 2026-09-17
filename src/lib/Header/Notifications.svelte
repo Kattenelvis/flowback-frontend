@@ -7,12 +7,11 @@
 	import { onMount } from 'svelte';
 	import type { notification } from './Notification';
 	import TimeAgo from 'javascript-time-ago';
-	import { faX } from '@fortawesome/free-solid-svg-icons/faX';
 	import { goto } from '$app/navigation';
 	import { notifications as notificationLimit } from '$lib/Generic/APILimits.json';
 	import { darkModeStore } from '$lib/Generic/DarkMode';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
-	import { N } from 'ethers';
+	import { isMobile } from '$lib/utils/isMobile';
 
 	let notifications: notification[],
 		timeAgo: TimeAgo,
@@ -30,7 +29,8 @@
 
 	const closeWindowWhenClickingOutside = () => {
 		window.addEventListener('click', (e) => {
-			const notificationListElement = document.getElementById(`notifications-list`);
+			const notificationListElement =
+				document.getElementById(`notifications-list`);
 			if (
 				notificationsOpen &&
 				//@ts-ignore
@@ -55,12 +55,17 @@
 
 	const markAllAsRead = async () => {
 		const { res, json } = await fetchRequest('POST', 'notification/update', {
-			notification_object_ids: notifications.map((notification) => notification.object_id),
+			notification_object_ids: notifications.map(
+				(notification) => notification.object_id
+			),
 			read: true
 		});
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: "Couldn't mark all notifications as read", success: false });
+			ErrorHandlerStore.set({
+				message: "Couldn't mark all notifications as read",
+				success: false
+			});
 			return;
 		}
 
@@ -70,20 +75,25 @@
 	const gotoNotificationOrigin = async (notification: notification) => {
 		switch (notification.tag) {
 			case 'poll':
-				await goto(`/groups/${notification.data.group_id}/polls/${notification.data.poll_id}`);
+			case 'poll_vote_update':
+				await goto(
+					`/groups/${notification.data.group_id}/polls/${notification.data.poll_id}?source=notification`
+				);
 				return;
 			case 'poll_comment':
 				await goto(
-					`/groups/${notification.data.group_id}/thread/${notification.data.thread_id}?section=comments`
+					`/groups/${notification.data.group_id}/polls/${notification.data.poll_id}?section=comments&source=notification`
 				);
 				return;
 			case 'thread':
-				await goto(`/groups/${notification.data.group_id}/thread/${notification.data.thread_id}`);
+				await goto(
+					`/groups/${notification.data.group_id}/thread/${notification.data.thread_id}?source=notification`
+				);
 				return;
 			case 'thread_comment':
 				// TODO: Fix scuffed solution with channel_data by changing data in backend probably group models.py
 				await goto(
-					`/groups/${notification.data.group_id}/thread/${notification.channel_data.thread_id}?section=comments`
+					`/groups/${notification.data.group_id}/thread/${notification.data.thread_id}?section=comments&source=notification`
 				);
 				return;
 			case 'group_user':
@@ -116,9 +126,14 @@
 	class="small-notification relative cursor-pointer"
 	on:click={() => (notificationsOpen = !notificationsOpen)}
 >
-	<Fa icon={faBell} color={$darkModeStore ? 'white' : 'black'} size={'1.3x'} />
+	<Fa
+		icon={faBell}
+		color={$darkModeStore ? 'white' : 'black'}
+		size={$isMobile ? '1.5x' : '1.3x'}
+	/>
 	<div
-		class:hidden={!notifications || notifications?.filter((n) => !n.read)?.length === 0}
+		class:hidden={!notifications ||
+			notifications?.filter((n) => !n.read)?.length === 0}
 		class="w-[2em] h-[2em] flex items-center justify-center rounded-full absolute -top-1.5 -right-1.5 text-[10px] text-white bg-secondary"
 	>
 		<span>{Math.min(99, notifications?.filter((n) => !n.read)?.length)}</span>
@@ -128,7 +143,10 @@
 <!-- Menu of notifications, that for now opens when clicking the notification bell in the header -->
 {#if notificationsOpen}
 	<ul
-		class="max-h-[90vh] overflow-y-scroll absolute right-0 top-full bg-white dark:bg-darkobject dark:text-darkmodeText select-none shadow slide-animation z-[60]"
+		class="max-h-[90vh] overflow-y-scroll absolute right-0 bg-white dark:bg-darkobject dark:text-darkmodeText select-none shadow z-[60]
+		{$isMobile
+			? 'slide-animation-mobile bottom-full'
+			: 'slide-animation bottom-auto top-full'}"
 		id="notifications-list"
 	>
 		<button
@@ -140,7 +158,7 @@
 		{#if notifications?.length > 0}
 			{#each notifications as notification}
 				<li
-					class=" flex justify-between max-w-[25rem] border-gray-200 dark:border-gray-600 border hover:shadow transition-all dark:hover:bg-slate-700 hover:bg-blue-300 hover:border-l-2 hover:border-l-primary"
+					class="flex justify-between max-w-[25rem] border-gray-200 dark:border-gray-600 border hover:shadow transition-all dark:hover:bg-slate-700 hover:bg-blue-300 hover:border-l-2 hover:border-l-primary"
 					class:bg-green-300={!notification.read}
 					class:dark:bg-slate-600={!notification.read}
 				>
@@ -153,7 +171,9 @@
 					>
 						<div class="break-words pr-8 text-left pl-4 py-2">
 							<div>{$_(notification.message)}</div>
-							<div class="text-sm">{timeAgo.format(new Date(notification.timestamp))}</div>
+							<div class="text-sm">
+								{timeAgo.format(new Date(notification.timestamp))}
+							</div>
 						</div>
 					</button>
 					<button
@@ -175,7 +195,9 @@
 				</li>
 			{/each}
 		{:else}
-			<div class="pt-3 pb-3 pr-10 pl-6 border-b border-gray-200 border cursor-default">
+			<div
+				class="pt-3 pb-3 pr-10 pl-6 border-b border-gray-200 border cursor-default"
+			>
 				{$_('No notifications')}
 			</div>
 		{/if}
@@ -190,6 +212,20 @@
 		to {
 			top: 100%;
 		}
+	}
+
+	@keyframes slide-animation-mobile {
+		from {
+			bottom: 80%;
+		}
+		to {
+			bottom: 100%;
+		}
+	}
+
+	.slide-animation-mobile {
+		animation-name: slide-animation-mobile;
+		animation-duration: 300ms;
 	}
 
 	.slide-animation {

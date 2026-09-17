@@ -4,36 +4,50 @@
 	import EditGroup from '$lib/Group/Creation/CreateEditGroup.svelte';
 	import Permissions from '$lib/Group/Permissions/Permissions.svelte';
 	import Tags from '$lib/Group/Tags.svelte';
-	import { page } from '$app/stores';
+	import GroupKPIs from '$lib/Poll/KPI/GroupKPIs.svelte';
+	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
-	import { faArrowLeft, faCog, faTags, faShieldAlt } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowLeft,
+		faCog,
+		faTags,
+		faShieldAlt,
+		faChartLine
+	} from '@fortawesome/free-solid-svg-icons';
 	import { onMount } from 'svelte';
 	import { groupUserStore } from '$lib/Group/interface';
+	import { env } from '$env/dynamic/public';
 
-	let selectedPage: 'group' | 'areas' | 'perms' | 'blockchain' = 'group',
+	let selectedPage: 'group' | 'areas' | 'perms' | 'blockchain' | 'kpis' =
+			'group',
 		optionsDesign =
 			'flex items-center gap-3 w-full cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 transition-all';
 
 	onMount(() => {
 		// Fixes bug where users who are not admin may navigate and see the admin page
-		if (!$groupUserStore?.is_admin) goto(`/groups/${$page.params.groupId}`);
+		if (!$groupUserStore?.is_admin) goto(`/groups/${page.params.groupId}`);
 	});
 </script>
 
 <Layout centered>
-	<div class="flex mt-6 gap-6 max-w-[90%]" class:hidden={!$groupUserStore?.is_admin}>
+	<div
+		class="flex mt-6 gap-6 max-w-[90%]"
+		class:hidden={!$groupUserStore?.is_admin}
+	>
 		<div
 			class="bg-white dark:bg-darkobject dark:text-darkmodeText w-[350px] p-6 rounded border shadow"
 		>
 			<div class="flex items-center mb-4 gap-4">
 				<button
 					class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
-					on:click={() => goto(`/groups/${$page.params.groupId}`)}
+					on:click={() => goto(`/groups/${page.params.groupId}`)}
 				>
 					<Fa icon={faArrowLeft} />
 				</button>
-				<h1 class="text-xl font-semibold text-primary dark:text-secondary text-left break-word">
+				<h1
+					class="text-xl font-semibold text-primary dark:text-secondary text-left break-word"
+				>
 					{$_('Admin Settings')}
 				</h1>
 			</div>
@@ -48,16 +62,19 @@
 				>
 					<Fa icon={faCog} class="w-5 h-5" />{$_('Edit Group')}
 				</button>
-				<button
-					on:click={() => (selectedPage = 'areas')}
-					class={`${optionsDesign}`}
-					class:bg-gray-100={selectedPage === 'areas'}
-					class:dark:bg-gray-700={selectedPage === 'areas'}
-					class:border-l-2={selectedPage === 'areas'}
-					class:border-primary={selectedPage === 'areas'}
-				>
-					<Fa icon={faTags} class="w-5 h-5" />{$_('Areas')}
-				</button>
+
+				{#if env.PUBLIC_POLL_VERSION === '1'}
+					<button
+						on:click={() => (selectedPage = 'areas')}
+						class={`${optionsDesign}`}
+						class:bg-gray-100={selectedPage === 'areas'}
+						class:dark:bg-gray-700={selectedPage === 'areas'}
+						class:border-l-2={selectedPage === 'areas'}
+						class:border-primary={selectedPage === 'areas'}
+					>
+						<Fa icon={faTags} class="w-5 h-5" />{$_('Areas')}
+					</button>
+				{/if}
 				<button
 					on:click={() => (selectedPage = 'perms')}
 					class={`${optionsDesign}`}
@@ -67,6 +84,16 @@
 					class:border-primary={selectedPage === 'perms'}
 				>
 					<Fa icon={faShieldAlt} class="w-5 h-5" />{$_('Permissions')}
+				</button>
+				<button
+					on:click={() => (selectedPage = 'kpis')}
+					class={`${optionsDesign}`}
+					class:bg-gray-100={selectedPage === 'kpis'}
+					class:dark:bg-gray-700={selectedPage === 'kpis'}
+					class:border-l-2={selectedPage === 'kpis'}
+					class:border-primary={selectedPage === 'kpis'}
+				>
+					<Fa icon={faChartLine} class="w-5 h-5" />{$_('KPIs')}
 				</button>
 				<!-- <ul>
 				<li
@@ -90,6 +117,8 @@
 				<Tags />
 			{:else if selectedPage === 'perms'}
 				<Permissions />
+			{:else if selectedPage === 'kpis'}
+				<GroupKPIs />
 			{:else if selectedPage === 'blockchain'}
 				<!-- block -->
 			{/if}

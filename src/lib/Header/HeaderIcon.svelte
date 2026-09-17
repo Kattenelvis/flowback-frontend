@@ -5,11 +5,12 @@
 	import { faCircle } from '@fortawesome/free-solid-svg-icons/faCircle';
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { darkModeStore, getIconFilter } from '$lib/Generic/DarkMode';
 	import { chatOpenStore } from '$lib/Chat/functions';
 	import { goto } from '$app/navigation';
+	import { isMobile } from '$lib/utils/isMobile'
 
 	export let icon: IconDefinition | string = faCircle,
 		icons: (IconDefinition | string)[] = [faCircle],
@@ -44,7 +45,7 @@
 		checkSelectedPage();
 	});
 
-	$: if ($page.url.pathname) checkSelectedPage();
+	$: if (page.url.pathname) checkSelectedPage();
 </script>
 
 {#if href}
@@ -66,18 +67,18 @@
 					{#if typeof icon === 'string'}
 						<img
 							class={`w-${size}`}
-							style="filter: {getIconFilter(selectedPage)}"
+							style="filter: {getIconFilter(selectedPage, 'blue', $darkModeStore)}"
 							src={icon}
 							alt="icon"
 						/>
 					{:else}
 						<Fa
 							{icon}
-							{size}
+							size={$isMobile ? '1.5x' : '1x'}
 							class={`inline ${selectedPage ? 'lightgray' : selectedPage ? '#015BC0' : 'black'}`}
 						/>
 					{/if}
-					<div class={`${textClass} text-xs mt-2 dark:text-darkmodeText`}>
+					<div class={`${textClass} text-xs mt-2 dark:text-darkmodeText hidden md:block`}>
 						{$_(text)}
 					</div>
 				{/each}
@@ -91,6 +92,8 @@
 		</div>
 	</button>
 {:else}
+	<!-- These are typically applied on pollthumbnail and threadthumbnail -->
+
 	<button
 		on:mouseover={() => (hovering = true)}
 		on:mouseleave={() => (hovering = false)}
@@ -123,8 +126,10 @@
 <style>
 	.header-icon {
 		position: absolute;
-		width: 100px;
-		left: calc(50% - 50px);
+		left: 50%;
+		transform: translateX(-50%);
+		width: max-content;
+		max-width: 220px;
 		text-align: center;
 		filter: opacity(0.8);
 	}
@@ -136,7 +141,7 @@
 
 	.active-icon::after {
 		content: '';
-		position: absolute;
+	  position: absolute;
 		bottom: -1.5rem;
 		left: 50%;
 		transform: translateX(-50%);

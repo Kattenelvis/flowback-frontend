@@ -57,7 +57,7 @@
 	<div class="flex flex-row items-center gap-1">
 		<span>{$_('Sort')}: </span>
 		<Select
-			classInner="p-1 font-semibold"
+			classInner="p-1"
 			labels={[$_('All'), $_('Member'), $_('Not member')]}
 			values={['all', 'member', 'not-member']}
 			bind:value={filter.joined}

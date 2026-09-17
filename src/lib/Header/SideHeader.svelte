@@ -23,6 +23,7 @@
 	//TODO: Implement codocument creation
 	const handleCoDocumentCreation = () => {};
 
+	// Close the sidepanel when clicking anywhere else on the screen
 	const closeWindowWhenClickingOutside = () => {
 		window.addEventListener('click', function (e) {
 			const notificationListElement = document.getElementById(`side-header`);
@@ -63,7 +64,10 @@
 
 	onMount(() => {
 		if (env.PUBLIC_SUPPORT_PHONE || env.PUBLIC_SUPPORT_MAIL) {
-			navs.splice(2, 0, { title: 'Support', action: () => (open_support = true) });
+			navs.splice(2, 0, {
+				title: 'Support',
+				action: () => (open_support = true)
+			});
 			navs = navs;
 		}
 
@@ -73,9 +77,8 @@
 
 <div
 	class:hidden={!sideHeaderOpen}
-	class="z-[80] absolute top-[4.5rem] right-0 bg-white z-[110] select-none shadow slide-animation dark:bg-darkobject dark:text-darkmodeText flex flex-col"
+	class="absolute bottom-auto top-full right-0 z-[110] select-none shadow slide-animation bg-white dark:bg-darkobject dark:text-darkmodeText flex flex-col"
 	id="side-header"
-	on:click={() => (sideHeaderOpen = !sideHeaderOpen)}
 >
 	{#each navs as nav}
 		<button
@@ -95,7 +98,7 @@
 
 		<div slot="body" class="text-left">
 			{#if env.PUBLIC_SUPPORT_PHONE}
-	<div>{$_('Phone support is only between 15:30 and 17:30 CET')}</div>
+				<div>{$_('Phone support is only between 15:30 and 17:30 CET')}</div>
 				<div>{$_(`Number: ${env.PUBLIC_SUPPORT_PHONE}`)}</div>
 			{/if}
 			{#if env.PUBLIC_SUPPORT_MAIL}
@@ -118,7 +121,9 @@
 		</div>
 		<div class="grupper-card row g-2 clickable">
 			<div class="text-center my-2 noSelect">
-				<button on:keydown on:click={handleCoDocumentCreation}>+ {$_('Create Co-Document')}</button>
+				<button on:keydown on:click={handleCoDocumentCreation}
+					>+ {$_('Create Co-Document')}</button
+				>
 			</div>
 		</div>
 	</div>
@@ -133,10 +138,10 @@
 <style>
 	@keyframes slide-animation {
 		from {
-			right: -1000px;
+			transform: translateX(100%);
 		}
 		to {
-			right: 0;
+			transform: translateX(0);
 		}
 	}
 

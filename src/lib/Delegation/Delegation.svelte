@@ -9,15 +9,20 @@
 	import type { Delegate } from '$lib/Delegation/interfaces';
 	import Delegations from '$lib/Delegation/Delegations.svelte';
 	import StopBeingDelegate from '$lib/Delegation/StopBeingDelegate.svelte';
-	import { groupUserPermissionStore, type Group, type GroupUser } from '$lib/Group/interface';
+	import {
+		groupUserPermissionStore,
+		type Group,
+		type GroupUser
+	} from '$lib/Group/interface';
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
-	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faUserShield } from '@fortawesome/free-solid-svg-icons';
 	import { userStore } from '$lib/User/interfaces';
 	import type { Permissions } from '$lib/Group/Permissions/interface';
 	import { getPermissionsFast } from '$lib/Generic/GenericFunctions';
 	import TextInput from '$lib/Generic/TextInput.svelte';
+	import { delegation as groupsLimit } from '$lib/Generic/APILimits.json';
 
 	let group: Group,
 		groups: Group[],
@@ -27,23 +32,34 @@
 		delegates: Delegate[] = [],
 		selectedPage: 'become-delegate' | 'delegate' | 'none' = 'none',
 		userPermissions: Permissions,
-		search = '';
+		search = '',
+		searchTimeout: ReturnType<typeof setTimeout>;
+
+	const getGroupsDebounced = () => {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => getGroups(), 300);
+	};
 
 	const getGroups = async () => {
 		const { res, json } = await fetchRequest(
 			'GET',
-			`group/list?limit=1000&joined=true&name__icontains=${search}`
+			`group/list?limit=${groupsLimit}&joined=true&name__icontains=${search}`
 		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Could not get groups', success: false });
+			ErrorHandlerStore.set({
+				message: 'Could not get groups',
+				success: false
+			});
 			return;
 		}
 		groups = json?.results;
 
 		group =
 			groups.find(
-				(g: Group) => g.id === Number(new URLSearchParams(window.location.search).get('groupId'))
+				(g: Group) =>
+					g.id ===
+					Number(new URLSearchParams(window.location.search).get('groupId'))
 			) || groups[0];
 	};
 
@@ -54,7 +70,10 @@
 		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Could not get user info', success: false });
+			ErrorHandlerStore.set({
+				message: 'Could not get user info',
+				success: false
+			});
 			return;
 		}
 
@@ -65,14 +84,24 @@
 	 	Makes the currently logged in user into a delegate(pool)
 	 */
 	const createDelegationPool = async () => {
-		const { res, json } = await fetchRequest('POST', `group/${group.id}/delegate/pool/create`, {});
+		const { res, json } = await fetchRequest(
+			'POST',
+			`group/${group.id}/delegate/pool/create`,
+			{}
+		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Error when trying to become delegate', success: false });
+			ErrorHandlerStore.set({
+				message: 'Error when trying to become delegate',
+				success: false
+			});
 			return;
 		}
 
-		ErrorHandlerStore.set({ message: 'Successfully became delegate', success: true });
+		ErrorHandlerStore.set({
+			message: 'Successfully became delegate',
+			success: true
+		});
 		groupUser.delegate_pool_id = json;
 	};
 
@@ -90,7 +119,10 @@
 	};
 
 	const getDelegatePools = async () => {
-		const { json, res } = await fetchRequest('GET', `group/${group.id}/delegate/pools?limit=1000`);
+		const { json, res } = await fetchRequest(
+			'GET',
+			`group/${group.id}/delegate/pools?limit=1000`
+		);
 
 		autovote = res.ok && json?.results.length > 0;
 	};
@@ -130,10 +162,17 @@
 </script>
 
 <Layout centered>
-	<div class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-full text-left">
-		<!-- id:{groupUser?.delegate_pool_id} -->
-		<h1 class="text-xl font-semibold text-primary dark:text-secondary text-left">
-			{$_(env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE' ? 'Automate' : 'Manage Delegations')}
+	<div
+		class="max-w-[1400px] bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-full text-left"
+	>
+		<h1
+			class="text-xl font-semibold text-primary dark:text-secondary text-left"
+		>
+			{$_(
+				env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE'
+					? 'Automate'
+					: 'Manage Delegations'
+			)}
 		</h1>
 
 		<p>
@@ -154,14 +193,16 @@
 			</div>
 		</Button>
 
-		<div class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-[50%]">
+		<div
+			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-[50%]"
+		>
 			{#if env.PUBLIC_ONE_GROUP_FLOWBACK !== 'TRUE'}
 				{$_('Search for groups')}
 				<div class="w-full flex items-end">
 					<TextInput
 						Class="w-4/5"
-						onInput={() => getGroups()}
-						label=""
+						onInput={getGroupsDebounced}
+						label="Search Groups"
 						placeholder={$_('Search groups')}
 						bind:value={search}
 					/>
@@ -209,34 +250,74 @@
 						</p>
 					</div>
 				{/if}
-				<Button
-					Class="w-full mt-3"
-					onClick={() => (selectedPage = 'become-delegate')}
-					buttonStyle="primary-light">{$_('Become delegate')}</Button
+				<div
+					class="mt-4 p-4 rounded-xl border border-dashed border-gray-200 dark:border-gray-600 flex flex-col gap-2"
 				>
+					<p class="text-xs text-gray-400 dark:text-gray-500">
+						{$_('Want to represent others in votes?')}
+					</p>
+					<Button
+						Class="w-full"
+						onClick={() => (selectedPage = 'become-delegate')}
+						buttonStyle="primary-light">{$_('Become delegate')}</Button
+					>
+				</div>
 				<!-- <li><input type="checkbox" /> {$_('Smart secretary')}</li> -->
 			</div>
 		</div>
-		<div class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-[50%]">
+		<div
+			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-[50%]"
+		>
 			{#if selectedPage === 'become-delegate'}
-				{$_(
-					'As a delegate, you choose to publicly show everyone how you vote. However, other users can delegate their vote to you, which means that you will vote for them. '
-				)}
-				<Button onClick={() => (selectedPage = 'delegate')}>{$_('Cancel')}</Button>
-
-				{#if groupUser?.delegate_pool_id !== null}
-					<StopBeingDelegate
-						Class="w-full mt-3"
-						bind:delegates
-						bind:groupUser
-						groupId={group.id}
-						bind:loading
-					/>
-				{:else}
-					<Button Class="w-full mt-3" onClick={createDelegationPool} buttonStyle="primary-light"
-						>{$_('Become delegate')}</Button
+				<div class="flex flex-col gap-5">
+					<div
+						class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-700"
 					>
-				{/if}
+						<div
+							class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary"
+						>
+							<Fa icon={faUserShield} />
+						</div>
+						<div>
+							<h2 class="font-semibold text-gray-800 dark:text-darkmodeText">
+								{$_('Become a Delegate')}
+							</h2>
+							<p class="text-xs text-gray-400">
+								{$_('Vote publicly on behalf of others')}
+							</p>
+						</div>
+					</div>
+
+					<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+						{$_(
+							'As a delegate, you choose to publicly show everyone how you vote. Other users can delegate their vote to you, meaning you vote on their behalf.'
+						)}
+					</p>
+
+					{#if groupUser?.delegate_pool_id !== null}
+						<StopBeingDelegate
+							bind:delegates
+							bind:groupUser
+							groupId={group.id}
+							bind:loading
+						/>
+					{:else}
+						<Button
+							Class="w-full"
+							onClick={createDelegationPool}
+							buttonStyle="primary-light"
+						>
+							{$_('Confirm')}
+						</Button>
+					{/if}
+
+					<button
+						class="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-center"
+						onclick={() => (selectedPage = 'delegate')}
+					>
+						{$_('Cancel')}
+					</button>
+				</div>
 			{:else if selectedPage === 'delegate' && group?.id}
 				<Delegations bind:group bind:delegates />
 			{/if}

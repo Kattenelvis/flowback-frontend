@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import type { Phase, poll } from '../interface';
 	import Timeline from './Timeline.svelte';
 	import { isMobile } from '$lib/utils/isMobile';
@@ -9,7 +8,7 @@
 		phase: Phase = 'area_vote',
 		resetScroll = false,
 		showRight = false,
-    showBoth = false;
+		showBoth = false;
 
 	// 'bg-white h-[490px] max-h-[490px] dark:bg-darkobject dark:text-darkmodeText p-4 rounded shadow-md',
 	let genericStyle =
@@ -25,15 +24,14 @@
 	$: gridClass = `
 		${Class} 
 		${poll ? 'poll-grid' : 'poll-grid-no-timeline'} 
-		p-3 md:p-6 lg:p-12 max-w-[1200px] w-full gap-4 lg:gap-6 
+		py-6 px-3 md:px-6 lg:px-12 max-w-[1200px] w-full gap-4 lg:gap-6 
 		${$isMobile ? 'flex flex-col' : 'grid'}
 	`;
 
-	$: showLeftSlot = $$slots.left && 
-		(!$isMobile || !showRight || showBoth);
+	$: showLeftSlot = $$slots.left && (!$isMobile || !showRight || showBoth);
 
-	$: showRightSlot = $$slots.right && 
-		($isMobile ? (showRight || showBoth) : true);
+	$: showRightSlot =
+		$$slots.right && ($isMobile ? showRight || showBoth : true);
 
 	$: showBottomSlot = $$slots.bottom;
 </script>
@@ -44,7 +42,9 @@
 			bind:phase
 			bind:poll
 			enableDetails={false}
-			Class={$isMobile ? 'w-full mobile-timeline' : 'desktop-timeline h-[490px]'}
+			Class={$isMobile
+				? 'w-full mobile-timeline'
+				: 'desktop-timeline h-[490px]'}
 			horizontal={$isMobile}
 		/>
 	{/if}
@@ -72,9 +72,8 @@
 	@media (min-width: 768px) {
 		.poll-grid {
 			grid-template-columns: 0.1fr repeat(2, minmax(0, 1fr));
-			grid-template-rows: repeat(3, minmax(0, 55vh));
+			grid-template-rows: 450px 1fr;
 			display: grid;
-			max-height: 2000px;
 		}
 
 		.poll-grid-no-timeline {

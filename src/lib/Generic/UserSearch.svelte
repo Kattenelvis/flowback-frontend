@@ -43,7 +43,7 @@
 		/>
 		<ul>
 			{#each searchedUsers as user}
-				{#if !(showSelf && $userStore?.id === user.id)}
+				{#if !(showSelf === false && $userStore?.id === user.id)}
 					<li class="flex justify-between mt-6">
 						<ProfilePicture
 							displayName

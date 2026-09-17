@@ -19,15 +19,15 @@
 		ClassOpen = '',
 		hoverEffect = true
 	}: {
-		notificationOpen: boolean;
+		notificationOpen?: boolean;
 		categories: string[];
 		labels: string[];
 		type: 'poll' | 'group' | 'thread' | 'delegation' | 'event';
 		api: string;
 		id: number;
-		Class: string;
-		ClassOpen: string;
-		hoverEffect: boolean;
+		Class?: string;
+		ClassOpen?: string;
+		hoverEffect?: boolean;
 	} = $props();
 
 	let notifications: NotificationObject[] = $state([]);
@@ -53,7 +53,9 @@
 			if (
 				notificationOpen &&
 				//@ts-ignore
-				![...document.getElementsByClassName(`notifications-clickable-region`)]?.find((element) =>
+				![
+					...document.getElementsByClassName(`notifications-clickable-region`)
+				]?.find((element) =>
 					//@ts-ignore
 					element.contains(e.target)
 				)
@@ -64,11 +66,15 @@
 	};
 
 	const getNotifications = async () => {
-		const { res, json } = await fetchRequest('GET', 'notification/subscription');
+		const { res, json } = await fetchRequest(
+			'GET',
+			'notification/subscription'
+		);
 		if (!res.ok) return;
 
 		const notificationsData = json.results.find(
-			(notification: NotificationSubscriptionResponse) => notification.origin_id === id
+			(notification: NotificationSubscriptionResponse) =>
+				notification.origin_id === id
 		);
 
 		notifications = notificationsData
@@ -80,13 +86,22 @@
 			: [];
 	};
 
-	const notificationSubscription = async (category: string, method: 'add' | 'remove' = 'add') => {
+	const notificationSubscription = async (
+		category: string,
+		method: 'add' | 'remove' = 'add'
+	) => {
 		method === 'add'
 			? (notifications = [
 					...notifications,
-					{ channel_category: category, channel_sender_id: id, channel_sender_type: type }
+					{
+						channel_category: category,
+						channel_sender_id: id,
+						channel_sender_type: type
+					}
 				])
-			: (notifications = notifications.filter((item) => item.channel_category !== category));
+			: (notifications = notifications.filter(
+					(item) => item.channel_category !== category
+				));
 
 		let payload: any = {
 			tags: notifications.map((notification) => notification.channel_category)
@@ -95,23 +110,22 @@
 
 		const { res, json } = await fetchRequest('POST', `${api}`, payload);
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to subscribe', success: false });
+			ErrorHandlerStore.set({
+				message: (() => {
+					if (method === 'add') {
+						const msg = json.detail[0];
+						if (msg === 'Event is not active or has already ended.') return msg;
+						else return 'Failed to subscribe';
+					} else return 'Failed to unsubscribe';
+				})(),
+				success: false
+			});
 			return;
 		}
 
-		method === 'add'
-			? notifications.push({
-					channel_category: category,
-					channel_sender_id: id,
-					channel_sender_type: type
-				})
-			: (notifications = notifications.filter(
-					(notification) => notification.channel_category !== category
-				));
-
-		ErrorHandlerStore.set({ message: 'Subscribed', success: true });
-
-		notifications = notifications;
+		if (method === 'add')
+			ErrorHandlerStore.set({ message: 'Subscribed', success: true });
+		else ErrorHandlerStore.set({ message: 'Unsubscribed', success: true });
 	};
 
 	const subscribeToAll = async () => {
@@ -120,7 +134,10 @@
 		});
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to subscribe to all', success: false });
+			ErrorHandlerStore.set({
+				message: 'Failed to subscribe to all',
+				success: false
+			});
 			return;
 		}
 
@@ -148,6 +165,7 @@
 <div class={`${Class} notifications-clickable-region relative z-100 `}>
 	<button
 		type="button"
+		id={`notification-bell-${type}`}
 		class={``}
 		onclick={() => {
 			notificationOpen = !notificationOpen;
@@ -163,15 +181,18 @@
 	</button>
 
 	{#if notificationOpen && categories}
-		<div class={`z-40 absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm ${ClassOpen}`}>
+		<div
+			class={`z-40 absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm ${ClassOpen}`}
+		>
 			<div class="text-xs p-2">{$_('Manage Subscriptions')}</div>
-			<button
-				onclick={(e) => {
-					e.preventDefault();
-					subscribeToAll();
-				}}
-				class="text-xs p-2">{$_('Subscribe to All')}</button
-			>
+			{#if type !== 'event'}
+				<button
+					onclick={(e) => {
+						e.preventDefault();
+						subscribeToAll();
+					}}
+					class="text-xs p-2">{$_('Subscribe to All')}</button
+				>{/if}
 			{#each categories as category, i}
 				<button
 					class="bg-gray-200 dark:bg-gray-700 w-full p-2 px-5 flex justify-between items-center transition-all"
@@ -182,14 +203,20 @@
 					class:hover:cursor-pointer={hoverEffect}
 					class:dark:hover:bg-slate-800={hoverEffect}
 					class:!bg-white={notifications?.find(
-						(notificationObject) => notificationObject.channel_category === category
+						(notificationObject) =>
+							notificationObject.channel_category === category
 					)}
 					class:dark:!bg-slate-400={notifications?.find(
-						(notificationObject) => notificationObject.channel_category === category
+						(notificationObject) =>
+							notificationObject.channel_category === category
 					)}
 					onclick={(e) => {
 						e.preventDefault();
-						if (!notifications.find((object) => object.channel_category === category))
+						if (
+							!notifications.find(
+								(object) => object.channel_category === category
+							)
+						)
 							notificationSubscription(category, 'add');
 						else notificationSubscription(category, 'remove');
 					}}
@@ -198,13 +225,15 @@
 					<Fa
 						class=""
 						color={notifications?.find(
-							(notificationObject) => notificationObject.channel_category === category
+							(notificationObject) =>
+								notificationObject.channel_category === category
 						)
 							? 'black'
 							: 'white'}
 						swapOpacity
 						icon={notifications?.find(
-							(notificationObject) => notificationObject.channel_category === category
+							(notificationObject) =>
+								notificationObject.channel_category === category
 						)
 							? faBell
 							: faBellSlash}

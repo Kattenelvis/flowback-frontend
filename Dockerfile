@@ -1,37 +1,65 @@
-FROM node:24-alpine3.21 AS sk-build
-WORKDIR /usr/src/app
+# TODO: Have a production setting (either in Dockerfile or in docker-compose, set in .env)
+# https://medium.com/@balazs.csaba.diy/optimized-dockerfile-for-sveltekit-applications-from-experience-and-best-practices-99603d8d1303
+ARG NODE_IMAGE=node:24-alpine3.22
+ARG PORT="3000"
 
-# This just sets the timezone
+FROM ${NODE_IMAGE} AS sk-build
+WORKDIR /app
+
+# Sets the timezone
 ARG TZ=Europe/Stockholm
 
-COPY . /usr/src/app
-RUN apk --no-cache add curl tzdata
-RUN cp /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN npm install
-RUN npm run build
-# CMD ["npm", "run", "dev3000"]
+COPY package*.json ./
+RUN npm ci
 
-FROM node:24-alpine3.21
-WORKDIR /usr/src/app
+COPY . .
+RUN npm run build && \
+  find build -name "*.map" -delete
 
-# This just sets the timezone
-# ARG TZ=Europe/Stockholm
-# RUN apk --no-cache add curl tzdata
-# RUN cp /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-COPY --from=sk-build /usr/src/app/package.json /usr/src/app/package.json
-COPY --from=sk-build /usr/src/app/package-lock.json /usr/src/app/package-lock.json
+FROM ${NODE_IMAGE} as runner
 
-# Should use "--only=production" but generates errors
-# best guess is that there are some outdated packaged,
-# but we don't know
-#RUN npm i --only=production
-RUN npm install 
+WORKDIR /app
 
-COPY --from=sk-build /usr/src/app/build /usr/src/app/build
+# Copy only necessary config and manifest files from local context
+# No need to create node user and node groups, because these are exist by default
+COPY --chown=node:node .npmrc package.json package-lock.json .
 
-# EXPOSE 5173
-EXPOSE 3000
-CMD ["node", "build/index.js"]
-# CMD ["npm", "run", "dev3000"]
-# CMD ["vite", "dev", "--port", "3000", "--host"]
+RUN npm ci --omit=dev --ignore-scripts
+
+# Copy build output from build stage
+COPY --from=sk-build --chown=node:node /app/build ./build
+# Clean up npm cache to reduce image size
+# npm cache clean --force && \
+# Remove unnecessary files and folders from node_modules such as docs, tests, maps, git metadata
+# find node_modules \( \
+# -type d -empty \
+# -o -iname "license*" \
+# -o -name "*.md" \
+# -o -name "*.txt" \
+# -o -name "*.map" \
+# -o -name ".git*" \
+# -o -name "*.yml" \
+# -o -name "*.yaml" \
+# -o -name "*.json" -path "*/test/*" \
+# -o -name "*.json" -path "*/tests/*" \
+# -o -name "test" -type d \
+# -o -name "tests" -type d \
+# -o -name "__tests__" -type d \
+# -o -name "coverage" -type d \
+# -o -name ".nyc_output" -type d \
+# \) -delete && \
+# # Remove leftover tmp and cache files
+# rm -rf /tmp/* /var/cache/apk/* /root/.npm && \
+# # Remove globally installed npm to save space and remove vulnerability
+# npm r -g npm
+
+# Switch to non-root user
+USER node
+
+# Set environment variable
+ENV NODE_ENV=production
+
+EXPOSE ${PORT}
+
+CMD ["node", "build"]

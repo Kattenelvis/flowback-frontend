@@ -14,7 +14,11 @@
 	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
 	import Tab from '$lib/Generic/Tab.svelte';
 	import { env } from '$env/dynamic/public';
-	import { faAlignLeft, faArrowLeft, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faAlignLeft,
+		faArrowLeft,
+		faCalendarAlt
+	} from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';
 	import { onDestroy, onMount } from 'svelte';
 	import Select from '$lib/Generic/Select.svelte';
@@ -22,6 +26,7 @@
 	import { groupUserStore } from '$lib/Group/interface';
 	import type { pollType } from './interface';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
+	import { POLL_TYPE } from '$lib/Poll/pollType';
 
 	let title = $state(''),
 		description = $state(''),
@@ -31,7 +36,7 @@
 		images: File[] = $state([]),
 		isFF = $state(false),
 		pushToBlockchain = $state(true),
-		selectedPoll: pollType = $state('Text Poll'),
+		selectedPoll: pollType = $state('Score Poll'),
 		selectedPage: 'poll' | 'thread' = $state(
 			$page.url.searchParams.get('type') === 'thread' ? 'thread' : 'poll'
 		),
@@ -60,28 +65,37 @@
 
 		if (env.PUBLIC_BLOCKCHAIN_INTEGRATION === 'TRUE' && pushToBlockchain) {
 			blockchain_id = await createPollBlockchain(Number(groupId), title);
-			if (blockchain_id) formData.append('blockchain_id', blockchain_id.toString());
+			if (blockchain_id)
+				formData.append('blockchain_id', blockchain_id.toString());
 		}
 
 		formData.append('title', title);
 		formData.append('description', description);
 		formData.append('start_date', times[0].toISOString());
-		if (selectedPoll === 'Text Poll') {
-			formData.append('area_vote_end_date', times[1].toISOString());
-			formData.append('proposal_end_date', times[2].toISOString());
-			formData.append('prediction_statement_end_date', times[3].toISOString());
-			formData.append('prediction_bet_end_date', times[4].toISOString());
-			formData.append('delegate_vote_end_date', times[5].toISOString());
-			formData.append('vote_end_date', times[6].toISOString());
-			formData.append('end_date', times[7].toISOString());
+		if (selectedPoll === 'Score Poll') {
+			formData.append('proposal_end_date', times[1].toISOString());
+			formData.append('prediction_bet_end_date', times[2].toISOString());
+			formData.append('delegate_vote_end_date', times[3].toISOString());
+			formData.append('vote_end_date', times[4].toISOString());
+			formData.append('end_date', times[5].toISOString());
 		} else if (selectedPoll === 'Date Poll') {
 			formData.append('end_date', times[1].toISOString());
 		}
 		formData.append('allow_fast_forward', isFF.toString());
-		formData.append('poll_type', (selectedPoll === 'Text Poll' ? 4 : 3).toString());
-		formData.append('dynamic', selectedPoll === 'Text Poll' ? 'false' : 'true');
+		formData.append(
+			'poll_type',
+			(selectedPoll === 'Score Poll'
+				? POLL_TYPE.SCORE
+				: POLL_TYPE.SCHEDULE
+			).toString()
+		);
+		formData.append(
+			'dynamic',
+			selectedPoll === 'Score Poll' ? 'false' : 'true'
+		);
 		formData.append('public', isPublic.toString());
 		formData.append('pinned', 'false');
+		formData.append('version', '2');
 		formData.append('tag', tags[0]?.id?.toString() || '1');
 
 		images.forEach((image) => {
@@ -145,7 +159,9 @@
 			return;
 		}
 
-		goto(`groups/${$page.url.searchParams.get('id')}/thread/${json}`);
+		goto(
+			`groups/${$page.url.searchParams.get('id')}/thread/${json}?source=create`
+		);
 	};
 
 	const getWorkGroupList = async () => {
@@ -162,6 +178,7 @@
 			selectedPage === 'poll' ? createPoll() : createThread();
 		}
 	};
+
 	onDestroy(() => {
 		//	TODO: Fix issue where reloading leads to 404 page
 		// 	document.removeEventListener('keydown', handleKeyDown);
@@ -175,7 +192,9 @@
 
 	$effect(() => {
 		times =
-			selectedPoll === 'Text Poll' ? new Array(8).fill(new Date()) : new Array(2).fill(new Date());
+			selectedPoll === 'Score Poll'
+				? new Array(6).fill(new Date())
+				: new Array(2).fill(new Date());
 	});
 </script>
 
@@ -184,7 +203,7 @@
 		e.preventDefault();
 		selectedPage === 'poll' ? createPoll() : createThread();
 	}}
-	class="relative md:w-2/3 max-w-[800px] dark:text-darkmodeText my-6"
+	class="relative w-3/4 md:w-2/3 max-w-[800px] dark:text-darkmodeText my-6"
 >
 	<button
 		class="absolute -left-12 bg-white dark:bg-darkobject p-3 rounded shadow z-40 hover:bg-gray-100 active:bg-gray-200 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
@@ -194,9 +213,16 @@
 	>
 		<Fa icon={faArrowLeft} />
 	</button>
+
 	<Loader {loading}>
-		<div class="bg-white dark:bg-darkobject p-6 shadow-xl flex flex-col gap-3 rounded">
-			<Tab displayNames={['Poll', 'Thread']} tabs={['poll', 'thread']} bind:selectedPage />
+		<div
+			class="bg-white dark:bg-darkobject p-6 shadow-xl flex flex-col gap-3 rounded"
+		>
+			<Tab
+				displayNames={['Poll', 'Thread']}
+				tabs={['poll', 'thread']}
+				bind:selectedPage
+			/>
 
 			{#if selectedPage === 'poll'}
 				<RadioButtons2
@@ -204,15 +230,25 @@
 					label="Poll Content"
 					ClassInner="mr-2 flex gap-2 items-center"
 					horizontal
-					labels={['Text Poll', 'Date Poll']}
-					values={['Text Poll', 'Date Poll']}
+					labels={['Score Poll', 'Date Poll']}
+					values={['Score Poll', 'Date Poll']}
 					icons={[faAlignLeft, faCalendarAlt]}
 					bind:value={selectedPoll}
 				/>
 			{/if}
 
-			<TextInput inputClass="bg-white" required label="Title" bind:value={title} />
-			<TextArea label="Description" bind:value={description} inputClass="whitespace-pre-wrap" />
+			<TextInput
+				inputClass="bg-white"
+				required
+				label="Title"
+				max={200}
+				bind:value={title}
+			/>
+			<TextArea
+				label="Description"
+				bind:value={description}
+				inputClass="whitespace-pre-wrap"
+			/>
 			<FileUploads bind:files={images} disableCropping />
 
 			{#if selectedPage === 'poll'}
@@ -236,17 +272,22 @@
 			{/if}
 
 			<Select
-				disabled={(selectedPage !== 'thread' && selectedPoll !== 'Date Poll') || isPublic}
+				disabled={(selectedPage !== 'thread' && selectedPoll !== 'Date Poll') ||
+					isPublic}
 				classInner="border border-gray-300"
 				label={$_('Work Group')}
-				labels={workGroups.map((workGroup) => workGroup.name)}
-				values={workGroups.map((workGroup) => workGroup.id)}
+				labels={[
+					'No workgroup selected',
+					...workGroups.map((workGroup) => workGroup.name)
+				]}
+				values={[null, ...workGroups.map((workGroup) => workGroup.id)]}
 				bind:value={workGroup}
-				innerLabelOn={true}
-				innerLabel={$_('No workgroup assigned')}
+				disableFirstChoice
 			/>
 
-			<Button type="submit" disabled={loading} Class={'bg-primary p-3 mt-3'}>{$_('Post')}</Button>
+			<Button type="submit" disabled={loading} Class={'bg-primary p-3 mt-3'}
+				>{$_('Post')}</Button
+			>
 		</div>
 	</Loader>
 </form>

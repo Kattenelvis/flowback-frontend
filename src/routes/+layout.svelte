@@ -5,17 +5,22 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { groupUserPermissionStore, groupUserStore } from '$lib/Group/interface';
+	import {
+		groupUserPermissionStore,
+		groupUserStore
+	} from '$lib/Group/interface';
 	import Chat from '$lib/Chat/Chat.svelte';
 	import { _ } from 'svelte-i18n';
 	import { env } from '$env/dynamic/public';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import { workGroupsStore } from '$lib/Group/WorkingGroups/interface';
 	import LogBackInModal from '$lib/Generic/LogBackInModal.svelte';
 	import { userStore } from '$lib/User/interfaces';
 	import ErrorHandler from '$lib/Generic/ErrorHandler.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { setUserGroupPermissionInfo } from '$lib/Group/functions';
+	import { workgroupStore } from '$lib/Group/Kanban/Kanban';
+	import TopHeader from '$lib/Header/TopHeader.svelte';
+	import { isMobile } from '$lib/utils/isMobile';
 
 	let showUI = false,
 		scrolledY = '',
@@ -36,7 +41,6 @@
 	//TODO: Avoid code duplication and introduce group stores for storing group data.
 	const getGrouplist = async () => {
 		const { res, json } = await fetchRequest('GET', 'group/list');
-		console.log(res, 'Group-List');
 
 		if (!res.ok) return;
 		else return json?.results;
@@ -49,7 +53,9 @@
 
 		let pathname = window?.location?.pathname;
 
-		const sessionExpirationTime = window.localStorage.getItem('sessionExpirationTime');
+		const sessionExpirationTime = window.localStorage.getItem(
+			'sessionExpirationTime'
+		);
 		if (
 			sessionExpirationTime &&
 			!relativePath.includes('/login') &&
@@ -57,7 +63,10 @@
 		) {
 			localStorage.removeItem('token');
 			goto('/login');
-		} else if (!window.localStorage.getItem('token') && !relativePath.includes('/login'))
+		} else if (
+			!window.localStorage.getItem('token') &&
+			!relativePath.includes('/login')
+		)
 			goto('/login');
 		else if (
 			//For one group flowback, if no group has been setup, redirect to create group.
@@ -71,6 +80,7 @@
 
 	const getWorkingGroupList = async () => {
 		if (!$page.params.groupId) return;
+		console.log($page.params.groupId);
 		const { res, json } = await fetchRequest(
 			'GET',
 			`group/${$page.params.groupId}/list?limit=100&order_by=name_asc`
@@ -78,30 +88,44 @@
 
 		if (!res.ok) return;
 
-		workGroupsStore.set(json?.results);
+		workgroupStore.set(json?.results);
 	};
 
 	const checkSessionExpiration = () => {
-		const sessionExpiration = window.localStorage.getItem('sessionExpirationTime');
+		const sessionExpiration = window.localStorage.getItem(
+			'sessionExpirationTime'
+		);
 		if (!sessionExpiration) return;
 
 		const expirationTime = Number(sessionExpiration);
 		const currentTime = new Date().getTime();
 
 		// Check if it will expire within next hour
-		if (expirationTime > currentTime && expirationTime - currentTime < 3600000) {
+		if (
+			expirationTime > currentTime &&
+			expirationTime - currentTime < 3600000
+		) {
 			openLoginModal = true;
 		}
 	};
 
 	const setUserGroupInfo = async () => {
-		if (!$page.params.groupId) return;
-
 		if (!$userStore?.id) return;
+
+		if (
+			!$page.params.groupId &&
+			!(window.location.pathname === '/createpoll')
+		) {
+			groupUserStore.set(null);
+			return;
+		}
+
+		// Fix for /createpoll page
+		let search = new URLSearchParams(window.location.search).get('id');
 
 		const { res, json } = await fetchRequest(
 			'GET',
-			`group/${$page.params.groupId}/users?user_id=${$userStore?.id}`
+			`group/${$page.params.groupId ?? search}/users?user_id=${$userStore?.id}`
 		);
 
 		if (!res.ok || json?.results.length === 0) {
@@ -136,16 +160,23 @@
 		checkSessionExpiration();
 		await setUserInfo();
 		await setUserGroupInfo();
-		groupUserPermissionStore.set(await setUserGroupPermissionInfo($groupUserStore));
+		groupUserPermissionStore.set(
+			await setUserGroupPermissionInfo($groupUserStore)
+		);
 	};
 
 	//Initialize Translation, which should happen before any lifecycle hooks.
 	initializeLocalization();
 
 	onMount(async () => {
+		document.body.classList.remove('invisible');
+		document.body.style.visibility = 'visible';
+
 		await setUserInfo();
 		await setUserGroupInfo();
-		groupUserPermissionStore.set(await setUserGroupPermissionInfo($groupUserStore));
+		groupUserPermissionStore.set(
+			await setUserGroupPermissionInfo($groupUserStore)
+		);
 		isBrowser = true;
 		getWorkingGroupList();
 		showUI = shouldShowUI();
@@ -160,20 +191,21 @@
 		ErrorHandlerStore.subscribe((_errorhandler) => {
 			if (!_errorhandler) return;
 			if (_errorhandler.message === '') return;
+			if (!errorhandler) return;
 
 			errorhandler.addPopup({
 				message: _errorhandler.message,
 				success: _errorhandler.success
 			});
 		});
-
-		document.body.classList.remove('invisible');
-		document.body.style.visibility = 'visible';
 	});
 </script>
 
-<main class="min-h-[100vh]">
+<main class="min-h-[100vh] pb-[15vh] md:pb">
 	{#if showUI}
+		{#if $isMobile}
+			<TopHeader />
+		{/if}
 		<Chat />
 		<Header />
 	{/if}

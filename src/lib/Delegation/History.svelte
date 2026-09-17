@@ -11,7 +11,7 @@
 	import Select from '$lib/Generic/Select.svelte';
 	import { userStore } from '$lib/User/interfaces';
 	import Structure from '$lib/Poll/NewDesign/Structure.svelte';
-	import Tag from '$lib/Group/Tag.svelte';
+	import type { PredictionStatement } from '$lib/Poll/PredictionMarket/interfaces';
 
 	export let history: null | number,
 		groupId = 0;
@@ -22,7 +22,8 @@
 		filteredVotingHistory: VoteHistory[] = [],
 		searchVoteQuery = '',
 		searched = false,
-		sortOrder: 'a-z' | 'z-a' = 'a-z';
+		sortOrder: 'a-z' | 'z-a' = 'a-z',
+		predictions: PredictionStatement[] = [];
 
 	const getDelegateHistory = async () => {
 		loading = true;
@@ -35,7 +36,6 @@
 
 		votingHistory = json?.results;
 		filteredVotingHistory = [...json?.results];
-		sortVoteHistory();
 	};
 
 	const getDelegateInfo = async () => {
@@ -47,23 +47,21 @@
 		delegatePool = json?.results[0];
 	};
 
-	const sortVoteHistory = () => {
-		if (sortOrder === 'a-z') {
-			filteredVotingHistory = [...filteredVotingHistory].sort((a, b) =>
-				a.poll_title.toLowerCase().localeCompare(b.poll_title.toLowerCase())
-			);
-		} else if (sortOrder === 'z-a') {
-			filteredVotingHistory = [...filteredVotingHistory].sort((a, b) =>
-				b.poll_title.toLowerCase().localeCompare(a.poll_title.toLowerCase())
-			);
-		}
-	};
-
 	$: {
 		if (filteredVotingHistory.length > 0) {
-			sortVoteHistory();
 		}
 	}
+
+	const getPredictionStatements = async () => {
+		const { res, json } = await fetchRequest(
+			'GET',
+			`group/${groupId}/poll/prediction/statement/list`
+		);
+
+		if (!res.ok) return;
+
+		predictions = json?.results;
+	};
 
 	const searchVotes = async (query: string) => {
 		searched = true;
@@ -71,12 +69,10 @@
 		if (query === '') {
 			filteredVotingHistory = [...votingHistory];
 		} else {
-			filteredVotingHistory = votingHistory.filter((vote) =>
-				vote.poll_title.toLowerCase().includes(query.toLowerCase())
+			filteredVotingHistory = votingHistory.filter(
+				(v) => v.poll.title?.toLowerCase().includes(query.toLowerCase())
 			);
 		}
-
-		sortVoteHistory();
 	};
 
 	const resetFilter = () => {
@@ -84,19 +80,21 @@
 		sortOrder = 'a-z';
 		filteredVotingHistory = [...votingHistory];
 		searched = false;
-		sortVoteHistory();
 	};
 
 	onMount(async () => {
 		await getDelegateInfo();
 		await getDelegateHistory();
+		await getPredictionStatements();
 	});
 </script>
 
 <Loader bind:loading>
 	<div class="w-screen bg-[#faf5ff] dark:bg-darkbackground pt-4 p-4">
-		<div class="w-full max-w-screen-md mx-auto p-4 bg-white dark:bg-darkobject rounded shadow mb-4">
-			<span class="font-semibold text-sm text-gray-700 dark:text-darkmodeText pb-2">
+		<div
+			class="w-full max-w-screen-md mx-auto p-4 bg-white dark:bg-darkobject rounded shadow mb-4"
+		>
+			<span class="text-sm text-gray-700 dark:text-darkmodeText pb-2">
 				{$_('Delegate history for')}
 				{$userStore?.username}
 			</span>
@@ -118,11 +116,10 @@
 					<div class="flex flex-row items-center gap-1 pt-2">
 						<span class="text-gray-700 dark:text-gray-300">{$_('Sort')}: </span>
 						<Select
-							classInner="p-1 font-semibold dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600"
+							classInner="p-1 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600"
 							labels={[$_('A - Z'), $_('Z - A')]}
 							values={['a-z', 'z-a']}
 							bind:value={sortOrder}
-							onInput={sortVoteHistory}
 						/>
 
 						<div class="rounded-md p-1 ml-auto">
@@ -153,66 +150,41 @@
 								<div class="flex flex-col gap-2">
 									<a
 										class="w-full break-words text-left text-xl p-1 pl-0 text-gray-900 dark:text-gray-300 cursor-pointer hover:underline"
-										href={`groups/${new URLSearchParams(window.location.search).get(
+										href={`groups/${new URLSearchParams(
+											window.location.search
+										).get(
 											'group_id'
-										)}/polls/${voteHistory?.poll_id}?source=delegate-history`}
+										)}/polls/${voteHistory?.poll.id}?source=delegate-history`}
 									>
 										{voteHistory?.poll.title || $_('No title')}
 									</a>
 
 									{#if voteHistory?.poll.description}
 										<div class="text-sm text-gray-600 dark:text-gray-400 pl-1">
-											<p class="line-clamp-2">{voteHistory?.poll.description}</p>
+											<p class="line-clamp-2">
+												{voteHistory?.poll.description}
+											</p>
 										</div>
 									{/if}
 
-									<div class="flex flex-wrap gap-2 pl-1">
-										{#if voteHistory?.poll.tag_name}
-											<span
-												class="text-xs bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-full"
-											>
-												{voteHistory?.poll.tag_name}
-											</span>
-										{/if}
-
-										<!-- {#if voteHistory?.created_at}
-											<span class="text-xs text-gray-500 dark:text-gray-400">
-												Created: {new Date(voteHistory?.created_at).toLocaleDateString()}
-											</span>
-										{/if} -->
-									</div>
-
-									<!-- {#if voteHistory?.historical_data}
-										<div class="mt-1 pl-1 text-sm">
-											<details>
-												<summary
-													class="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline"
-												>
-													{$_('Historical IMAC')}
-												</summary>
-												<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded mt-1">
-													<pre class="text-xs overflow-x-auto text-gray-900 dark:text-gray-300">
-													{JSON.stringify(voteHistory.historical_data, null, 2)}
-												</pre>
-												</div>
-											</details>
-										</div>
-									{/if} -->
-
-									<div>
-										{$_('Area:')}
-										{voteHistory.poll.tag_name ?? ''}
-									</div>
-
-									<div>
-										{$_('Historical IMAC:')}
-										{voteHistory.poll.interval_mean_absolute_correctness ??
-											'Was not calculated at the time'}
-									</div>
 									{#each voteHistory.vote as vote}
-										<div>{vote.proposal_title}</div>
-										<div>{vote.proposal_description}</div>
-										<div>{$_('Delegate voted:')} {vote.raw_score}</div>
+										{@const predictionsForProp = predictions.filter((p) =>
+											p.segments.find((s) => s.proposal_id === vote.proposal_id)
+										)}
+										<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+											<div>{vote.proposal_title}</div>
+											<div>{vote.proposal_description}</div>
+											<div>{$_('Delegate voted:')} {vote.raw_score}</div>
+											{#each predictionsForProp as prediction}
+												<div
+													class="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded"
+												>
+													{prediction?.title}
+													{prediction?.description}
+													{prediction?.combined_bet}
+												</div>
+											{/each}
+										</div>
 									{/each}
 								</div>
 							</li>

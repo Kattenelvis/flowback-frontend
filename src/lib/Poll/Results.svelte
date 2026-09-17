@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fetchRequest } from '$lib/FetchRequest';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { formatDate } from '$lib/Generic/DateFormatter';
 	import Statistics from './Statistics.svelte';
@@ -10,9 +10,14 @@
 	import NewDescription from './NewDescription.svelte';
 	import type { poll, proposal } from './interface';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
+	import {
+		POLL_TYPE,
+		isSchedulePoll,
+		isScorePoll,
+		type PollType
+	} from './pollType';
 
-	//4 for score voting, 3 for date
-	export let pollType = 1,
+	export let pollType: PollType = POLL_TYPE.SCORE,
 		proposals: any[] = [],
 		poll: poll,
 		getPollData = () => {},
@@ -22,25 +27,33 @@
 		labels: string[] = [],
 		noVotes = false;
 
+	const getProposalIterations = 15;
+
 	const getProposals = async () => {
 		const { res, json } = await fetchRequest(
 			'GET',
-			`group/poll/${$page.params.pollId}/proposals?limit=1000&order_by=score_desc`
+			`group/poll/${page.params.pollId}/proposals?limit=1000&order_by=score_desc`
 		);
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to get proposals', success: false });
+			ErrorHandlerStore.set({
+				message: 'Failed to get proposals',
+				success: false
+			});
 			return;
 		}
 
-		if (pollType === 4) proposals = json?.results;
-		else if (pollType === 3)
-			//Only one proposal wins in date poll
+		let _proposals = json?.results;
+		if (_proposals.length === 0) return;
+
+		if (isScorePoll(pollType)) proposals = _proposals;
+		//Only one proposal wins in date poll
+		else if (isSchedulePoll(pollType))
 			proposals = [
 				{
-					id: json?.results[0].id,
-					title: formatDate(json?.results[0].start_date),
-					description: formatDate(json?.results[0].end_date)
+					id: _proposals[0].id,
+					title: formatDate(_proposals[0].start_date),
+					description: formatDate(_proposals[0].end_date)
 				}
 			];
 
@@ -75,9 +88,19 @@
 		noVotes = checkIfNoVotes();
 		let k = 0;
 
+		// Start fetching poll results whenever the poll is in the calculating phase.
 		if (poll?.status === 2) {
 			let time = setInterval(() => {
-				if (poll.status === -1 || poll.status === 1 || k === 15) clearInterval(time);
+				if (
+					// If poll failed, succeeded, taken longer than some amount of iterations,
+					// or if the user has navigated to another poll, stop.
+
+					poll.status === -1 ||
+					poll.status === 1 ||
+					Number(page.params.pollId) !== poll.id ||
+					k === getProposalIterations
+				)
+					clearInterval(time);
 				getProposals();
 				getPollData();
 				k++;
@@ -97,11 +120,12 @@
 </script>
 
 <div class="w-full flex flex-col">
-	<span class="text-primary dark:text-secondary font-semibold text-xl text-center block py-2"
+	<span
+		class="text-primary dark:text-secondary font-semibold text-xl text-center block py-2"
 		>{$_('Results')}</span
 	>
 
-	{#if pollType === 4}
+	{#if isScorePoll(pollType)}
 		<!-- Conditional is split up to let poll status 0 both display text and list of proposals -->
 		{#if poll?.status === 2}
 			{$_('Calculating results...')}
@@ -117,7 +141,9 @@
 				<Statistics bind:votes bind:labels />
 			{/if}
 			{#each proposals as proposal, i}
-				<div class="border-gray-300 border-b-2 mt-3 pb-1 overflow-auto max-w-full">
+				<div
+					class="border-gray-300 border-b-2 mt-3 pb-1 overflow-auto max-w-full"
+				>
 					<span
 						class="text-primary dark:text-secondary font-semibold flex items-center gap-1 break-words"
 						>{#if i === 0 && !noVotes}
@@ -125,19 +151,27 @@
 						{/if}
 						{proposal.title}</span
 					>
-					<NewDescription description={proposal.description} limit={2} lengthLimit={100} />
+					<NewDescription
+						description={proposal.description}
+						limit={2}
+						lengthLimit={100}
+					/>
 					<span class="block text-right"
-						><span class="text-primary dark:text-secondary font-semibold">{$_('Points')}:</span>
+						><span class="text-primary dark:text-secondary font-semibold"
+							>{$_('Points')}:</span
+						>
 						{proposal.score || '0'}</span
 					>
 				</div>
 			{/each}
 		{/if}
-	{:else if pollType === 3}
+	{:else if isSchedulePoll(pollType)}
 		<div class="flex flex-col items-center justify-center h-full gap-4 mt-10">
 			{#if proposals.length > 0}
 				<Fa icon={faStar} color="orange" class="text-5xl" />
-				<div class="text-primary dark:text-secondary font-semibold text-lg text-center block">
+				<div
+					class="text-primary dark:text-secondary font-semibold text-lg text-center block"
+				>
 					{$_('Results have also been added to Group Schedule')}!
 				</div>
 

@@ -14,12 +14,16 @@
 	import CropperModal from '$lib/Generic/Cropper/CropperModal.svelte';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
-	import { faArrowLeft, faPen, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowLeft,
+		faPen,
+		faPaperPlane
+	} from '@fortawesome/free-solid-svg-icons';
 	import { goto } from '$app/navigation';
 	import { TelInput, normalizedCountries } from 'svelte-tel-input';
 	import type { DetailedValue, CountryCode } from 'svelte-tel-input/types';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
-	import { chatOpenStore } from '$lib/Chat/functions';
+	import { chatOpenStore, chatPartnerStore } from '$lib/Chat/functions';
 	import { getUserChannelId } from '$lib/Chat/functions';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { userStore } from '$lib/User/interfaces';
@@ -78,21 +82,32 @@
 		if (!userId) isUser = true;
 		else isUser = userId === ($userStore?.id || -1).toString();
 
-		const { res, json } = await fetchRequest('GET', isUser ? 'user' : `users?id=${userId}`);
+		const { res, json } = await fetchRequest(
+			'GET',
+			isUser ? 'user' : `users?id=${userId}`
+		);
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Could not fetch user', success: false });
+			ErrorHandlerStore.set({
+				message: 'Could not fetch user',
+				success: false
+			});
 			return;
 		}
 		user = isUser ? json : json?.results[0];
 		userEdit = user;
 
-		if (userEdit.bio === null || userEdit.bio === blankSymbol) userEdit.bio = '';
-		if (userEdit.website === null || userEdit.website === blankSymbol) userEdit.website = '';
+		if (userEdit.bio === null || userEdit.bio === blankSymbol)
+			userEdit.bio = '';
+		if (userEdit.website === null || userEdit.website === blankSymbol)
+			userEdit.website = '';
 
-		if (user.profile_image) profileImagePreview = `${env.PUBLIC_API_URL}${user.profile_image}`;
-		if (user.banner_image) bannerImagePreview = `${env.PUBLIC_API_URL}${user.banner_image}`;
+		if (user.profile_image)
+			profileImagePreview = `${env.PUBLIC_API_URL}${user.profile_image}`;
+		if (user.banner_image)
+			bannerImagePreview = `${env.PUBLIC_API_URL}${user.banner_image}`;
 
-		if (!user.contact_email || userEdit.contact_email === 'a@a.com') userEdit.contact_email = '';
+		if (!user.contact_email || userEdit.contact_email === 'a@a.com')
+			userEdit.contact_email = '';
 		if (!user.contact_phone || userEdit.contact_phone === '+4646464646')
 			userEdit.contact_phone = '';
 
@@ -107,7 +122,10 @@
 		const formData = new FormData();
 		formData.append('username', userEdit.username);
 		formData.append('bio', userEdit.bio === '' ? blankSymbol : userEdit.bio);
-		formData.append('website', userEdit.website === '' ? blankSymbol : userEdit.website);
+		formData.append(
+			'website',
+			userEdit.website === '' ? blankSymbol : userEdit.website
+		);
 		formData.append(
 			'contact_email',
 			userEdit.contact_email === '' ? `a@a.com` : userEdit.contact_email
@@ -117,15 +135,25 @@
 			userEdit.contact_phone === '' ? `+4646464646` : userEdit.contact_phone
 		);
 
-		if (bannerImagePreview !== '') formData.append('banner_image', bannerImageToSend);
-		if (profileImagePreview !== DefaultPFP) formData.append('profile_image', imageToSend);
+		if (bannerImagePreview !== '')
+			formData.append('banner_image', bannerImageToSend);
+		if (profileImagePreview !== DefaultPFP)
+			formData.append('profile_image', imageToSend);
 
-		const { res, json } = await fetchRequest('POST', `user/update`, formData, true, false);
+		const { res, json } = await fetchRequest(
+			'POST',
+			`user/update`,
+			formData,
+			true,
+			false
+		);
 
 		loading = false;
 
 		if (!res.ok) {
-			const message = json.detail[Object.keys(json.detail)[0]][0] || 'Could not update profile';
+			const message =
+				json.detail[Object.keys(json.detail)[0]][0] ||
+				'Could not update profile';
 
 			ErrorHandlerStore.set({ message, success: false });
 			return;
@@ -137,20 +165,25 @@
 		user = updatedUser;
 
 		isEditing = false;
-		ErrorHandlerStore.set({ message: 'Profile successfully updated', success: true });
+		ErrorHandlerStore.set({
+			message: 'Profile successfully updated',
+			success: true
+		});
 	};
 
 	const handleCropProfileImage = async (e: any) => {
 		//Type string, for preview image
 		oldProfileImagePreview = profileImagePreview;
-		if (e.target.files.length > 0) profileImagePreview = URL.createObjectURL(e.target.files[0]);
+		if (e.target.files.length > 0)
+			profileImagePreview = URL.createObjectURL(e.target.files[0]);
 		currentlyCroppingProfile = true;
 	};
 
 	const handleCropBanner = async (e: any) => {
 		//Type string, for preview image
 		oldBannerImagePreview = bannerImagePreview;
-		if (e.target.files.length > 0) bannerImagePreview = URL.createObjectURL(e.target.files[0]);
+		if (e.target.files.length > 0)
+			bannerImagePreview = URL.createObjectURL(e.target.files[0]);
 		currentlyCroppingBanner = true;
 	};
 
@@ -224,8 +257,12 @@
 				alt="avatar"
 				id="avatar"
 			/>
-			<div class="z-0 dark:bg-darkobject dark:text-darkmodeText w-[60%] py-6 px-4">
-				<div class="text-xl text-primary dark:text-secondary font-bold max-w-[600px] break-words">
+			<div
+				class="z-0 dark:bg-darkobject dark:text-darkmodeText w-[60%] py-6 px-4"
+			>
+				<div
+					class="text-xl text-primary dark:text-secondary font-bold max-w-[600px] break-words"
+				>
 					{user.username}
 				</div>
 				<p class=" whitespace-pre-wrap">
@@ -240,6 +277,7 @@
 							<button
 								on:click={() => {
 									chatOpenStore.set(true);
+									chatPartnerStore.set(channelId);
 								}}
 								Class="text-primary"
 							>
@@ -251,7 +289,8 @@
 
 				{#if user.website && user.website !== blankSymbol && user.website !== ''}
 					<a
-						href={user.website.startsWith('http://') || user.website.startsWith('https://')
+						href={user.website.startsWith('http://') ||
+						user.website.startsWith('https://')
 							? user.website
 							: 'https://' + user.website}
 						target="_blank"
@@ -267,12 +306,14 @@
 					</span>
 				{/if}
 				<p class="">
-					{$_('Phone number')}: {user.contact_phone === '+4646464646' || user.contact_phone === ''
+					{$_('Phone number')}: {user.contact_phone === '+4646464646' ||
+					user.contact_phone === ''
 						? $_('None provided')
 						: user.contact_phone}
 				</p>
 				<p class="">
-					{$_('E-mail')}: {user.contact_email === 'a@a.com' || user.contact_email === ''
+					{$_('E-mail')}: {user.contact_email === 'a@a.com' ||
+					user.contact_email === ''
 						? $_('None provided')
 						: user.contact_email}
 				</p>
@@ -302,11 +343,15 @@
 				class="bg-white w-full p-8 flex flex-col items-center justify-center dark:bg-darkobject dark:text-darkmodeText"
 				on:submit|preventDefault={editUser}
 			>
-				<div class="flex flex-row items-center justify-center gap-6 pb-6 w-full">
+				<div
+					class="flex flex-row items-center justify-center gap-6 pb-6 w-full"
+				>
 					<label for="file-ip-1" class="inline">
 						<!-- Profile Picture -->
 						<img
-							src={currentlyCroppingProfile ? oldProfileImagePreview : profileImagePreview}
+							src={currentlyCroppingProfile
+								? oldProfileImagePreview
+								: profileImagePreview}
 							class="mt-6 h-36 w-36 inline rounded-full border border-gray-300 transition-all filter hover:grayscale-[70%] hover:bg-gray-200 dark:bg-darkobject dark:hover:brightness-[120%] backdrop-grayscale"
 							alt="avatar"
 							id="avatar"
@@ -345,7 +390,9 @@
 								name="Country"
 								bind:value={selectedCountry}
 							>
-								<option value={null} hidden={selectedCountry !== null}>Please select</option>
+								<option value={null} hidden={selectedCountry !== null}
+									>Please select</option
+								>
 								{#each normalizedCountries as currentCountry (currentCountry.id)}
 									<option
 										value={currentCountry.iso2}

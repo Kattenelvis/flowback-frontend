@@ -5,7 +5,8 @@
 	import { _ } from 'svelte-i18n';
 	import { commentsStore, filterByTags } from './commentStore';
 	import Modal from '$lib/Generic/Modal.svelte';
-	import Button from '$lib/Generic/Button.svelte';
+	import Fa from 'svelte-fa';
+	import { faFilter } from '@fortawesome/free-solid-svg-icons';
 	import { page } from '$app/stores';
 	import { idfy } from '$lib/Generic/GenericFunctions2';
 
@@ -41,7 +42,9 @@
 		/>
 	</div>
 
-	<div class="w-auto max-w-xs flex flex-row items-center dark:text-darkmodeText">
+	<div
+		class="w-auto max-w-xs flex flex-row items-center dark:text-darkmodeText"
+	>
 		<p class="pr-2">{$_('Sort')}:</p>
 		<Select
 			innerLabel={null}
@@ -55,14 +58,24 @@
 				null
 			]}
 			bind:value={sortBy}
-			labels={[$_('Recent'), $_('Oldest'), $_('Top'), $_('Controversial'), $_('Hot')]}
-			Class="border-0 font-semibold"
+			labels={[
+				$_('Recent'),
+				$_('Oldest'),
+				$_('Top'),
+				$_('Controversial'),
+				$_('Hot')
+			]}
+			Class="border-0"
 		/>
 
 		{#if proposals?.length > 0}
-			<Button onClick={() => (displayProposalsModal = true)} Class="ml-2"
-				>{$_('Filter by Proposal')}</Button
+			<button
+				type="button"
+				class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+				on:click={() => (displayProposalsModal = true)}
 			>
+				{$_('Filter by Proposal')}
+			</button>
 		{/if}
 	</div>
 </div>
@@ -81,7 +94,9 @@
 						bind:group={selectedProposals}
 					/>
 					<!-- on:input={filterByTags} -->
-					<label class="text-left" for={`proposal-${proposal.id}`}>{proposal.title}</label>
+					<label class="text-left" for={`proposal-${proposal.id}`}
+						>{proposal.title}</label
+					>
 				</div>
 			{/each}
 		</div>
