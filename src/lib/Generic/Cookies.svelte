@@ -28,7 +28,7 @@
 </script>
 
 <div
-	class="bg-white dark:bg-darkobject p-4 fixed text-sm bottom-3 rounded dark:text-darkmodeText left-1/2 -translate-x-1/2 border-gray-200 shadow-xl z-50 flex flex-col items-center xl:!flex-none"
+	class="bg-white dark:bg-darkobject p-4 fixed text-sm bottom-8 rounded dark:text-darkmodeText left-1/2 -translate-x-1/2 border-gray-200 shadow-xl z-50 flex flex-col items-center xl:!flex-none"
 	class:hidden={hasClicked !== false}
 >
 	<span class="text-center">{$_('We use cookies to improve the experience of Flowback')} </span>
