@@ -25,7 +25,7 @@
 			</div>
 		</Button>
 		
-			<KanbanBoard />
+			<KanbanBoard Class=" flex-1 min-w-0" />
 		</div>
 	</div>
 </Layout>

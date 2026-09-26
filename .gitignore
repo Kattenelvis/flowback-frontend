@@ -43,3 +43,6 @@ src/lib/Blockchain_v1_Ethereum/foundry.lock
 # Do not commit V1 foundry workspace (optional noise)
 src/lib/Blockchain_v1_Ethereum/foundry.toml
 src/lib/Blockchain_v1_Ethereum/script/
+
+# Playwright MCP snapshots/logs
+.playwright-mcp/
