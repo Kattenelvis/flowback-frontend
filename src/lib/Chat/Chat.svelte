@@ -105,7 +105,7 @@
 		chatOpenStore.set(chatOpen);
 	}}
 	class:small-notification={notification}
-	class="dark:text-white transition-all fixed z-50 bg-white dark:bg-darkobject shadow-md border p-5 bottom-6 ml-5 rounded-full cursor-pointer hover:shadow-xl hover:border-gray-400 active:shadow-2xl active:p-6"
+	class="dark:text-white transition-all fixed z-[105] md:z-50 bg-white dark:bg-darkobject shadow-md border p-5 bottom-24 md:bottom-6 ml-5 rounded-full cursor-pointer hover:shadow-xl hover:border-gray-400 active:shadow-2xl active:p-6"
 >
 	<img
 		src={ChatIcon}
