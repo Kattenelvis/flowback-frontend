@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Fa from 'svelte-fa';
-	import Button from '$lib/Generic/Button.svelte';
 	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 	import { Calendar } from '@fullcalendar/core';
 	import { _ } from 'svelte-i18n';
@@ -199,6 +198,17 @@
 		let calendarEl = document.getElementById('calendar-2');
 		if (!calendarEl) return;
 
+		const isMobile = window.innerWidth < 768;
+		// Fill the remaining viewport, leaving room for the card padding and the mobile bottom nav
+		const height = Math.max(
+			480,
+			window.innerHeight -
+				calendarEl.getBoundingClientRect().top -
+				window.scrollY -
+				(isMobile ? 88 : 32)
+		);
+
+		calendar?.destroy();
 		calendar = new Calendar(calendarEl, {
 			plugins: [
 				dayGridPlugin,
@@ -208,18 +218,20 @@
 				multiMonthPlugin
 			],
 			initialView: 'dayGridMonth',
-			// TODO: Rework the calculation so these calculations don't need to be rerun at header changes
-			height: 'calc(100vh - 2rem - 40px - 28px)',
+			height,
 			headerToolbar: {
-				left: 'prev,next today',
-				center: 'title',
-				right: 'addEventButton'
+				left: 'prev title next',
+				center: '',
+				right: 'today addEventButton'
 				// 'dayGridMonth, timeGridDay, listWeek, multiMonthYear, dayGridYear, timeGridWeek'
 			},
-			windowResize: () => {
-				renderCalendar();
-				calendar?.addEventSource(distributeEvents());
-			},
+			buttonText: { today: $_('Today') },
+			buttonHints: { prev: $_('Previous month'), next: $_('Next month') },
+			dayHeaderFormat: { weekday: 'short' },
+			fixedWeekCount: false,
+			// Re-render so the height, header labels and add-button text follow the new viewport.
+			// Deferred so the calendar isn't destroyed from inside its own callback.
+			windowResize: () => setTimeout(renderCalendar),
 
 			selectable: true,
 			// selectMirror: true,
@@ -232,7 +244,8 @@
 
 			customButtons: {
 				addEventButton: {
-					text: '+',
+					text: isMobile ? '+' : `+ ${$_('Create Event')}`,
+					hint: $_('Create Event'),
 					click: () => {
 						open = true;
 					}
@@ -286,7 +299,7 @@
 
 				scheduleEventUpdate();
 			},
-			dayMaxEventRows: 3,
+			dayMaxEventRows: isMobile ? 2 : 3,
 			eventInteractive: true,
 			eventClassNames: 'cursor-pointer',
 			editable: true,
@@ -383,21 +396,23 @@
 	});
 </script>
 
-<div class="flex">
-	<Button
-		onClick={() => history.back()}
-		Class=" max-h-[3rem] p-3 m-4 transition-all bg-gray-200 dark:bg-darkobject hover:brightness-95 active:brightness-90"
+<div class="flex items-center gap-2 px-3 pt-7 pb-2 md:px-6 md:pt-4">
+	<!-- The mobile header already provides a back button -->
+	<button
+		onclick={() => history.back()}
+		class="hidden md:block rounded-full p-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-200/70 dark:hover:bg-white/10 transition-colors"
+		aria-label={$_('Back')}
 		id="back-button"
 	>
-		<div class="text-gray-800 dark:text-gray-200">
-			<Fa icon={faArrowLeft} />
-		</div>
-	</Button>
+		<Fa icon={faArrowLeft} />
+	</button>
 	<AdvancedFiltering bind:groupIds bind:workgroupIds bind:userChecked />
 </div>
 
-<div class="flex justify-center w-full">
-	<div class="w-full bg-white dark:bg-darkbackground" id="calendar-2"></div>
+<div
+	class="schedule-card mx-2 mb-2 md:mx-6 md:mb-4 rounded-2xl bg-white dark:bg-darkobject dark:text-darkmodeText border border-gray-200 dark:border-gray-700/60 shadow-sm p-2 md:p-4"
+>
+	<div class="w-full" id="calendar-2"></div>
 </div>
 
 <!-- Modal for displaying, creating and editing schedule events -->
@@ -444,12 +459,26 @@
 	</div>
 
 	<div slot="body">
-		<div role="form">
+		<div role="form" class="schedule-form flex flex-col gap-3 text-left">
 			<TextInput label="Title" bind:value={editingEvent.title} />
 			<TextArea label="Description" bind:value={editingEvent.description} />
 
-			<input type="datetime-local" bind:value={selectedStartDate} />
-			<input type="datetime-local" bind:value={selectedEndDate} />
+			<div class="flex flex-col gap-3">
+				<label class="flex flex-col gap-1">
+					<span class="dark:text-darkmodeText">{$_('Start date')}</span>
+					<input
+						type="datetime-local"
+						bind:value={selectedStartDate}
+					/>
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="dark:text-darkmodeText">{$_('End date')}</span>
+					<input
+						type="datetime-local"
+						bind:value={selectedEndDate}
+					/>
+				</label>
+			</div>
 
 			<Select
 				disableFirstChoice
@@ -467,3 +496,275 @@
 		</div>
 	</div>
 </Modal>
+
+<style>
+	.schedule-card {
+		--fc-border-color: rgb(229 231 235);
+		--fc-page-bg-color: transparent;
+		--fc-neutral-bg-color: rgb(249 250 251);
+		--fc-today-bg-color: rgba(160, 34, 239, 0.06);
+		--fc-event-bg-color: rgba(1, 91, 192, 0.12);
+		--fc-event-border-color: var(--primary);
+		--fc-event-text-color: var(--primary);
+		--fc-highlight-color: rgba(1, 91, 192, 0.1);
+		--fc-small-font-size: 0.75rem;
+	}
+
+	:global(.dark) .schedule-card {
+		--fc-border-color: rgba(55, 65, 81, 0.6);
+		--fc-neutral-bg-color: rgba(255, 255, 255, 0.03);
+		--fc-today-bg-color: rgba(182, 100, 233, 0.08);
+		--fc-event-bg-color: rgba(1, 91, 192, 0.35);
+		--fc-event-text-color: var(--darkmode-text-color);
+		--fc-highlight-color: rgba(1, 91, 192, 0.25);
+	}
+
+	/* Toolbar */
+	.schedule-card :global(.fc .fc-toolbar.fc-header-toolbar) {
+		margin-bottom: 0.75rem;
+		gap: 0.5rem;
+	}
+
+	.schedule-card :global(.fc-toolbar-chunk) {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.schedule-card :global(.fc .fc-toolbar-title) {
+		font-size: 1.125rem;
+		font-weight: 600;
+		min-width: 9.5rem;
+		text-align: center;
+	}
+
+	.schedule-card :global(.fc .fc-button) {
+		border: none;
+		box-shadow: none;
+		font-size: 0.875rem;
+		font-weight: 500;
+		text-transform: none;
+		transition:
+			background-color 150ms,
+			filter 150ms;
+	}
+
+	.schedule-card :global(.fc .fc-button:focus-visible) {
+		outline: 2px solid var(--primary);
+		outline-offset: 2px;
+	}
+
+	.schedule-card :global(.fc .fc-prev-button),
+	.schedule-card :global(.fc .fc-next-button) {
+		background: transparent;
+		color: inherit;
+		border-radius: 9999px;
+		padding: 0.5rem 0.6rem;
+		line-height: 1;
+	}
+
+	.schedule-card :global(.fc .fc-prev-button:hover),
+	.schedule-card :global(.fc .fc-next-button:hover) {
+		background: rgb(243 244 246);
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-prev-button:hover),
+	:global(.dark) .schedule-card :global(.fc .fc-next-button:hover) {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	.schedule-card :global(.fc .fc-today-button) {
+		background: transparent;
+		color: var(--primary);
+		border: 1px solid rgb(229 231 235);
+		border-radius: 9999px;
+		padding: 0.35rem 0.9rem;
+		opacity: 1;
+	}
+
+	.schedule-card :global(.fc .fc-today-button:hover:not(:disabled)) {
+		background: rgba(1, 91, 192, 0.08);
+	}
+
+	.schedule-card :global(.fc .fc-today-button:disabled) {
+		color: rgb(156 163 175);
+		cursor: default;
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-today-button) {
+		color: var(--accent-secondary);
+		border-color: rgba(55, 65, 81, 0.6);
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-today-button:disabled) {
+		color: rgb(107 114 128);
+	}
+
+	.schedule-card :global(.fc .fc-addEventButton-button) {
+		background: var(--primary);
+		color: white;
+		border-radius: 9999px;
+		padding: 0.35rem 1rem;
+		margin-left: 0.25rem;
+	}
+
+	.schedule-card :global(.fc .fc-addEventButton-button:hover) {
+		filter: brightness(0.93);
+	}
+
+	/* Grid */
+	.schedule-card :global(.fc .fc-col-header-cell) {
+		background: var(--fc-neutral-bg-color);
+	}
+
+	.schedule-card :global(.fc .fc-col-header-cell-cushion) {
+		padding: 0.5rem 0.25rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(107 114 128);
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-col-header-cell-cushion) {
+		color: rgb(156 163 175);
+	}
+
+	.schedule-card :global(.fc .fc-daygrid-day-top) {
+		flex-direction: row;
+		padding: 0.25rem;
+	}
+
+	.schedule-card :global(.fc .fc-daygrid-day-number) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.75rem;
+		height: 1.75rem;
+		padding: 0 0.25rem;
+		border-radius: 9999px;
+		font-size: 0.8125rem;
+		font-weight: 500;
+	}
+
+	.schedule-card :global(.fc .fc-day-other .fc-daygrid-day-top) {
+		opacity: 0.45;
+	}
+
+	.schedule-card :global(.fc .fc-day-today .fc-daygrid-day-number) {
+		background: var(--accent);
+		color: white;
+		font-weight: 700;
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-day-today .fc-daygrid-day-number) {
+		background: var(--accent-secondary);
+	}
+
+	.schedule-card :global(.fc .fc-daygrid-day:not(.fc-day-today):hover) {
+		background: rgba(1, 91, 192, 0.03);
+	}
+
+	/* Events */
+	.schedule-card :global(.fc .fc-daygrid-event) {
+		margin: 1px 4px 2px;
+		padding: 0.15rem 0.4rem;
+		border-width: 0 0 0 3px;
+		border-radius: 0.375rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.schedule-card :global(.fc .fc-daygrid-event:hover) {
+		filter: brightness(0.96);
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-daygrid-event:hover) {
+		filter: brightness(1.15);
+	}
+
+	.schedule-card :global(.fc .fc-daygrid-more-link) {
+		margin-left: 4px;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--primary);
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-daygrid-more-link) {
+		color: var(--accent-secondary);
+	}
+
+	.schedule-card :global(.fc .fc-popover) {
+		border-radius: 0.75rem;
+		overflow: hidden;
+		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+	}
+
+	:global(.dark) .schedule-card :global(.fc .fc-popover) {
+		background: var(--darkmode-object-color);
+	}
+
+	@media (max-width: 767px) {
+		.schedule-card :global(.fc .fc-toolbar-title) {
+			font-size: 1rem;
+			min-width: 0;
+		}
+
+		.schedule-card :global(.fc .fc-prev-button),
+		.schedule-card :global(.fc .fc-next-button) {
+			padding: 0.5rem;
+		}
+
+		.schedule-card :global(.fc .fc-today-button) {
+			padding: 0.3rem 0.7rem;
+		}
+
+		.schedule-card :global(.fc .fc-addEventButton-button) {
+			padding: 0.3rem 0.8rem;
+		}
+
+		.schedule-card :global(.fc .fc-daygrid-day-number) {
+			min-width: 1.5rem;
+			height: 1.5rem;
+			font-size: 0.75rem;
+		}
+
+		.schedule-card :global(.fc .fc-daygrid-event) {
+			margin: 1px 2px;
+			padding: 0.05rem 0.25rem;
+			font-size: 0.6875rem;
+		}
+	}
+
+	/* Event modal */
+	.schedule-form :global(input:not([type='checkbox'])),
+	.schedule-form :global(textarea),
+	.schedule-form :global(select) {
+		padding: 0.5rem 0.625rem;
+		border: 1px solid rgb(209 213 219);
+		border-radius: 0.5rem;
+		transition:
+			border-color 150ms,
+			box-shadow 150ms;
+	}
+
+	.schedule-form :global(input:not([type='checkbox']):focus),
+	.schedule-form :global(textarea:focus),
+	.schedule-form :global(select:focus) {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px rgba(1, 91, 192, 0.15);
+	}
+
+	:global(.dark) .schedule-form :global(input:not([type='checkbox'])),
+	:global(.dark) .schedule-form :global(textarea),
+	:global(.dark) .schedule-form :global(select) {
+		border-color: rgb(75 85 99);
+		background: var(--darkmode-background-color);
+		color: var(--darkmode-text-color);
+		color-scheme: dark;
+	}
+</style>

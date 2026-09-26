@@ -340,5 +340,9 @@
     "End date": "Fecha de finalización",
     "Deleting group": "Eliminando grupo",
     "Are you sure you want to delete this group?": "¿Estás seguro de que quieres eliminar este grupo?",
-    "Delete Group": "Eliminar grupo"
+    "Delete Group": "Eliminar grupo",
+    "Today": "Hoy",
+    "Previous month": "Mes anterior",
+    "Next month": "Mes siguiente",
+    "Back": "Atrás"
 }
