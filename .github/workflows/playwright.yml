@@ -21,7 +21,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           outputs: type=docker,dest=/tmp/flowback-frontend.tar
-          tags: ${{ secrets.DOCKERHUB_USERNAME || github.repository_owner }}/flowback-frontend:latest
+          tags: flowback-frontend:ci
 
       - uses: actions/upload-artifact@v4
         with:
@@ -57,16 +57,24 @@ jobs:
       - name: Load frontend image
         run: docker load --input flowback-frontend.tar
 
+      # Tag the CI image with the name flowback-docker's compose file expects,
+      # so the stack runs this commit's frontend
       - name: Tag frontend image for Compose services
-        run: docker tag "${{ secrets.DOCKERHUB_USERNAME || github.repository_owner }}/flowback-frontend:latest" flowback-docker-flowback-frontend:latest
+        working-directory: flowback-docker
+        run: docker tag flowback-frontend:ci "$(docker compose config --images | grep flowback-frontend)"
 
       - name: Build images
         working-directory: flowback-docker
         run: docker compose build caddy flowback-backend flowback-celery-worker flowback-celery-beat
 
+      - name: Pull published images
+        working-directory: flowback-docker
+        run: docker compose pull flowback-postgresql flowback-redis
+
+      # --pull never: fail instead of silently falling back to a published image
       - name: Start Flowback stack
         working-directory: flowback-docker
-        run: docker compose up -d --no-build --pull missing
+        run: docker compose up -d --no-build --pull never
 
       - uses: actions/checkout@v4
         with:
@@ -130,7 +138,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Publish frontend image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:latest
+        run: |
+          docker tag flowback-frontend:ci ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:latest
 
   publish-dev:
     needs: docker-publish
@@ -145,8 +155,12 @@ jobs:
           key: ${{ secrets.KEY }}
           port: 22
           script: |
-            cd flowback/flowback-docker-testing
-            docker compose pull && docker compose up -d
+            set -e
+            cd /home/flowback/dev-flowback
+            docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
+            docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
+            docker compose build caddy
+            docker compose up -d --no-build caddy
 
   # Production publishes only from development or master pushes.
   publish-prod:
@@ -164,5 +178,9 @@ jobs:
           key: ${{ secrets.KEY }}
           port: 22
           script: |
-            cd flowback/flowback-docker-prod
-            docker compose pull && docker compose up -d
+            set -e
+            cd /home/flowback/prod-flowback
+            docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
+            docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
+            docker compose build caddy
+            docker compose up -d --no-build caddy
