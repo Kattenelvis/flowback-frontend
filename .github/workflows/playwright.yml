@@ -154,13 +154,15 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           port: 22
+          # The SSH user can't read the checkout; run the deploy as flowback
           script: |
-            set -e
+            sudo -n -iu flowback bash -se <<'EOF'
             cd /home/flowback/dev-flowback
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose build caddy
             docker compose up -d --no-build caddy
+            EOF
 
   # Production publishes only from development or master pushes.
   publish-prod:
@@ -177,10 +179,12 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           port: 22
+          # The SSH user can't read the checkout; run the deploy as flowback
           script: |
-            set -e
+            sudo -n -iu flowback bash -se <<'EOF'
             cd /home/flowback/prod-flowback
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose build caddy
             docker compose up -d --no-build caddy
+            EOF
