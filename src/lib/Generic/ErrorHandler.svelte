@@ -67,7 +67,7 @@
 {#each $popupQueue as popup (popup.id)}
 	<div
 		id="popup-{popup.id}"
-		class="bg-white dark:bg-darkobject dark:text-darkmodeText fixed right-5 z-50 shadow-xl flex gap-2 items-center px-4 py-2 rounded-md opacity-0 transition-all duration-300"
+		class="bg-white dark:bg-darkobject dark:text-darkmodeText fixed right-5 z-[130] shadow-xl flex gap-2 items-center px-4 py-2 rounded-md opacity-0 transition-all duration-300"
 		style="bottom: {1 + $popupQueue.indexOf(popup) * 3.5}rem;"
 		class:show={popup.show}
 		hidden={!popup.show}

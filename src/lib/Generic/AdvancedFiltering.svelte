@@ -104,9 +104,7 @@
 
 <Modal bind:open={openFilter} Class="max-w-[520px]">
 	<div slot="header">
-		<div
-			class="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-600"
-		>
+		<div class="flex items-center gap-2">
 			<div
 				class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"
 			>

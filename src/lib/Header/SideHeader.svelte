@@ -92,7 +92,7 @@
 
 {#if env.PUBLIC_SUPPORT_PHONE || env.PUBLIC_SUPPORT_MAIL}
 	<Modal bind:open={open_support}>
-		<div slot="header" class="p-4">
+		<div slot="header">
 			{$_('Support')}
 		</div>
 
@@ -109,7 +109,7 @@
 {/if}
 
 <Modal bind:open={open_tools}>
-	<div slot="header" class="p-4">
+	<div slot="header">
 		{$_('Tools')}
 	</div>
 
