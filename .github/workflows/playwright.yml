@@ -156,7 +156,8 @@ jobs:
           port: 22
           script: |
             set -e
-            cd /home/dev-flowback
+            su -iu flowback
+            cd /home/flowback/dev-flowback
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose build caddy
@@ -179,6 +180,7 @@ jobs:
           port: 22
           script: |
             set -e
+            su -iu flowback
             cd /home/flowback/prod-flowback
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
