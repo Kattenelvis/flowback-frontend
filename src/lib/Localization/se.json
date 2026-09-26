@@ -790,5 +790,9 @@
 	"You must join the group to access the poll": "Du måste gå med i en grupp för att få åtkomst till pollen",
 	"You must join the group to access the thread": "Du måste gå med i en grupp för att få åtkomst till tråden",
 	"User Schedule": "Användar Kalender",
-	"You must join the group to access the group": "Du måste gå med i en grupp för att få åtkomst till gruppen"
+	"You must join the group to access the group": "Du måste gå med i en grupp för att få åtkomst till gruppen",
+	"Today": "Idag",
+	"Previous month": "Föregående månad",
+	"Next month": "Nästa månad",
+	"Back": "Tillbaka"
 }

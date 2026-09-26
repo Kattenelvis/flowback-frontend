@@ -1,12 +1,12 @@
 name: Playwright Tests
 on:
   push:
-    branches: [dev, master]
+    branches: [master]
   pull_request:
     branches: [dev, master]
 
 env:
-  LINK: "http://localhost:8085"
+  LINK: 'http://localhost:8085'
   TEST_PASS: TestPassword
   PUBLIC_POLL_VERSION: 2
 
@@ -67,7 +67,7 @@ jobs:
       - name: Start Flowback stack
         working-directory: flowback-docker
         run: docker compose up -d --no-build --pull missing
-      
+
       - uses: actions/checkout@v4
         with:
           repository: Kattenelvis/flowback-interface-testing
@@ -96,7 +96,8 @@ jobs:
 
       - name: Run the rest of the tests
         working-directory: flowback-interface-testing
-        run: npx playwright test . --project chromium --retries 2 --workers 1 --reporter list
+        run:
+          npx playwright test . --project chromium --retries 2 --workers 1 --reporter list
           --grep-invert "Smoke-Test"
 
       - name: Dump docker logs on failure

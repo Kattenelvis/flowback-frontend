@@ -167,7 +167,7 @@
 </script>
 
 <Layout centered>
-	<div class={$isMobile ? 'flex flex-col w-full h-screen' : 'flex mt-6 gap-6'}>
+	<div class={$isMobile ? 'flex flex-col w-full h-[100svh]' : 'flex mt-6 gap-6'}>
 		<div
 			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow
 			{$isMobile ? 'h-full' : 'w-[300px] h-[800px] rounded border'}"

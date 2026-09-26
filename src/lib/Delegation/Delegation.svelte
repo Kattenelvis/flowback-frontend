@@ -163,7 +163,7 @@
 
 <Layout centered>
 	<div
-		class="max-w-[1400px] bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-full text-left"
+		class="max-w-[1400px] bg-white dark:bg-darkobject dark:text-darkmodeText p-4 md:p-6 shadow w-full text-left"
 	>
 		<h1
 			class="text-xl font-semibold text-primary dark:text-secondary text-left"
@@ -183,24 +183,29 @@
 			)}
 		</p>
 	</div>
-	<div class="flex w-[80%] max-w-[1200px] my-6 gap-6">
-		<Button
-			onClick={() => history.back()}
-			Class="z-10 max-h-[3rem] left-6 p-3 transition-all bg-gray-200 dark:bg-darkobject hover:brightness-95 active:brightness-90"
-		>
-			<div class="text-gray-800 dark:text-gray-200">
-				<Fa icon={faArrowLeft} />
-			</div>
-		</Button>
+	<div
+		class="flex flex-col md:flex-row w-full md:w-[80%] max-w-[1200px] mt-4 mb-24 md:my-6 px-3 md:px-0 gap-4 md:gap-6"
+	>
+		<!-- Hidden on mobile, where the header already has a back arrow -->
+		<div class="hidden md:block">
+			<Button
+				onClick={() => history.back()}
+				Class="z-10 max-h-[3rem] left-6 p-3 transition-all bg-gray-200 dark:bg-darkobject hover:brightness-95 active:brightness-90"
+			>
+				<div class="text-gray-800 dark:text-gray-200">
+					<Fa icon={faArrowLeft} />
+				</div>
+			</Button>
+		</div>
 
 		<div
-			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-[50%]"
+			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-4 md:p-6 shadow w-full md:w-[50%]"
 		>
 			{#if env.PUBLIC_ONE_GROUP_FLOWBACK !== 'TRUE'}
 				{$_('Search for groups')}
 				<div class="w-full flex items-end">
 					<TextInput
-						Class="w-4/5"
+						Class="w-full md:w-4/5"
 						onInput={getGroupsDebounced}
 						label="Search Groups"
 						placeholder={$_('Search groups')}
@@ -266,7 +271,7 @@
 			</div>
 		</div>
 		<div
-			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-6 shadow w-[50%]"
+			class="bg-white dark:bg-darkobject dark:text-darkmodeText p-4 md:p-6 shadow w-full md:w-[50%]"
 		>
 			{#if selectedPage === 'become-delegate'}
 				<div class="flex flex-col gap-5">

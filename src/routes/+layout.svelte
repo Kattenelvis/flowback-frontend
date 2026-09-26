@@ -201,7 +201,7 @@
 	});
 </script>
 
-<main class="min-h-[100vh] pb-[15vh] md:pb">
+<main class="min-h-[100svh] pb-[15svh] md:pb">
 	{#if showUI}
 		{#if $isMobile}
 			<TopHeader />

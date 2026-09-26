@@ -193,11 +193,12 @@
 										?.tags.find(_tag => _tag.id === tag.id) !== undefined}
 										
 								<label
-									class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors
+									class="flex items-center justify-between gap-2 p-3 rounded-xl border cursor-pointer transition-colors
 										{isChecked
 											? 'bg-primary/5 border-primary/30 dark:bg-primary/10 dark:border-primary/40'
 											: 'border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-darkbackground'}"
 								>
+									<div class="min-w-0 truncate">
 									<ProfilePicture
 										displayName
 										username={delegate.user.username}
@@ -206,6 +207,7 @@
                     href={`/user?id=${delegate.user.id}`}
                     Class="hover:opacity-80 hover:text-primary dark:hover:text-secondary transition-all duration-150"
 									/>
+									</div>
 									<div class="flex items-center gap-3 shrink-0">
 										<a
 											href={`/user?id=${delegate.user.id}&delegate_id=${delegate.id}&group_id=${group.id}&is_admin=${delegate.is_admin}`}
@@ -213,7 +215,7 @@
 											on:click|stopPropagation
 										>
 											<Fa icon={faClockRotateLeft} />
-											<span>{$_('History')}</span>
+											<span class="hidden sm:inline">{$_('History')}</span>
 										</a>
 										<input
 											disabled={delegates.find(d => d.user.id === $userStore?.id) && delegate.user.id !== $userStore?.id}
@@ -233,14 +235,14 @@
 											type="radio"
 											name={tag.name}
 											checked={isChecked}
-											class="accent-primary w-4 h-4"
+											class="accent-primary w-5 h-5 sm:w-4 sm:h-4"
 										/>
 									</div>
 								</label>
 							{/each}
 						</div>
 						<button
-							class="text-xs text-red-400 hover:text-red-600 hover:underline transition-colors mt-2"
+							class="text-xs text-red-400 hover:text-red-600 hover:underline transition-colors mt-2 py-1"
 							on:click={() => clearChoice(tag)}
 						>
 							{$_('Clear Choice')}

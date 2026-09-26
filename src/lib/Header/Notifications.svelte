@@ -143,7 +143,7 @@
 <!-- Menu of notifications, that for now opens when clicking the notification bell in the header -->
 {#if notificationsOpen}
 	<ul
-		class="max-h-[90vh] overflow-y-scroll absolute right-0 bg-white dark:bg-darkobject dark:text-darkmodeText select-none shadow z-[60]
+		class="max-h-[90dvh] overflow-y-scroll absolute right-0 bg-white dark:bg-darkobject dark:text-darkmodeText select-none shadow z-[60]
 		{$isMobile
 			? 'slide-animation-mobile bottom-full'
 			: 'slide-animation bottom-auto top-full'}"
