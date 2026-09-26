@@ -32,7 +32,7 @@
 			],
 			initialView: 'dayGridMonth',
 			//TODO: Rework the calculation so these calculations don't need to be rerun at header changes
-			height: 'calc(100vh - 2rem - 40px - 28px)',
+			height: 'calc(100svh - 2rem - 40px - 28px)',
 			headerToolbar: {
 				left: 'prev next today',
 				center: 'title',
@@ -123,7 +123,7 @@
 	$inspect(times, 'TIME');
 </script>
 
-<div class="flex justify-center h-[100vh] w-full">
+<div class="flex justify-center h-[100svh] w-full">
 	<div class="w-full" id="calendar-2"></div>
 </div>
 

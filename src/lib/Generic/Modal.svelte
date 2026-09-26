@@ -68,7 +68,7 @@
 >
 	<div
 		{id}
-		class={`w-[80%] !cursor-default max-h-[80vh] mt-10 dark:bg-darkbackground bg-white overflow-y-auto overflow-x-hidden border
+		class={`w-[80%] !cursor-default max-h-[80dvh] mt-10 dark:bg-darkbackground bg-white overflow-y-auto overflow-x-hidden border
 		border-gray-300 rounded shadow-xl fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-50 max-w-[400px] ${Class}`}
 		onclick={handleInnerClick}
 		tabindex="0"
@@ -117,7 +117,7 @@
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: 100vh;
+		height: 100dvh;
 		background-color: rgba(128, 128, 128, 0.5); /* color */
 		z-index: 49;
 	}

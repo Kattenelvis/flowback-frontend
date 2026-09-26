@@ -54,7 +54,7 @@
 <div
 	bind:this={chatDiv}
 	class:invisible={!chatOpen}
-	class="bg-background dark:bg-darkbackground dark:text-darkmodeText fixed z-[50] w-[100vw] h-[100vh] flex flex-col items-center"
+	class="bg-background dark:bg-darkbackground dark:text-darkmodeText fixed z-[50] w-[100vw] h-[100dvh] flex flex-col items-center"
 >
 	<div class="w-full flex justify-between mr-6">
 		<Button
@@ -83,7 +83,7 @@
 		/>
 	</div>
 
-	<div class="flex w-full gap-6 max-w-[1200px] h-[80vh]">
+	<div class="flex w-full gap-6 max-w-[1200px] h-[80dvh]">
 		<div class="bg-white w-[40%] flex-grow ml-6 dark:bg-darkobject p-2">
 			{#key creatingGroup}
 				<Preview bind:creatingGroup bind:groupMembers />
