@@ -14,7 +14,6 @@
 	import { _ } from 'svelte-i18n';
 	import Permissions from '$lib/Group/Permissions/Permissions.svelte';
 	import Loader from '$lib/Generic/Loader.svelte';
-	import Schedule from '$lib/Schedule/Schedule.svelte';
 	import WorkGroups from '$lib/Group/WorkingGroups/WorkGroups.svelte';
 	import { env } from '$env/dynamic/public';
 	import PollThreadThumbnails from '$lib/Poll/PollThreadThumbnails.svelte';
@@ -130,8 +129,6 @@
 						<!-- <KanbanBoard type="group" /> -->
 					{:else if selectedPage === 'perms'}
 						<Permissions />
-					{:else if selectedPage === 'schedule'}
-						<Schedule />
 					{:else if selectedPage === 'working-groups'}
 						<WorkGroups />
 					{/if}

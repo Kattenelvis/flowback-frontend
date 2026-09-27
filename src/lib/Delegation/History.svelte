@@ -2,26 +2,26 @@
 	import { fetchRequest } from '$lib/FetchRequest';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import type { DelegatePool, VoteHistory } from './interfaces';
+	import type { VoteHistory } from './interfaces';
 	import { _ } from 'svelte-i18n';
 	import Comments from '$lib/Comments/Comments.svelte';
-	import Button from '$lib/Generic/Button.svelte';
 	import TextInput from '$lib/Generic/TextInput.svelte';
-	import Select from '$lib/Generic/Select.svelte';
-	import { userStore } from '$lib/User/interfaces';
-	import Structure from '$lib/Poll/NewDesign/Structure.svelte';
 	import type { PredictionStatement } from '$lib/Poll/PredictionMarket/interfaces';
+	import Fa from 'svelte-fa';
+	import {
+		faArrowUpRightFromSquare,
+		faClockRotateLeft,
+		faComments
+	} from '@fortawesome/free-solid-svg-icons';
 
 	export let history: null | number,
-		groupId = 0;
+		groupId = 0,
+		delegateName = '';
 
 	let loading = false,
-		delegatePool: DelegatePool,
 		votingHistory: VoteHistory[] = [],
 		filteredVotingHistory: VoteHistory[] = [],
 		searchVoteQuery = '',
-		searched = false,
 		sortOrder: 'a-z' | 'z-a' = 'a-z',
 		predictions: PredictionStatement[] = [];
 
@@ -34,23 +34,18 @@
 		loading = false;
 		if (!res.ok) return;
 
-		votingHistory = json?.results;
-		filteredVotingHistory = [...json?.results];
+		votingHistory = json?.results ?? [];
 	};
 
-	const getDelegateInfo = async () => {
-		const { res, json } = await fetchRequest(
-			'GET',
-			`group/${$page.params.groupId || groupId}/delegate/pools?id=${history}`
+	$: filteredVotingHistory = [...votingHistory]
+		.filter((entry) =>
+			entry.poll.title?.toLowerCase().includes(searchVoteQuery.trim().toLowerCase())
+		)
+		.sort((a, b) =>
+			sortOrder === 'a-z'
+				? (a.poll.title || '').localeCompare(b.poll.title || '')
+				: (b.poll.title || '').localeCompare(a.poll.title || '')
 		);
-
-		delegatePool = json?.results[0];
-	};
-
-	$: {
-		if (filteredVotingHistory.length > 0) {
-		}
-	}
 
 	const getPredictionStatements = async () => {
 		const { res, json } = await fetchRequest(
@@ -60,154 +55,167 @@
 
 		if (!res.ok) return;
 
-		predictions = json?.results;
-	};
-
-	const searchVotes = async (query: string) => {
-		searched = true;
-
-		if (query === '') {
-			filteredVotingHistory = [...votingHistory];
-		} else {
-			filteredVotingHistory = votingHistory.filter(
-				(v) => v.poll.title?.toLowerCase().includes(query.toLowerCase())
-			);
-		}
+		predictions = json?.results ?? [];
 	};
 
 	const resetFilter = () => {
 		searchVoteQuery = '';
 		sortOrder = 'a-z';
-		filteredVotingHistory = [...votingHistory];
-		searched = false;
 	};
 
 	onMount(async () => {
-		await getDelegateInfo();
 		await getDelegateHistory();
 		await getPredictionStatements();
 	});
 </script>
 
 <Loader bind:loading>
-	<div class="w-screen bg-[#faf5ff] dark:bg-darkbackground pt-4 p-4">
-		<div
-			class="w-full max-w-screen-md mx-auto p-4 bg-white dark:bg-darkobject rounded shadow mb-4"
-		>
-			<span class="text-sm text-gray-700 dark:text-darkmodeText pb-2">
-				{$_('Delegate history for')}
-				{$userStore?.username}
-			</span>
-			<form
-				class="w-full dark:bg-darkobject dark:text-darkmodeText flex flex-1 items-end gap-4"
-				on:input|preventDefault={() => searchVotes(searchVoteQuery)}
-			>
-				<div class="flex-col w-full pt-2">
-					<TextInput
-						Class="w-full dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600"
-						onInput={() => (searched = false)}
-						label=""
-						max={null}
-						search={true}
-						placeholder={$_('Search polls')}
-						bind:value={searchVoteQuery}
-					/>
+	<section class="w-full bg-gray-50/70 px-4 py-6 dark:bg-darkbackground sm:px-6 sm:py-8">
+		<div class="mx-auto max-w-6xl">
+			<header class="mb-6 flex items-start gap-4 border-b border-gray-200 pb-5 dark:border-gray-700">
+				<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/20 dark:text-secondary">
+					<Fa icon={faClockRotateLeft} />
+				</div>
+				<div class="min-w-0">
+					<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+						{$_('History')}
+					</p>
+					<h2 class="mt-1 break-words text-2xl font-semibold leading-tight text-gray-900 dark:text-darkmodeText">
+						{$_('Delegate history for')} {delegateName}
+					</h2>
+				</div>
+			</header>
 
-					<div class="flex flex-row items-center gap-1 pt-2">
-						<span class="text-gray-700 dark:text-gray-300">{$_('Sort')}: </span>
-						<Select
-							classInner="p-1 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600"
-							labels={[$_('A - Z'), $_('Z - A')]}
-							values={['a-z', 'z-a']}
-							bind:value={sortOrder}
-						/>
-
-						<div class="rounded-md p-1 ml-auto">
-							<Button
-								Class="!p-1 border-none text-red-600 dark:text-red-400 cursor-pointer hover:underline"
-								buttonStyle="warning-light"
-								onClick={resetFilter}
+			<div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,1fr)]">
+				<section class="min-w-0">
+					<div class="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-darkobject sm:flex-row sm:items-center">
+						<div class="min-w-0 flex-1">
+							<TextInput
+								Class="w-full"
+								inputClass="!rounded-lg !border-gray-200 !px-3 !py-2 dark:!border-gray-600"
+								label=""
+								max={null}
+								search={true}
+								placeholder={$_('Search polls')}
+								bind:value={searchVoteQuery}
+							/>
+						</div>
+						<div class="flex items-center gap-2 sm:shrink-0">
+							<label for="delegate-history-sort" class="text-sm text-gray-500 dark:text-gray-400">
+								{$_('Sort')}
+							</label>
+							<select
+								id="delegate-history-sort"
+								bind:value={sortOrder}
+								class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-darkbackground dark:text-darkmodeText"
+							>
+								<option value="a-z">{$_('A - Z')}</option>
+								<option value="z-a">{$_('Z - A')}</option>
+							</select>
+							<button
+								type="button"
+								on:click={resetFilter}
+								class="ml-auto rounded-lg px-2 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5 dark:text-secondary dark:hover:bg-primary/10"
 							>
 								{$_('Reset Filter')}
-							</Button>
+							</button>
 						</div>
 					</div>
-				</div>
-			</form>
-		</div>
 
-		<Structure Class="mx-auto !p-6 !pt-0 max-w-screen-xl" showRight showBoth>
-			<div
-				slot="left"
-				class="p-4 bg-white dark:bg-darkobject rounded shadow max-h-[100%] overflow-auto"
-			>
-				{#if filteredVotingHistory.length > 0}
-					<ul class="w-full">
-						{#each filteredVotingHistory as voteHistory}
-							<li
-								class="bg-white dark:bg-darkobject dark:text-darkmodeText p-3 w-full border-b last:border-b-0 dark:border-gray-600"
-							>
-								<div class="flex flex-col gap-2">
-									<a
-										class="w-full break-words text-left text-xl p-1 pl-0 text-gray-900 dark:text-gray-300 cursor-pointer hover:underline"
-										href={`groups/${new URLSearchParams(
-											window.location.search
-										).get(
-											'group_id'
-										)}/polls/${voteHistory?.poll.id}?source=delegate-history`}
-									>
-										{voteHistory?.poll.title || $_('No title')}
-									</a>
-
-									{#if voteHistory?.poll.description}
-										<div class="text-sm text-gray-600 dark:text-gray-400 pl-1">
-											<p class="line-clamp-2">
-												{voteHistory?.poll.description}
+					{#if filteredVotingHistory.length > 0}
+						<ul class="space-y-4">
+							{#each filteredVotingHistory as voteHistory}
+								<li class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-darkobject">
+									<div class="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
+										{#if voteHistory.poll.tag_name}
+											<span class="mb-2 inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary dark:bg-primary/20 dark:text-secondary">
+												{voteHistory.poll.tag_name}
+											</span>
+										{/if}
+										<a
+											class="flex items-start justify-between gap-3 break-words text-lg font-semibold text-gray-900 hover:text-primary dark:text-darkmodeText dark:hover:text-secondary"
+											href={`/groups/${groupId}/polls/${voteHistory.poll.id}?source=delegate-history`}
+										>
+											<span>{voteHistory.poll.title || $_('No title')}</span>
+											<Fa icon={faArrowUpRightFromSquare} class="mt-1 shrink-0 text-xs text-gray-400" />
+										</a>
+										{#if voteHistory.poll.description}
+											<p class="mt-2 line-clamp-2 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+												{voteHistory.poll.description}
 											</p>
-										</div>
-									{/if}
-
-									{#each voteHistory.vote as vote}
-										{@const predictionsForProp = predictions.filter((p) =>
-											p.segments.find((s) => s.proposal_id === vote.proposal_id)
-										)}
-										<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
-											<div>{vote.proposal_title}</div>
-											<div>{vote.proposal_description}</div>
-											<div>{$_('Delegate voted:')} {vote.raw_score}</div>
-											{#each predictionsForProp as prediction}
-												<div
-													class="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded"
-												>
-													{prediction?.title}
-													{prediction?.description}
-													{prediction?.combined_bet}
-												</div>
+										{/if}
+									</div>
+									{#if voteHistory.vote?.length}
+										<ul class="divide-y divide-gray-100 px-5 dark:divide-gray-700">
+											{#each voteHistory.vote as vote}
+												{@const predictionsForProp = predictions.filter((p) =>
+													p.poll_id === voteHistory.poll.id &&
+													p.segments?.some((s) => s.proposal_id === vote.proposal_id)
+												)}
+												<li class="py-4">
+													<div class="flex items-start justify-between gap-4">
+												<div class="min-w-0">
+													<p class="text-sm font-semibold text-gray-800 dark:text-darkmodeText">
+														{vote.proposal_title}
+													</p>
+													{#if vote.proposal_description}
+														<p class="mt-1 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+															{vote.proposal_description}
+														</p>
+													{/if}
+														</div>
+														<div class="shrink-0 rounded-lg bg-primary/5 px-3 py-2 text-center dark:bg-primary/15">
+													<span class="block text-[11px] text-gray-500 dark:text-gray-400">
+														{$_('Delegate voted:')}
+													</span>
+													<span class="block text-lg font-semibold leading-tight text-primary dark:text-secondary">
+														{vote.raw_score ?? '—'}
+													</span>
+														</div>
+													</div>
+													{#if predictionsForProp.length}
+														<div class="mt-3 space-y-2 border-l-2 border-primary/20 pl-3 dark:border-secondary/30">
+															{#each predictionsForProp as prediction}
+																<div class="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+																	<span class="font-medium text-gray-700 dark:text-gray-300">{prediction.title}</span>
+															{#if prediction.description}
+																<span class="block">{prediction.description}</span>
+															{/if}
+																	{#if prediction.combined_bet !== null}
+																		<span class="block">{$_('Prediction')}: {prediction.combined_bet}</span>
+																	{/if}
+																</div>
+															{/each}
+														</div>
+													{/if}
+												</li>
 											{/each}
-										</div>
-									{/each}
-								</div>
-							</li>
-						{/each}
-					</ul>
-				{:else if filteredVotingHistory.length === 0 && searched}
-					<div class="p-3 text-center text-gray-500 dark:text-gray-400">
-						{$_('No polls match your search criteria')}
+										</ul>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					{:else}
+						<div class="rounded-xl border border-dashed border-gray-200 bg-white px-6 py-12 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-darkobject dark:text-gray-400">
+							{searchVoteQuery.trim()
+								? $_('No polls match your search criteria')
+								: $_('No delegate history')}
+						</div>
+					{/if}
+				</section>
+
+				<aside class="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-darkobject sm:p-5">
+					<div class="mb-4 flex items-center gap-2 border-b border-gray-100 pb-4 text-gray-900 dark:border-gray-700 dark:text-darkmodeText">
+						<Fa icon={faComments} class="text-primary dark:text-secondary" />
+						<h3 class="font-semibold">{$_('Discussion')}</h3>
 					</div>
-				{:else}
-					<div class="p-3 text-center text-gray-500 dark:text-gray-400">
-						{$_('No delegate history')}
-					</div>
-				{/if}
+					<Comments
+						Class="dark:text-darkmodeText"
+						api="delegate-history"
+						delegate_pool_id={history}
+					/>
+				</aside>
 			</div>
-			<div slot="right" class="p-4">
-				<Comments
-					Class="bg-white dark:bg-darkobject p-4 shadow dark:text-darkmodeText"
-					api="delegate-history"
-					on:keydown={() => {}}
-					delegate_pool_id={history}
-				/>
-			</div>
-		</Structure>
-	</div>
+		</div>
+	</section>
 </Loader>
