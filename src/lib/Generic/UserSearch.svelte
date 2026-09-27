@@ -7,7 +7,11 @@
 	import TextInput from './TextInput.svelte';
 
 	export let showUsers = false,
-		showSelf = false;
+		showSelf = false,
+		// Hide the built-in "+ Invite user" row when the caller opens the search itself
+		showTrigger = true,
+		label = 'User to invite',
+		title = '';
 
 	let searchedUsers: User[] = [],
 		search = '';
@@ -23,22 +27,25 @@
 	};
 </script>
 
-<div
-	class="p-4 shadow w-full bg-white dark:bg-darkobject flex items-center hover:bg-gray-100 dark:hover:bg-darkmodeObject transition-colors"
->
-	<button on:click={() => (showUsers = true)} class="flex items-center gap-4 w-full" type="button">
-		<ProfilePicture />
-		<div class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700">+ Invite user</div>
-	</button>
-</div>
+{#if showTrigger}
+	<div
+		class="p-4 shadow w-full bg-white dark:bg-darkobject flex items-center hover:bg-gray-100 dark:hover:bg-darkmodeObject transition-colors"
+	>
+		<button on:click={() => (showUsers = true)} class="flex items-center gap-4 w-full" type="button">
+			<ProfilePicture />
+			<div class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700">+ Invite user</div>
+		</button>
+	</div>
+{/if}
 
 <!-- TODO: Don't force UserSearch prop to be a Modal. Make it optional -->
 <Modal bind:open={showUsers} Class="bg-white dark:bg-darkobject !cursor-default">
+	<span slot="header">{title ? $_(title) : ''}</span>
 	<div slot="body">
 		<TextInput
 			onInput={() => searchUser(search)}
 			bind:value={search}
-			label={$_('User to invite')}
+			label={$_(label)}
 			placeholder="Username"
 		/>
 		<ul>

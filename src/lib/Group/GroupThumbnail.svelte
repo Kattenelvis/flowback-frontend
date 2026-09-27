@@ -78,7 +78,7 @@
 
 <button
 	id={group.name.toLowerCase().replaceAll(' ', '-')}
-	class={`w-4/6 md:w-2/5 max-w-[650px] bg-white relative shadow-md dark:bg-darkobject dark:text-darkmodeText text-center ${
+	class={`w-5/6 md:w-3/5 lg:w-2/5 max-w-[650px] bg-white relative shadow-md dark:bg-darkobject dark:text-darkmodeText text-center ${
 		group.joined && 'cursor-pointer hover:shadow-xl vote-thumbnail'
 	} transition-shadow rounded-2xl`}
 	onclick={goToGroup}

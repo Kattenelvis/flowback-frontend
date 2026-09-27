@@ -13,6 +13,7 @@
 	import TextArea from '$lib/Generic/TextArea.svelte';
 	import Fa from 'svelte-fa';
 	import {
+		faComments,
 		faPaperPlane,
 		faSmile,
 		faUsers
@@ -27,7 +28,9 @@
 	import TextInput from '$lib/Generic/TextInput.svelte';
 
 	export let selectedPage: 'direct' | 'group',
-		isLookingAtOlderMessages: boolean;
+		isLookingAtOlderMessages: boolean,
+		// Name shown for the open conversation, readable by the parent
+		conversationTitle = '';
 
 	let message: string = '',
 		olderMessages: string,
@@ -39,7 +42,7 @@
 		errorState = false,
 		participants: any[] = [],
 		participantsModalOpen = false,
-		preview: PreviewMessage,
+		preview: PreviewMessage | undefined,
 		title = '';
 
 	// Fetch recent messages for the selected chat
@@ -204,13 +207,6 @@
 		return unsubscribe;
 	};
 
-	// Adjust chat window height based on header
-	const correctHeightRelativeToHeader = () => {
-		const headerHeight = document.querySelector('#header')?.clientHeight;
-		if (headerHeight && chatWindow)
-			chatWindow.style.height = `calc(100% - ${headerHeight.toString()}px)`;
-	};
-
 	// Fetch channel participants
 	const getChannelParticipants = async () => {
 		if (!$chatPartnerStore) return;
@@ -247,6 +243,7 @@
 	};
 
 	const changeName = async () => {
+		if (!preview) return;
 		const { res, json } = await fetchRequest(
 			'POST',
 			'chat/message/channel/userdata/update',
@@ -266,34 +263,37 @@
 
 		$previewStore = [
 			preview,
-			...$previewStore.filter((p) => p.channel_id !== preview.channel_id)
+			...$previewStore.filter((p) => p.channel_id !== preview?.channel_id)
 		];
 	};
 
-	const updatePreview = () => {
-		const _preview = $previewStore?.find(
-			(p) => p.channel_id === $chatPartnerStore
-		);
-		if (!_preview) return;
-		if (_preview) preview = _preview;
-
-		title = preview.channel_title ?? '';
+	// Fill the rename form whenever another chat is opened
+	const resetTitle = (_partner: number | null) => {
+		title = preview?.channel_title ?? '';
 	};
 
-	$: $chatPartnerStore && updatePreview();
+	$: preview = $previewStore?.find((p) => p.channel_id === $chatPartnerStore);
+	$: resetTitle($chatPartnerStore);
+
+	// Direct messages opened from outside the chat list have no preview yet, so
+	// fall back to the names of the other participants.
+	$: conversationTitle =
+		preview?.channel_title ||
+		participants
+			.filter((p) => p.user?.id !== $userStore?.id)
+			.map((p) => p.user?.username)
+			.filter(Boolean)
+			.join(', ');
 
 	let unsubscribeMessageStore: () => void;
 
 	onMount(() => {
 		unsubscribeMessageStore = receiveMessage();
-		correctHeightRelativeToHeader();
-		window.addEventListener('resize', correctHeightRelativeToHeader);
 		conectToSocket();
 	});
 
 	onDestroy(() => {
 		if (unsubscribeMessageStore) unsubscribeMessageStore();
-		window.removeEventListener('resize', correctHeightRelativeToHeader);
 	});
 
 	// Reactive updates
@@ -311,17 +311,41 @@
 		}, 100);
 </script>
 
-{#if $chatPartnerStore !== 0}
-	<div class="flex flex-col h-full">
+{#if $chatPartnerStore}
+	<div class="flex flex-col flex-1 min-h-0">
+		<div
+			class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700"
+		>
+			<div class="min-w-0 flex-1">
+				<h3 class="font-semibold truncate">
+					{conversationTitle || $_('Conversation')}
+				</h3>
+				{#if participants.length > 0}
+					<p class="text-xs text-gray-400">
+						{participants.length}
+						{$_('participants')}
+					</p>
+				{/if}
+			</div>
+			<button
+				type="button"
+				class="shrink-0 w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-gray-100 active:bg-gray-200 dark:text-secondary dark:hover:bg-gray-700"
+				title={$_('Participants')}
+				aria-label={$_('Participants')}
+				on:click={() => (participantsModalOpen = true)}
+			>
+				<Fa icon={faUsers} class="text-lg" />
+			</button>
+		</div>
 		<ul
-			class="grow overflow-y-auto px-2 break-word"
+			class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-2 py-3 break-word"
 			id="chat-window"
 			bind:this={chatWindow}
 		>
 			{#if messages.length === 0 && $chatPartnerStore}
-				<span class="self-center"
-					>{$_('Chat is currently empty, maybe say hello?')}</span
-				>
+				<li class="py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+					{$_('Chat is currently empty, maybe say hello?')}
+				</li>
 			{/if}
 			{#if olderMessages}
 				<li class="text-center mt-6 mb-6">
@@ -365,9 +389,9 @@
 				</li>
 			{/if}
 		</ul>
-		<div class="border-t-2 border-t-gray-200 w-full">
+		<div class="border-t border-gray-200 dark:border-gray-700 w-full p-2">
 			<form
-				class="flex gap-1 justify-center items-center w-full mt-2"
+				class="flex gap-2 items-end w-full"
 				on:submit|preventDefault={postMessage}
 			>
 				<TextArea
@@ -384,33 +408,31 @@
 					rows={1}
 					bind:value={message}
 					placeholder={$_('Write a message...')}
-					Class="justify-center w-full h-2rem"
-					inputClass="border-0 bg-gray-100 placeholder-gray-700 pl-2 pt-1 resize-y min-h-[2rem] max-h-[6rem] overflow-auto"
+					Class="w-full"
+					inputClass="border-0 rounded-2xl bg-gray-100 dark:bg-darkbackground placeholder-gray-500 px-3 py-2 resize-none min-h-[2.5rem] max-h-[6rem] overflow-auto"
 				/>
 
 				<!-- TODO: Emoji Support -->
-				<!-- <Button -->
-				<!-- 	onClick={() => (showEmoji = !showEmoji)} -->
-				<!-- 	Class="rounded-full pl-3 pr-3 pt-3 pb-3 h-1/2" -->
-				<!-- > -->
-				<!-- 	<Fa icon={faSmile} /> -->
-				<!-- </Button> -->
 				<Button
 					type="submit"
-					Class="bg-transparent border-none flex items-center justify-center p-3 h-1/2 hover:bg-gray-100 active:bg-gray-200"
+					Class="shrink-0 w-10 h-10 !rounded-full flex items-center justify-center !p-0"
 				>
-					<Fa class="text-blue-600 text-lg" icon={faPaperPlane} />
+					<Fa icon={faPaperPlane} />
+					<span class="sr-only">{$_('Send')}</span>
 				</Button>
-				<Button
-					Class="bg-transparent border-none flex items-center justify-center p-3 h-1/2 hover:bg-gray-100 active:bg-gray-200"
-					onClick={() => (participantsModalOpen = true)}
-					><Fa class="text-blue-600 text-lg" icon={faUsers} /></Button
-				>
 			</form>
 		</div>
 	</div>
 {:else}
-	<div>{'No chat selected'}</div>
+	<div
+		class="flex-1 flex flex-col items-center justify-center gap-2 p-6 text-center text-gray-500 dark:text-gray-400"
+	>
+		<Fa icon={faComments} class="text-4xl text-gray-300 dark:text-gray-600" />
+		<p class="font-medium text-gray-700 dark:text-darkmodeText">
+			{$_('No chat selected')}
+		</p>
+		<p class="text-sm">{$_('Pick a conversation or start a new one.')}</p>
+	</div>
 {/if}
 
 <Modal bind:open={participantsModalOpen} Class="max-w-[200px]">

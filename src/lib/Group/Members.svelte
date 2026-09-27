@@ -383,7 +383,9 @@
 												chatOpenStore.set(true);
 												chatPartnerStore.set(channelId);
 											}}
-											Class="text-primary"
+											class="text-primary"
+											title={$_('Send message')}
+											aria-label={$_('Send message')}
 										>
 											<Fa icon={faPaperPlane} rotate="60" />
 										</button>
