@@ -10,6 +10,8 @@
 	import CommentFilter from './CommentFilter.svelte';
 	import { commentsStore } from './commentStore';
 	import type { Comment as comment } from '$lib/Poll/interface';
+	import Fa from 'svelte-fa';
+	import { faComments } from '@fortawesome/free-solid-svg-icons';
 
 	export let proposals: proposal[] = [],
 		api: 'poll' | 'thread' | 'delegate-history',
@@ -53,33 +55,42 @@
 	$: if (sortBy || searchString || selectedProposals) setUpComments();
 </script>
 
-<div class={`rounded dark:text-darktext min-h-[200px] ${Class}`} id="comments">
-	<div class="border-b border-gray-300">
-		<!-- Add Comment -->
+<div class={`dark:text-darkmodeText min-h-[200px] ${Class}`} id="comments">
+	<CommentPost bind:proposals {api} {delegate_pool_id} />
 
-		<CommentPost bind:proposals {api} {delegate_pool_id} />
+	<CommentFilter
+		Class="mt-4 pb-3 border-b border-gray-200 dark:border-gray-700"
+		bind:sortBy
+		bind:searchString
+		bind:proposals
+		bind:selectedProposals
+	/>
 
-		<CommentFilter
-			Class="flex flex-row items-center justify-start mb-2 gap-3 py-2"
-			bind:sortBy
-			bind:searchString
-			bind:proposals
-			bind:selectedProposals
-		/>
-	</div>
-
-	<div class="flex flex-col gap-1 mt-2">
-		{#each $commentsStore?.filteredComments as comment}
+	<div class="flex flex-col">
+		{#each $commentsStore?.filteredComments ?? [] as comment (comment.id)}
 			<Comment {delegate_pool_id} {comment} {api} {proposals} />
 		{/each}
-		{#if showReadMore}
-			<button on:click={readMore}>{$_('Read more')}</button>
-		{/if}
 	</div>
 
+	{#if showReadMore}
+		<div class="flex justify-center pt-2">
+			<button
+				type="button"
+				class="rounded-full px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-blue-50 dark:text-secondary dark:hover:bg-gray-700"
+				on:click={readMore}>{$_('Read more')}</button
+			>
+		</div>
+	{/if}
+
 	{#if $commentsStore?.filteredComments?.length === 0}
-		<div class="text-center mt-6 dark:text-darkmodeText">
-			{$_('There are currently no comments')}
+		<div
+			class="flex flex-col items-center gap-2 px-4 py-10 text-center text-gray-500 dark:text-gray-400"
+		>
+			<Fa icon={faComments} class="text-3xl text-gray-300 dark:text-gray-600" />
+			<p class="font-medium text-gray-700 dark:text-darkmodeText">
+				{$_('There are currently no comments')}
+			</p>
+			<p class="text-sm">{$_('Be the first to share your thoughts.')}</p>
 		</div>
 	{/if}
 </div>

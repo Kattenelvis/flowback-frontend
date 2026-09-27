@@ -821,5 +821,19 @@
 	"participants": "deltagare",
 	"Pick a conversation or start a new one.": "Välj en konversation eller starta en ny.",
 	"Could not start the conversation": "Kunde inte starta konversationen",
-	"Send message": "Skicka meddelande"
+	"Send message": "Skicka meddelande",
+	"Show": "Visa",
+	"Editing comment": "Redigerar kommentar",
+	"Attach file": "Bifoga fil",
+	"Tag a proposal": "Tagga ett förslag",
+	"Clear filter": "Rensa filter",
+	"Show comments": "Visa kommentarer",
+	"Only show discussions that mention these proposals.": "Visa bara diskussioner som nämner de här förslagen.",
+	"Be the first to share your thoughts.": "Bli först med att dela dina tankar.",
+	"Upvote": "Gilla",
+	"Downvote": "Ogilla",
+	"Attachment to the comment": "Bilaga till kommentaren",
+	"Save": "Spara",
+	"Top": "Bästa",
+	"View File": "Visa fil"
 }

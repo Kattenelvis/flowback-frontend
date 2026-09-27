@@ -112,6 +112,7 @@ export interface Comment {
   author_profile_image: string | null;
   parent_id: number | null;
   reply_depth: number;
+  created_at?: string;
   message: string | null;
   score: number;
   being_edited: boolean;

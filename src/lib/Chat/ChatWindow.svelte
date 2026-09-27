@@ -10,11 +10,9 @@
 	import { userStore } from '$lib/User/interfaces';
 	import { _ } from 'svelte-i18n';
 	import { browser } from '$app/environment';
-	import TextArea from '$lib/Generic/TextArea.svelte';
 	import Fa from 'svelte-fa';
 	import {
 		faComments,
-		faPaperPlane,
 		faSmile,
 		faUsers
 	} from '@fortawesome/free-solid-svg-icons';
@@ -26,6 +24,7 @@
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { chatPartnerStore, previewStore } from './functions';
 	import TextInput from '$lib/Generic/TextInput.svelte';
+	import TextSend from '$lib/Generic/TextSend.svelte';
 
 	export let selectedPage: 'direct' | 'group',
 		isLookingAtOlderMessages: boolean,
@@ -390,37 +389,15 @@
 			{/if}
 		</ul>
 		<div class="border-t border-gray-200 dark:border-gray-700 w-full p-2">
-			<form
-				class="flex gap-2 items-end w-full"
-				on:submit|preventDefault={postMessage}
-			>
-				<TextArea
-					autofocus
-					label=""
-					onKeyPress={(e) => {
-						if (e.key === 'Enter' && !e.shiftKey) {
-							postMessage();
-							e.preventDefault();
-						}
-					}}
-					max={3000}
-					displayMax={false}
-					rows={1}
-					bind:value={message}
-					placeholder={$_('Write a message...')}
-					Class="w-full"
-					inputClass="border-0 rounded-2xl bg-gray-100 dark:bg-darkbackground placeholder-gray-500 px-3 py-2 resize-none min-h-[2.5rem] max-h-[6rem] overflow-auto"
-				/>
-
-				<!-- TODO: Emoji Support -->
-				<Button
-					type="submit"
-					Class="shrink-0 w-10 h-10 !rounded-full flex items-center justify-center !p-0"
-				>
-					<Fa icon={faPaperPlane} />
-					<span class="sr-only">{$_('Send')}</span>
-				</Button>
-			</form>
+			<TextSend
+				bind:value={message}
+				autofocus
+				sendOnEnter
+				max={3000}
+				maxHeight={120}
+				placeholder="Write a message..."
+				onSend={postMessage}
+			/>
 		</div>
 	</div>
 {:else}

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { fetchRequest } from '$lib/FetchRequest';
 	import type { Comment, proposal } from '$lib/Poll/interface';
-	import { faThumbsUp, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
+	import { faThumbsUp, faThumbsDown, faPaperclip } from '@fortawesome/free-solid-svg-icons';
 	import { userStore } from '$lib/User/interfaces';
 	import Fa from 'svelte-fa';
-	import { _ } from 'svelte-i18n';
+	import { _, locale } from 'svelte-i18n';
 	import { page } from '$app/stores';
 	import CommentPost from './CommentPost.svelte';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
@@ -15,6 +15,8 @@
 	import TextInput from '$lib/Generic/TextInput.svelte';
 	import TextArea from '$lib/Generic/TextArea.svelte';
 	import { commentsStore } from './commentStore';
+	import { splitTags, timeSince } from './functions';
+	import { isMobile } from '$lib/utils/isMobile';
 
 	export let comment: Comment,
 		api: 'poll' | 'thread' | 'delegate-history',
@@ -28,6 +30,15 @@
 		reportTitle: string,
 		reportDescription: string,
 		images: File[] = [];
+
+	const actionClass =
+		'rounded-full px-2.5 py-1.5 font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white';
+
+	// A reply's thread line sits under the avatar of the comment it answers. On
+	// phones replies step in less, and deep threads stop stepping in after a few
+	// levels so they keep enough room for their text.
+	$: indent = (depth: number) =>
+		depth === 0 ? 0 : 15 + (Math.min(depth, $isMobile ? 4 : 8) - 1) * ($isMobile ? 12 : 29);
 
 	const commentDelete = async (id: number) => {
 		let _api = `group/`;
@@ -139,175 +150,223 @@
 </script>
 
 {#if comment.being_edited}
-	<CommentPost
-		{delegate_pool_id}
-		bind:proposals
-		bind:comments
-		bind:files={images}
-		bind:beingEdited={comment.being_edited}
-		message={comment.message || ''}
-		parent_id={comment.parent_id}
-		id={comment.id}
-		{api}
-	/>
-{:else}
-	<!-- class:bg-gray-100={comment.reply_depth % 2 === 1} -->
-	<!-- class:dark:bg-darkbackground={comment.reply_depth % 2 === 1} -->
 	<div
-		class={`p-3 text-sm border-0 border-l-gray-400  dark:text-darkmodeText`}
-		style:margin-left={`${comment.reply_depth * 20}px`}
-		class:border-l-2={comment.reply_depth > 0}
+		class="py-2"
+		class:thread-line={comment.reply_depth > 0}
+		style:margin-left={`${indent(comment.reply_depth)}px`}
 	>
-		<div class="flex gap-2">
-			<ProfilePicture
-				profilePicture={comment.author_profile_image}
-				username={comment.author_name}
-				displayName
-				userId={comment.author_id}
-				Class="font-semibold"
-			/>
-		</div>
-		{#key comment.message}
-			{#if comment.message}
-				<div
-					class="text-md mt-1 mb-3 pl-14 break-words whitespace-pre-wrap"
-					id={`comment-${comment.id}`}
+		<CommentPost
+			{delegate_pool_id}
+			bind:proposals
+			bind:comments
+			bind:files={images}
+			bind:beingEdited={comment.being_edited}
+			message={comment.message || ''}
+			parent_id={comment.parent_id}
+			id={comment.id}
+			{api}
+		/>
+	</div>
+{:else}
+	<article
+		class="flex gap-3 py-3 text-sm dark:text-darkmodeText"
+		class:thread-line={comment.reply_depth > 0}
+		style:margin-left={`${indent(comment.reply_depth)}px`}
+	>
+		<ProfilePicture
+			profilePicture={comment.author_profile_image}
+			username={comment.author_name}
+			userId={comment.author_id}
+			Class="self-start [&_img]:h-8 [&_img]:w-8"
+		/>
+		<div class="min-w-0 flex-1">
+			<div class="flex flex-wrap items-baseline gap-x-2">
+				<a
+					href={`/user?id=${comment.author_id}`}
+					class="truncate font-semibold text-gray-900 hover:underline dark:text-darkmodeText"
+					>{comment.author_name}</a
 				>
-					{comment.message}
+				{#if comment.created_at}
+					<time
+						datetime={comment.created_at}
+						title={new Date(comment.created_at).toLocaleString()}
+						class="text-xs text-gray-500 dark:text-gray-400"
+						>{timeSince(comment.created_at, $locale)}</time
+					>
+				{/if}
+				{#if comment.edited && comment.active}
+					<span class="text-xs text-gray-400">{$_('(edited)')}</span>
+				{/if}
+			</div>
+
+			{#key comment.message}
+				{#if comment.message}
+					<p
+						class="mt-0.5 whitespace-pre-wrap break-words leading-relaxed"
+						class:italic={!comment.active}
+						class:text-gray-400={!comment.active}
+						id={`comment-${comment.id}`}
+					>{#each splitTags(comment.message) as part}{#if part.tag}<span class="font-semibold text-primary dark:text-secondary">{part.text}</span>{:else}{part.text}{/if}{/each}</p>
+				{/if}
+			{/key}
+
+			{#if comment.attachments?.length > 0}
+				<div class="mt-2 flex flex-col items-start gap-2">
+					{#each comment.attachments as attachment}
+						{#if typeof attachment.file === 'string' && (attachment.file
+								.slice(-3)
+								.toLowerCase() === 'pdf' || attachment.file.slice(-3).toLowerCase() === 'txt')}
+							<a
+								href={attachment.file.substring(0, 4) === 'blob'
+									? attachment.file
+									: `${env.PUBLIC_API_URL}/media/${attachment.file}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-primary hover:bg-gray-200 dark:bg-darkbackground dark:text-secondary dark:hover:bg-gray-700"
+							>
+								<Fa icon={faPaperclip} class="text-xs" />
+								{$_('View File')}
+							</a>
+						{:else}
+							<img
+								src={(() => {
+									if (typeof attachment.file === 'string')
+										return attachment.file.substring(0, 4) === 'blob'
+											? attachment.file
+											: `${env.PUBLIC_API_URL}/media/${attachment.file}`;
+									else return URL.createObjectURL(attachment.file);
+								})()}
+								alt={$_('Attachment to the comment')}
+								class="max-h-72 max-w-full rounded-xl border border-gray-200 object-contain dark:border-gray-700"
+							/>
+						{/if}
+					{/each}
 				</div>
 			{/if}
-		{/key}
-		<div class="pl-14 text-xs text-gray-400 dark:text-darkmodeText">
-			{comment.edited && comment.active ? $_('(edited)') : ''}
-		</div>
-		{#if comment.attachments?.length > 0}
-			<div class="pl-14 mt-1 mb-3">
-				{#each comment.attachments as attachment}
-					<!-- {@debug attachment} -->
-					{#if typeof attachment.file === 'string' && (attachment.file
-							.slice(-3)
-							.toLowerCase() === 'pdf' || attachment.file.slice(-3).toLowerCase() === 'txt')}
-						<a
-							href={attachment.file.substring(0, 4) === 'blob'
-								? attachment.file
-								: `${env.PUBLIC_API_URL}/media/${attachment.file}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="text-primary dark:text-secondary hover:underline"
+
+			{#if comment.active}
+				<div class="-ml-1 mt-1.5 flex flex-wrap items-center gap-1 text-xs">
+					<div
+						class="mr-1 flex items-center rounded-full bg-gray-100 dark:bg-darkbackground"
+					>
+						<button
+							type="button"
+							class="flex h-7 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 {comment.user_vote ===
+							true
+								? 'text-primary dark:text-secondary'
+								: 'text-gray-500 dark:text-gray-400'}"
+							aria-label={$_('Upvote')}
+							aria-pressed={comment.user_vote === true}
+							on:click={() => commentVote(1)}
 						>
-							{$_('View File')}
-
-							<!-- {typeof attachment?.file}
-							{attachment?.file} -->
-						</a>
-					{:else}
-						<img
-							src={(() => {
-								if (typeof attachment.file === 'string')
-									return attachment.file.substring(0, 4) === 'blob'
-										? attachment.file
-										: `${env.PUBLIC_API_URL}/media/${attachment.file}`;
-								else return URL.createObjectURL(attachment.file);
-							})()}
-							alt="Attachment to the comment"
-						/>
-						<!-- {typeof attachment?.file}
-						{attachment?.file} -->
-					{/if}
-				{/each}
-			</div>
-		{/if}
-
-		{#if comment.active}
-			<div class="flex gap-6 text-xs pl-14">
-				<div class="flex items-center gap-2">
-					<button
-						class:text-primary={comment.user_vote === true}
-						class="flex items-center gap-1 cursor-pointer transition-colors"
-						on:click={() => commentVote(1)}
-					>
-						<Fa icon={faThumbsUp} />
-					</button>
-					{comment.score}
-					<button
-						class:text-primary={comment.user_vote === false}
-						class="flex items-center gap-1 cursor-pointer transition-colors"
-						on:click={() => commentVote(-1)}
-					>
-						<Fa class="pl-0.5" icon={faThumbsDown} />
-					</button>
-				</div>
-				<!-- {/if} -->
-
-				<button
-					class="flex items-center gap-1 hover:text-gray-900 text-gray-600 dark:text-darkmodeText dark:hover:text-gray-400 cursor-pointer transition-colors hover:underline"
-					on:click={() => (comment.being_replied = true)}
-				>
-					<!-- <Fa icon={faReply} /> -->
-					{$_('Reply')}
-				</button>
-				{#if ($userStore?.id || -1) !== comment.author_id}
-					<button
-						class="flex items-center gap-1 hover:text-red-900 text-gray-600 dark:text-darkmodeText dark:hover:text-red-400 cursor-pointer transition-colors hover:underline"
-						on:click={() => (ReportCommentModalShow = true)}
-					>
-						{$_('Report')}
-					</button>
-				{/if}
-
-				{#if Number($userStore?.id || -1) === comment.author_id}
-					<button
-						class="hover:text-gray-900 text-gray-600 dark:text-darkmodeText hover:dark:text-gray-400 cursor-pointer transition-colors hover:underline"
-						on:click={() => commentDelete(comment.id)}
-					>
-						{$_('Delete')}
-					</button>
-					<button
-						class="hover:text-gray-900 text-gray-600 dark:text-darkmodeText hover:dark:text-gray-400 cursor-pointer transition-colors break-words hover:underline"
-						on:click={() => {
-							comment.being_edited = true;
-							comment.being_edited_message = comment.message || '';
-						}}
-					>
-						{$_('Edit')}
-					</button>
-				{/if}
-
-				<Modal
-					bind:open={ReportCommentModalShow}
-					buttons={[
-						{
-							label: 'Report',
-							type: 'warning',
-							onClick: () => commentReport(comment.id, comment.message || '')
-						},
-						{ label: 'Cancel', type: 'secondary', onClick: () => (ReportCommentModalShow = false) }
-					]}
-				>
-					<div slot="header">{$_('Report Comment')}</div>
-					<div class="flex flex-col gap-3" slot="body">
-						<TextInput inputClass="bg-white" required label="Title" bind:value={reportTitle} />
-						<TextArea
-							label="Description"
-							required
-							bind:value={reportDescription}
-							inputClass="whitespace-pre-wrap"
-						/>
+							<Fa icon={faThumbsUp} />
+						</button>
+						<span class="min-w-[1.5ch] text-center font-semibold tabular-nums"
+							>{comment.score}</span
+						>
+						<button
+							type="button"
+							class="flex h-7 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 {comment.user_vote ===
+							false
+								? 'text-primary dark:text-secondary'
+								: 'text-gray-500 dark:text-gray-400'}"
+							aria-label={$_('Downvote')}
+							aria-pressed={comment.user_vote === false}
+							on:click={() => commentVote(-1)}
+						>
+							<Fa icon={faThumbsDown} />
+						</button>
 					</div>
-				</Modal>
-			</div>
-		{/if}
-	</div>
+
+					<button
+						type="button"
+						class={actionClass}
+						on:click={() => (comment.being_replied = true)}
+					>
+						{$_('Reply')}
+					</button>
+					{#if Number($userStore?.id || -1) === comment.author_id}
+						<button
+							type="button"
+							class={actionClass}
+							on:click={() => {
+								comment.being_edited = true;
+								comment.being_edited_message = comment.message || '';
+							}}
+						>
+							{$_('Edit')}
+						</button>
+						<button
+							type="button"
+							class={`${actionClass} hover:!text-red-600 dark:hover:!text-red-400`}
+							on:click={() => commentDelete(comment.id)}
+						>
+							{$_('Delete')}
+						</button>
+					{:else}
+						<button
+							type="button"
+							class={`${actionClass} hover:!text-red-600 dark:hover:!text-red-400`}
+							on:click={() => (ReportCommentModalShow = true)}
+						>
+							{$_('Report')}
+						</button>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	</article>
+
+	<Modal
+		bind:open={ReportCommentModalShow}
+		buttons={[
+			{
+				label: 'Report',
+				type: 'warning',
+				onClick: () => commentReport(comment.id, comment.message || '')
+			},
+			{ label: 'Cancel', type: 'secondary', onClick: () => (ReportCommentModalShow = false) }
+		]}
+	>
+		<div slot="header">{$_('Report Comment')}</div>
+		<div class="flex flex-col gap-3" slot="body">
+			<TextInput inputClass="bg-white" required label="Title" bind:value={reportTitle} />
+			<TextArea
+				label="Description"
+				required
+				bind:value={reportDescription}
+				inputClass="whitespace-pre-wrap"
+			/>
+		</div>
+	</Modal>
 {/if}
 
 {#if comment.being_replied}
-	<CommentPost
-		{delegate_pool_id}
-		bind:files={images}
-		bind:proposals
-		bind:comments
-		bind:replying={comment.being_replied}
-		parent_id={comment.id}
-		{api}
-	/>
+	<div
+		class="thread-line py-2"
+		style:margin-left={`${indent(comment.reply_depth + 1)}px`}
+	>
+		<CommentPost
+			{delegate_pool_id}
+			bind:files={images}
+			bind:proposals
+			bind:comments
+			bind:replying={comment.being_replied}
+			parent_id={comment.id}
+			replyingTo={comment.author_name}
+			{api}
+		/>
+	</div>
 {/if}
+
+<style>
+	/* Replies are indented with a line connecting them to the comment above */
+	.thread-line {
+		border-left: 2px solid rgb(229 231 235);
+		padding-left: 0.75rem;
+	}
+
+	:global(.dark) .thread-line {
+		border-left-color: rgb(55 65 81);
+	}
+</style>
