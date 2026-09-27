@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import { onMount } from 'svelte';
 	import type { User } from '$lib/User/interfaces';
 	import Layout from '$lib/Generic/Layout.svelte';
 	import DefaultPFP from '$lib/assets/abstract-user-flat-4.svg';
@@ -23,7 +22,7 @@
 		faEnvelope,
 		faCamera
 	} from '@fortawesome/free-solid-svg-icons';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { TelInput, normalizedCountries } from 'svelte-tel-input';
 	import type { DetailedValue, CountryCode } from 'svelte-tel-input/types';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
@@ -77,20 +76,24 @@
 
 	const blankSymbol = '___';
 
-	onMount(() => {
+	afterNavigate(() => {
+		isEditing = false;
 		getUser();
 	});
 
+	let userRequest = 0;
 	const getUser = async () => {
+		const request = ++userRequest;
 		//The URL has no ID if the user is on their own profile
 		const userId = $page.url.searchParams.get('id');
-		if (!userId) isUser = true;
-		else isUser = userId === ($userStore?.id || -1).toString();
+		const viewingSelf = !userId || userId === ($userStore?.id || -1).toString();
+		isUser = viewingSelf;
 
 		const { res, json } = await fetchRequest(
 			'GET',
-			isUser ? 'user' : `users?id=${userId}`
+			viewingSelf ? 'user' : `users?id=${userId}`
 		);
+		if (request !== userRequest) return;
 		if (!res.ok) {
 			ErrorHandlerStore.set({
 				message: 'Could not fetch user',
@@ -98,8 +101,10 @@
 			});
 			return;
 		}
-		user = isUser ? json : json?.results[0];
+		user = viewingSelf ? json : json?.results[0];
 		userEdit = user;
+		profileImagePreview = DefaultPFP;
+		bannerImagePreview = '';
 
 		if (userEdit.bio === null || userEdit.bio === blankSymbol)
 			userEdit.bio = '';
