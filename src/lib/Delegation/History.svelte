@@ -127,11 +127,6 @@
 							{#each filteredVotingHistory as voteHistory}
 								<li class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-darkobject">
 									<div class="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-										{#if voteHistory.poll.tag_name}
-											<span class="mb-2 inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary dark:bg-primary/20 dark:text-secondary">
-												{voteHistory.poll.tag_name}
-											</span>
-										{/if}
 										<a
 											class="flex items-start justify-between gap-3 break-words text-lg font-semibold text-gray-900 hover:text-primary dark:text-darkmodeText dark:hover:text-secondary"
 											href={`/groups/${groupId}/polls/${voteHistory.poll.id}?source=delegate-history`}
