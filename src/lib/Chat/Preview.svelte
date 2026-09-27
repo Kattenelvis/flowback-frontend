@@ -22,9 +22,12 @@
 	import Fa from 'svelte-fa';
 	import {
 		faArrowRightFromBracket,
-		faPaperPlane
+		faPaperPlane,
+		faPenToSquare,
+		faUserGroup
 	} from '@fortawesome/free-solid-svg-icons';
 	import Modal from '$lib/Generic/Modal.svelte';
+	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 
 	let chatSearch = $state(''),
 		openUserSearch = $state(false),
@@ -33,6 +36,16 @@
 		next: string | undefined | null = $state(undefined);
 
 	let previewContainer: HTMLDivElement;
+
+	const startButtonClass =
+		'flex items-center justify-center gap-2 min-w-0 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors bg-blue-50 text-primary hover:bg-blue-100 active:bg-blue-200 dark:bg-gray-700 dark:text-secondary dark:hover:bg-gray-600';
+
+	const rowClass = (selected: boolean) =>
+		`flex items-center mt-1 rounded-xl transition-colors duration-150 cursor-pointer ${
+			selected
+				? 'bg-gray-100 dark:bg-gray-700 border-l-[3px] border-primary rounded-l-none'
+				: 'hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600'
+		}`;
 
 	// Lazy Loading
 	const getPreviews = async () => {
@@ -93,16 +106,45 @@
 	type Props = {
 		creatingGroup: boolean;
 		groupMembers?: GroupMembers[];
+		// Called when the user picks a chat, so the parent can show it
+		onSelect?: () => void;
 	};
 
-	let { creatingGroup = $bindable(), groupMembers = [] }: Props = $props();
+	let {
+		creatingGroup = $bindable(),
+		groupMembers = $bindable([]),
+		onSelect = () => {}
+	}: Props = $props();
 
 	// Local reactive state (a prop with a fallback value is not reactive when
 	// reassigned, which left invites stale after accepting/denying them).
 	let inviteList: invite[] = $state([]);
 
+	let pendingInvites = $derived(
+		inviteList.filter(
+			(g) => g.rejected === null && g.message_channel_origin === 'user_group'
+		)
+	);
+	let acceptedInvites = $derived(
+		inviteList.filter(
+			(g) => g.rejected === false && g.message_channel_origin === 'user_group'
+		)
+	);
+	const isShown = (chatter: PreviewMessage) =>
+		chatter.channel_title
+			?.toUpperCase()
+			?.includes(chatSearch.toUpperCase()) &&
+		(!creatingGroup || chatter?.channel_origin_name === 'user');
+
+	let hasShownPreviews = $derived(($previewStore ?? []).some(isShown));
+
 	// Handle chat selection and clear notifications
 	const clickedChatter = async (chatterId: any) => {
+		if (!chatterId) return;
+
+		// Open the chat right away; marking it as read can happen afterwards.
+		chatPartnerStore.set(chatterId);
+
 		let preview = $previewStore?.find(
 			(_preview) => _preview.channel_id === chatterId
 		);
@@ -130,9 +172,26 @@
 				store ? store?.map((p) => (p.id === preview?.id ? preview : p)) : []
 			);
 		}
+	};
 
-		// $chatPartnerStore = chatterId;
-		chatPartnerStore.set(chatterId);
+	const selectChatter = (chatterId: number) => {
+		clickedChatter(chatterId);
+		onSelect();
+	};
+
+	const startDirectMessage = async (userId: number) => {
+		const channelId = await getUserChannelId(userId);
+		if (!channelId) {
+			ErrorHandlerStore.set({
+				message: 'Could not start the conversation',
+				success: false
+			});
+			return;
+		}
+
+		openUserSearch = false;
+		chatOpenStore.set(true);
+		selectChatter(channelId);
 	};
 
 	// Fetch chat invites
@@ -187,168 +246,184 @@
 	onMount(async () => {
 		await UserChatInviteList();
 		await getPreviews();
-		clickedChatter($chatPartnerStore);
+		if ($chatPartnerStore) clickedChatter($chatPartnerStore);
 	});
 </script>
 
-<div
-	bind:this={previewContainer}
-	class="h-full overflow-y-auto pb-2"
-	onscroll={handleScroll}
->
-	<div class="border-b-2 w-full">
+<div class="flex flex-col h-full min-h-0">
+	<div
+		class="p-3 flex flex-col gap-3 border-b border-gray-200 dark:border-gray-700"
+	>
+		<div class="grid grid-cols-2 gap-2">
+			<button
+				type="button"
+				class={startButtonClass}
+				onclick={() => (openUserSearch = true)}
+			>
+				<Fa icon={faPenToSquare} />
+				<span class="truncate">{$_('New message')}</span>
+			</button>
+			<button
+				type="button"
+				class={startButtonClass}
+				onclick={() => {
+					creatingGroup = true;
+					groupMembers = [];
+				}}
+			>
+				<Fa icon={faUserGroup} />
+				<span class="truncate">{$_('New group')}</span>
+			</button>
+		</div>
+
 		<TextInput
+			search
 			placeholder={'Search chatters'}
 			label=""
 			max={null}
 			bind:value={chatSearch}
-			inputClass="mt-4 mb-2 placeholder-gray-600 py-1 pl-2 text-gray-500 border-0 bg-gray-100 dark:bg-darkobject"
+			inputClass="py-2 rounded-full border-0 bg-gray-100 placeholder-gray-500 dark:bg-darkbackground"
 		/>
 	</div>
 
-	<div class="flex justify-center">
-		<Button
-			Class="my-2"
-			onClick={() => {
-				creatingGroup = true;
-				groupMembers = []; // Reset groupMembers
-			}}
-		>
-			{$_('+ New Group')}
-		</Button>
-
-		<UserSearch bind:showUsers={openUserSearch}>
-			<div slot="action" let:item>
-				<button
-					onclick={async () => {
-						const id = await getUserChannelId(item.id);
-						chatPartnerStore.set(id);
-						chatOpenStore.set(true);
-						openUserSearch = false;
-					}}
-				>
-					<Fa icon={faPaperPlane} rotate="60" />
-				</button>
-			</div>
-		</UserSearch>
-		<!-- <Button onClick={newDM}>New DM</Button> -->
-	</div>
-
-	{#if inviteList?.some((g) => !g.rejected && g?.message_channel_origin === 'user_group')}
-		<p class="text-xs text-gray-400 px-3 pt-2">{$_('Invites')}</p>
-	{/if}
-	{#if inviteList}
-		{#each inviteList as groupChat}
-			{#if !groupChat.rejected && groupChat?.message_channel_origin === 'user_group'}
-				{#if groupChat.rejected === null}
-					<span>{$_("You've been invited to this chat:")}</span>
-					<Button onClick={() => UserChatInvite(true, groupChat.id)}
-						>{$_('Accept')}</Button
-					>
-					<Button onClick={() => UserChatInvite(false, groupChat.id)}
-						>{$_('Deny')}</Button
-					>
-				{/if}
-				<button
-					class="w-full transition-colors duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1"
-					class:dark:bg-gray-700={$chatPartnerStore ===
-						groupChat.message_channel_id}
-					class:dark:hover:bg-gray-700={groupChat.rejected === false}
-					class:hover:bg-gray-100={groupChat.rejected === false}
-					class:active:bg-gray-200={groupChat.rejected === false}
-					class:bg-gray-100={$chatPartnerStore === groupChat.message_channel_id}
-					class:border-l-[3px]={$chatPartnerStore ===
-						groupChat.message_channel_id}
-					class:border-primary={$chatPartnerStore ===
-						groupChat.message_channel_id}
-					class:rounded-l-none={$chatPartnerStore ===
-						groupChat.message_channel_id}
-					onclick={() => {
-						if (groupChat.rejected === false)
-							clickedChatter(groupChat.message_channel_id);
-					}}
-					disabled={groupChat.rejected === null}
+	<div
+		bind:this={previewContainer}
+		class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2"
+		onscroll={handleScroll}
+	>
+		{#if pendingInvites.length > 0}
+			<p class="text-xs font-medium uppercase tracking-wide text-gray-400 px-3 pt-1 pb-2">
+				{$_('Invites')}
+			</p>
+			{#each pendingInvites as groupChat}
+				<div
+					class="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl border border-gray-200 dark:border-gray-700"
 				>
 					<ProfilePicture
 						username={groupChat.message_channel_name}
 						profilePicture={null}
 					/>
 					<div class="min-w-0 flex-1">
-						<span class="font-medium text-sm truncate block">
+						<p class="font-medium text-sm truncate">
 							{groupChat.message_channel_name}
-						</span>
+						</p>
+						<p class="text-xs text-gray-400 truncate">
+							{$_('Group chat invite')}
+						</p>
 					</div>
-				</button>
-			{/if}
-		{/each}
-	{/if}
+					<button
+						type="button"
+						class="shrink-0 rounded-full px-3 py-1.5 text-sm font-medium text-white bg-primary hover:brightness-90"
+						onclick={() => UserChatInvite(true, groupChat.id)}
+					>
+						{$_('Accept')}
+					</button>
+					<button
+						type="button"
+						class="shrink-0 rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+						onclick={() => UserChatInvite(false, groupChat.id)}
+					>
+						{$_('Deny')}
+					</button>
+				</div>
+			{/each}
+		{/if}
 
-	{#each $previewStore as chatter}
-		{#if chatter.channel_title
-			?.toUpperCase()
-			?.includes(chatSearch.toUpperCase()) && ((chatter?.channel_origin_name === 'user' && creatingGroup) || !creatingGroup)}
+		{#each acceptedInvites as groupChat}
+			{@const selected = $chatPartnerStore === groupChat.message_channel_id}
 			<button
-				class="w-full transition-colors duration-150 px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-xl mt-1 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600"
-				class:bg-gray-100={$chatPartnerStore === chatter.channel_id}
-				class:dark:bg-gray-700={$chatPartnerStore === chatter.channel_id}
-				class:border-l-[3px]={$chatPartnerStore === chatter.channel_id}
-				class:border-primary={$chatPartnerStore === chatter.channel_id}
-				class:rounded-l-none={$chatPartnerStore === chatter.channel_id}
-				onclick={() => clickedChatter(chatter.channel_id)}
+				type="button"
+				class={`${rowClass(selected)} w-full px-3 py-2.5 gap-3`}
+				onclick={() => selectChatter(groupChat.message_channel_id)}
 			>
 				<ProfilePicture
-					profilePicture={chatter?.recent_message?.profile_image}
+					username={groupChat.message_channel_name}
+					profilePicture={null}
 				/>
+				<span class="min-w-0 flex-1 font-medium text-sm truncate text-left">
+					{groupChat.message_channel_name}
+				</span>
+			</button>
+		{/each}
 
-				<div class="flex justify-between items-center w-full min-w-0">
-					<div class="min-w-0 flex-1">
-						<div class="font-medium text-sm truncate">
-							{chatter.channel_title ??
-								chatter.recent_message?.channel_title ??
-								'Name not found'}
+		<!-- Iterate the store itself: the socket updates previews in place, and only
+		     store-backed each blocks re-render mutated items. -->
+		{#each $previewStore as chatter}
+			{#if isShown(chatter)}
+				{@const selected = $chatPartnerStore === chatter.channel_id}
+				<div class={rowClass(selected)}>
+					<button
+						type="button"
+						class="flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 text-left"
+						onclick={() => selectChatter(chatter.channel_id)}
+					>
+						<ProfilePicture
+							profilePicture={chatter?.recent_message?.profile_image}
+						/>
+						<div class="min-w-0 flex-1">
+							<div class="font-medium text-sm truncate">
+								{chatter.channel_title ??
+									chatter.recent_message?.channel_title ??
+									'Name not found'}
+							</div>
+							<div class="text-gray-400 text-xs truncate mt-0.5">
+								{chatter?.recent_message?.message || ''}
+							</div>
 						</div>
-						<div class="text-gray-400 text-xs truncate mt-0.5">
-							{chatter?.recent_message?.message || ''}
-						</div>
-					</div>
-					<!-- Purple dot on Chat indicating notification -->
-					{#if chatter?.recent_message?.notified === false}
-						<div class="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0"></div>
+						<!-- Purple dot on Chat indicating notification -->
+						{#if chatter?.recent_message?.notified === false}
+							<div class="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0"></div>
+						{/if}
+					</button>
+					{#if chatter?.channel_origin_name === 'user_group'}
+						<button
+							type="button"
+							class="shrink-0 mr-2 w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 hover:text-red-500 dark:hover:bg-gray-600"
+							title={$_('Leave Group')}
+							aria-label={$_('Leave Group')}
+							onclick={() => {
+								leaveGroupChannelId = chatter.channel_id;
+								leaveGroupModal = true;
+							}}
+						>
+							<Fa icon={faArrowRightFromBracket} />
+						</button>
 					{/if}
 				</div>
-				{#if chatter?.channel_origin_name === 'user_group'}
-					<Button
-						onClick={() => {
-							leaveGroupChannelId = chatter.channel_id;
-							leaveGroupModal = true;
-						}}
-					>
-						<Fa icon={faArrowRightFromBracket} />
-					</Button>
+			{/if}
+		{/each}
+
+		{#if !hasShownPreviews && acceptedInvites.length === 0 && pendingInvites.length === 0}
+			<div class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+				{#if chatSearch}
+					{$_('No chats match your search')}
+				{:else}
+					<p class="font-medium text-gray-700 dark:text-darkmodeText">
+						{$_('No conversations yet')}
+					</p>
+					<p class="mt-1">{$_('Start one with New message or New group.')}</p>
 				{/if}
-			</button>
-			<!-- Button for creating group user chat -->
-			<!-- {#if creatingGroup} -->
-			<!-- 	<div id={`chat-${idfy(chatter.channel_title ?? '')}`}> -->
-			<!-- 		<Button -->
-			<!-- 			onClick={() => { -->
-			<!-- 				if (groupMembers.some((member) => member.id === chatter.id)) { -->
-			<!-- 					return; -->
-			<!-- 				} -->
-			<!-- 				const newMember = chatter.participants.find( -->
-			<!-- 					(user) => user.id !== $userStore?.id -->
-			<!-- 				); -->
-			<!-- 				// @ts-ignore -->
-			<!-- 				groupMembers = [...groupMembers, newMember]; -->
-			<!-- 			}} -->
-			<!-- 		> -->
-			<!-- 			{$_('Add User')} -->
-			<!-- 		</Button> -->
-			<!-- 	</div> -->
-			<!-- {/if} -->
+			</div>
 		{/if}
-	{/each}
+	</div>
 </div>
+
+<UserSearch
+	bind:showUsers={openUserSearch}
+	showTrigger={false}
+	title="New message"
+	label="Find a user"
+>
+	<div slot="action" let:item>
+		<Button
+			Class="flex items-center gap-2 !rounded-full px-4"
+			onClick={() => startDirectMessage(item.id)}
+		>
+			<Fa icon={faPaperPlane} />
+			{$_('Message')}
+		</Button>
+	</div>
+</UserSearch>
 
 <Modal
 	bind:open={leaveGroupModal}

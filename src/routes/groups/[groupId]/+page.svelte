@@ -14,7 +14,6 @@
 	import { _ } from 'svelte-i18n';
 	import Permissions from '$lib/Group/Permissions/Permissions.svelte';
 	import Loader from '$lib/Generic/Loader.svelte';
-	import Schedule from '$lib/Schedule/Schedule.svelte';
 	import WorkGroups from '$lib/Group/WorkingGroups/WorkGroups.svelte';
 	import { env } from '$env/dynamic/public';
 	import PollThreadThumbnails from '$lib/Poll/PollThreadThumbnails.svelte';
@@ -95,10 +94,7 @@
 		<div class="flex flex-col items-center">
 			<GroupHeader bind:selectedPage {group} {memberCount} />
 			<div class="flex justify-center gap-6 mt-6">
-				<main
-					class={`w-[70vw] max-w-[800px] 
-				`}
-				>
+				<main class="w-[calc(100vw-1.5rem)] md:w-[70vw] max-w-[800px]">
 					<!-- Here is where the different pages on a group are selected and switched around with, such as "Flow" page which is 
 					here called Pollthumbnails. -->
 
@@ -130,8 +126,6 @@
 						<!-- <KanbanBoard type="group" /> -->
 					{:else if selectedPage === 'perms'}
 						<Permissions />
-					{:else if selectedPage === 'schedule'}
-						<Schedule />
 					{:else if selectedPage === 'working-groups'}
 						<WorkGroups />
 					{/if}

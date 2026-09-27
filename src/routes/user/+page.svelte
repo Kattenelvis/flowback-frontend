@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import { onMount } from 'svelte';
 	import type { User } from '$lib/User/interfaces';
 	import Layout from '$lib/Generic/Layout.svelte';
 	import DefaultPFP from '$lib/assets/abstract-user-flat-4.svg';
@@ -17,9 +16,13 @@
 	import {
 		faArrowLeft,
 		faPen,
-		faPaperPlane
+		faPaperPlane,
+		faGlobe,
+		faPhone,
+		faEnvelope,
+		faCamera
 	} from '@fortawesome/free-solid-svg-icons';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { TelInput, normalizedCountries } from 'svelte-tel-input';
 	import type { DetailedValue, CountryCode } from 'svelte-tel-input/types';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
@@ -28,6 +31,7 @@
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { userStore } from '$lib/User/interfaces';
 	import History from '../../lib/Delegation/History.svelte';
+	import { isMobile } from '$lib/utils/isMobile';
 
 	let user: User = {
 		banner_image: '',
@@ -72,20 +76,24 @@
 
 	const blankSymbol = '___';
 
-	onMount(() => {
+	afterNavigate(() => {
+		isEditing = false;
 		getUser();
 	});
 
+	let userRequest = 0;
 	const getUser = async () => {
+		const request = ++userRequest;
 		//The URL has no ID if the user is on their own profile
 		const userId = $page.url.searchParams.get('id');
-		if (!userId) isUser = true;
-		else isUser = userId === ($userStore?.id || -1).toString();
+		const viewingSelf = !userId || userId === ($userStore?.id || -1).toString();
+		isUser = viewingSelf;
 
 		const { res, json } = await fetchRequest(
 			'GET',
-			isUser ? 'user' : `users?id=${userId}`
+			viewingSelf ? 'user' : `users?id=${userId}`
 		);
+		if (request !== userRequest) return;
 		if (!res.ok) {
 			ErrorHandlerStore.set({
 				message: 'Could not fetch user',
@@ -93,8 +101,10 @@
 			});
 			return;
 		}
-		user = isUser ? json : json?.results[0];
+		user = viewingSelf ? json : json?.results[0];
 		userEdit = user;
+		profileImagePreview = DefaultPFP;
+		bannerImagePreview = '';
 
 		if (userEdit.bio === null || userEdit.bio === blankSymbol)
 			userEdit.bio = '';
@@ -191,6 +201,42 @@
 
 	$: if (currentlyCroppingProfile) imageToBeCropped = profileImagePreview;
 	else if (currentlyCroppingBanner) imageToBeCropped = bannerImagePreview;
+
+	// The backend stores placeholders instead of empty values, see editUser
+	const shown = (value: string | null, placeholder: string) =>
+		!value || value === placeholder ? '' : value;
+
+	$: bio = shown(user.bio, blankSymbol);
+	$: website = shown(user.website, blankSymbol);
+	$: phone = shown(user.contact_phone, '+4646464646');
+	$: contactEmail = shown(user.contact_email, 'a@a.com');
+
+	$: contactRows = [
+		{
+			id: 'profile-contact-website',
+			icon: faGlobe,
+			label: 'Website',
+			value: website,
+			href: /^https?:\/\//.test(website) ? website : `https://${website}`,
+			external: true
+		},
+		{
+			id: 'profile-contact-phone',
+			icon: faPhone,
+			label: 'Phone number',
+			value: phone,
+			href: `tel:${phone}`,
+			external: false
+		},
+		{
+			id: 'profile-contact-email',
+			icon: faEnvelope,
+			label: 'E-mail',
+			value: contactEmail,
+			href: `mailto:${contactEmail}`,
+			external: false
+		}
+	];
 </script>
 
 {#if currentlyCroppingProfile || currentlyCroppingBanner}
@@ -218,23 +264,26 @@
 <Layout centered Class="bg-white dark:bg-darkobject shadow">
 	{#if !isEditing}
 		<div class="relative w-full">
-			<Button
-				onClick={() => {
-					if (window.history.length > 1) {
-						window.history.back();
-					} else {
-						goto('/');
-					}
-				}}
-				Class="fixed p-3 m-4 transition-all bg-gray-200 dark:bg-darkobject hover:brightness-95 active:brightness-90"
-			>
-				<div class="text-gray-800 dark:text-gray-200">
-					<Fa icon={faArrowLeft} />
-				</div>
-			</Button>
+			<!-- On mobile the TopHeader already has a back arrow -->
+			{#if !$isMobile}
+				<Button
+					onClick={() => {
+						if (window.history.length > 1) {
+							window.history.back();
+						} else {
+							goto('/');
+						}
+					}}
+					Class="fixed p-3 m-4 transition-all bg-gray-200 dark:bg-darkobject hover:brightness-95 active:brightness-90"
+				>
+					<div class="text-gray-800 dark:text-gray-200">
+						<Fa icon={faArrowLeft} />
+					</div>
+				</Button>
+			{/if}
 			<img
 				src={bannerImagePreview || DefaultBanner}
-				class="w-full cover aspect-ratio-5"
+				class="w-full cover object-cover"
 				alt="banner"
 			/>
 
@@ -250,28 +299,37 @@
 				</Button>
 			{/if}
 		</div>
-		<div class="flex justify-around w-full max-w-[850px]">
+		<!-- Mobile: avatar, name and contact info stacked and centered. Desktop: three columns. -->
+		<div
+			class="flex flex-col items-center px-5 pb-8 md:flex-row md:items-start md:justify-around md:px-0 md:pb-0 w-full max-w-[850px]"
+		>
 			<img
 				src={profileImagePreview}
-				class="-translate-y-10 h-36 w-36 z-10 rounded-full profile border border-gray-300"
+				class="-mt-12 md:mt-0 md:-translate-y-10 h-24 w-24 md:h-[100px] md:w-[100px] shrink-0 z-10 rounded-full object-cover bg-white border-4 border-white dark:border-darkobject md:border md:border-gray-300"
 				alt="avatar"
 				id="avatar"
 			/>
 			<div
-				class="z-0 dark:bg-darkobject dark:text-darkmodeText w-[60%] py-6 px-4"
+				class="z-0 dark:bg-darkobject dark:text-darkmodeText w-full md:w-[60%] pt-3 text-center md:text-left md:py-6 md:px-4"
 			>
 				<div
-					class="text-xl text-primary dark:text-secondary font-bold max-w-[600px] break-words"
+					class="text-2xl md:text-xl text-primary dark:text-secondary font-bold md:max-w-[600px] break-words"
 				>
 					{user.username}
 				</div>
-				<p class=" whitespace-pre-wrap">
-					{user.bio === blankSymbol ? $_('This user has no bio') : user.bio}
-				</p>
+				{#if bio}
+					<p class="mt-1 whitespace-pre-wrap break-words">{bio}</p>
+				{:else}
+					<p class="mt-1 text-gray-400 italic">{$_('This user has no bio')}</p>
+				{/if}
 			</div>
-			<div class="dark:text-darkmodeText py-6 w-[30%]">
-				<div class="text-primary dark:text-secondary font-bold">
-					{$_('Contact Information')}
+			<section class="dark:text-darkmodeText w-full mt-6 md:mt-0 md:py-6 md:w-[30%]">
+				<div
+					class="flex items-center justify-between gap-2 pb-2 border-b border-gray-200 dark:border-gray-600"
+				>
+					<h2 class="text-primary dark:text-secondary font-bold">
+						{$_('Contact Information')}
+					</h2>
 					{#await getUserChannelId(user.id) then channelId}
 						{#if channelId}
 							<button
@@ -279,7 +337,9 @@
 									chatOpenStore.set(true);
 									chatPartnerStore.set(channelId);
 								}}
-								Class="text-primary"
+								class="text-primary dark:text-secondary p-2 -m-2"
+								aria-label={$_('Send message')}
+								title={$_('Send message')}
 							>
 								<Fa icon={faPaperPlane} rotate="60" />
 							</button>
@@ -287,50 +347,54 @@
 					{/await}
 				</div>
 
-				{#if user.website && user.website !== blankSymbol && user.website !== ''}
-					<a
-						href={user.website.startsWith('http://') ||
-						user.website.startsWith('https://')
-							? user.website
-							: 'https://' + user.website}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						{$_('Website')}:
-						{user.website}
-					</a>
-				{:else}
-					<span>
-						{$_('Website')}:
-						{$_('None provided')}
-					</span>
-				{/if}
-				<p class="">
-					{$_('Phone number')}: {user.contact_phone === '+4646464646' ||
-					user.contact_phone === ''
-						? $_('None provided')
-						: user.contact_phone}
-				</p>
-				<p class="">
-					{$_('E-mail')}: {user.contact_email === 'a@a.com' ||
-					user.contact_email === ''
-						? $_('None provided')
-						: user.contact_email}
-				</p>
-			</div>
+				<ul class="divide-y divide-gray-100 dark:divide-gray-700">
+					{#each contactRows as row}
+						<li class="flex items-start gap-3 py-2.5" id={row.id}>
+							<Fa icon={row.icon} fw class="mt-1 text-gray-400" />
+							<div class="min-w-0">
+								<span class="block text-xs text-gray-500 dark:text-gray-400">
+									{$_(row.label)}
+								</span>
+								{#if row.value}
+									<a
+										href={row.href}
+										target={row.external ? '_blank' : null}
+										rel={row.external ? 'noopener noreferrer' : null}
+										class="block break-words text-primary dark:text-secondary hover:underline"
+									>
+										{row.value}
+									</a>
+								{:else}
+									<span class="block text-gray-400 italic">{$_('None provided')}</span>
+								{/if}
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</section>
 		</div>
 		<!-- Editing your own profile -->
 	{:else}
 		<Loader bind:loading>
 			<!-- Banner Image -->
-			<label for="file-ip-2" class="bg-gray-200 w-full h-[40%] cover">
+			<label
+				for="file-ip-2"
+				class="relative block cursor-pointer bg-gray-200 w-full h-[40%] cover"
+			>
 				<img
 					src={currentlyCroppingBanner
 						? oldBannerImagePreview
 						: bannerImagePreview || DefaultBanner}
-					class="w-full cover transition-all filter hover:grayscale-[70%] hover:bg-gray-200 dark:bg-darkobject dark:hover:brightness-[120%] backdrop-grayscale"
+					class="w-full cover object-cover transition-all filter hover:grayscale-[70%] hover:bg-gray-200 dark:bg-darkobject dark:hover:brightness-[120%] backdrop-grayscale"
 					alt="banner"
 				/>
+				<!-- Touch screens have no hover, so show that the image can be changed -->
+				<span
+					class="absolute right-3 bottom-3 rounded-full bg-white dark:bg-darkobject dark:text-darkmodeText text-gray-700 p-2 shadow"
+					aria-hidden="true"
+				>
+					<Fa icon={faCamera} />
+				</span>
 				<input
 					class="hidden"
 					type="file"
@@ -340,22 +404,31 @@
 				/>
 			</label>
 			<form
-				class="bg-white w-full p-8 flex flex-col items-center justify-center dark:bg-darkobject dark:text-darkmodeText"
+				class="bg-white w-full p-4 md:p-8 flex flex-col items-center justify-center dark:bg-darkobject dark:text-darkmodeText"
 				on:submit|preventDefault={editUser}
 			>
 				<div
-					class="flex flex-row items-center justify-center gap-6 pb-6 w-full"
+					class="flex flex-col md:flex-row items-center justify-center gap-6 pb-6 w-full"
 				>
-					<label for="file-ip-1" class="inline">
+					<label
+						for="file-ip-1"
+						class="relative z-10 shrink-0 cursor-pointer -mt-14 md:mt-6"
+					>
 						<!-- Profile Picture -->
 						<img
 							src={currentlyCroppingProfile
 								? oldProfileImagePreview
 								: profileImagePreview}
-							class="mt-6 h-36 w-36 inline rounded-full border border-gray-300 transition-all filter hover:grayscale-[70%] hover:bg-gray-200 dark:bg-darkobject dark:hover:brightness-[120%] backdrop-grayscale"
+							class="h-28 w-28 md:h-36 md:w-36 block rounded-full object-cover bg-white border-4 border-white dark:border-darkobject md:border md:border-gray-300 transition-all filter hover:grayscale-[70%] hover:bg-gray-200 dark:bg-darkobject dark:hover:brightness-[120%] backdrop-grayscale"
 							alt="avatar"
 							id="avatar"
 						/>
+						<span
+							class="absolute right-1 bottom-1 rounded-full bg-white dark:bg-darkobject dark:text-darkmodeText text-gray-700 p-2 shadow"
+							aria-hidden="true"
+						>
+							<Fa icon={faCamera} />
+						</span>
 						<input
 							class="hidden"
 							type="file"
@@ -366,7 +439,7 @@
 						/></label
 					>
 
-					<div class="flex flex-col gap-1 w-[40%]">
+					<div class="flex flex-col gap-1 w-full md:w-[40%]">
 						<TextInput
 							autofocus
 							onBlur={() => (currentlyEditing = null)}
@@ -383,33 +456,44 @@
 							Class="p-2 text-left"
 						/>
 
-						<div class="wrapper">
-							<select
-								class="country-select {!valid ? 'invalid' : ''}"
-								aria-label="Default select example"
-								name="Country"
-								bind:value={selectedCountry}
+						<!-- p-2 lines the field up with the TextInputs around it -->
+						<div class="p-2">
+							<label
+								for="profile-phone-input"
+								class="block mb-1 text-md dark:text-darkmodeText"
 							>
-								<option value={null} hidden={selectedCountry !== null}
-									>Please select</option
+								{$_('Phone number')}
+							</label>
+							<div class="wrapper flex gap-2 w-full">
+								<select
+									class="country-select shrink-0 {!valid ? 'invalid' : ''}"
+									aria-label="Default select example"
+									name="Country"
+									bind:value={selectedCountry}
 								>
-								{#each normalizedCountries as currentCountry (currentCountry.id)}
-									<option
-										value={currentCountry.iso2}
-										selected={currentCountry.iso2 === selectedCountry}
-										aria-selected={currentCountry.iso2 === selectedCountry}
+									<option value={null} hidden={selectedCountry !== null}
+										>Please select</option
 									>
-										{currentCountry.iso2} (+{currentCountry.dialCode})
-									</option>
-								{/each}
-							</select>
-							<TelInput
-								bind:country={selectedCountry}
-								bind:value={userEdit.contact_phone}
-								bind:valid
-								bind:detailedValue
-								class="basic-tel-input {!valid ? 'invalid' : ''}"
-							/>
+									{#each normalizedCountries as currentCountry (currentCountry.id)}
+										<option
+											value={currentCountry.iso2}
+											selected={currentCountry.iso2 === selectedCountry}
+											aria-selected={currentCountry.iso2 === selectedCountry}
+										>
+											{currentCountry.iso2} (+{currentCountry.dialCode})
+										</option>
+									{/each}
+								</select>
+								<!-- w-0 so the input's intrinsic width can't widen the page on mobile -->
+								<TelInput
+									id="profile-phone-input"
+									bind:country={selectedCountry}
+									bind:value={userEdit.contact_phone}
+									bind:valid
+									bind:detailedValue
+									class="basic-tel-input w-0 flex-1 {!valid ? 'invalid' : ''}"
+								/>
+							</div>
 						</div>
 
 						<TextInput
@@ -432,7 +516,7 @@
 					</div>
 				</div>
 
-				<div class="flex gap-2 w-[50%]">
+				<div class="flex gap-2 w-full px-2 md:px-0 md:w-[50%]">
 					<Button
 						Class="flex-1"
 						buttonStyle="warning-light"
@@ -454,6 +538,7 @@
 		<History
 			history={Number($page.url.searchParams.get('delegate_id'))}
 			groupId={Number($page.url.searchParams.get('group_id'))}
+			delegateName={user.username}
 		/>
 	{/if}
 </Layout>
@@ -462,15 +547,6 @@
 	img.cover {
 		aspect-ratio: 5;
 		/* width: 100%; */
-	}
-
-	img.profile {
-		width: 100px;
-		height: 100px;
-	}
-
-	.aspect-ratio-5 {
-		aspect-ratio: 5;
 	}
 
 	.bg-semi-transparent {

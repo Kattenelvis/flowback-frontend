@@ -1,43 +1,76 @@
 <script lang="ts">
 	import ChatWindow from './ChatWindow.svelte';
 	import Preview from './Preview.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import type { GroupMembers } from './interfaces';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
-	import Button from '$lib/Generic/Button.svelte';
-	import { faCog } from '@fortawesome/free-solid-svg-icons';
+	import { faCog, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import ChatIcon from '$lib/assets/Chat_fill.svg';
 	import { darkModeStore, getIconFilter } from '$lib/Generic/DarkMode';
-	import { chatOpenStore, previewStore } from './functions';
+	import { chatOpenStore, chatPartnerStore, previewStore } from './functions';
 	import { goto } from '$app/navigation';
 	import CreateChatGroup from '$lib/Chat/CreateChatGroup.svelte';
-	import CrossButton from '$lib/Generic/CrossButton.svelte';
+	import { isMobile } from '$lib/utils/isMobile';
 
 	let chatOpen = false,
 		selectedPage: 'direct' | 'group' = 'direct',
 		isLookingAtOlderMessages = false,
-		chatDiv: HTMLDivElement,
 		creatingGroup = false,
 		groupMembers: GroupMembers[] = [],
-		notification = false;
+		notification = false,
+		headerHeight = 0,
+		conversationTitle = '',
+		// On small screens the chat list and the open conversation are tabs
+		// instead of two columns side by side.
+		tab: 'chats' | 'conversation' = 'chats';
 
-	// Adjust chat window based on the header
-	const correctMarginRelativeToHeader = () => {
-		const _headerHeight = document.querySelector('#header')?.clientHeight;
-		if (_headerHeight && chatDiv)
-			chatDiv.style.marginTop = `${_headerHeight.toString()}px`;
+	const iconButtonClass =
+		'w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-colors';
+
+	const tabClass = (active: boolean) =>
+		`flex items-center justify-center gap-2 min-w-0 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+			active
+				? 'bg-white text-primary shadow dark:bg-darkbackground dark:text-secondary'
+				: 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed'
+		}`;
+
+	// On desktop the header is at the top, so the chat opens below it. On mobile
+	// the chat covers the whole screen, bottom navigation bar included.
+	const measureHeader = () => {
+		headerHeight =
+			document.querySelector('#header')?.getBoundingClientRect().height ?? 0;
 	};
 
-	onMount(async () => {
-		// Adjust chat window margin based on header height
-		// TODO: Make better (CSS Only perhaps)
-		correctMarginRelativeToHeader();
-		window.addEventListener('resize', correctMarginRelativeToHeader);
+	const closeChat = () => {
+		chatOpen = false;
+		chatOpenStore.set(false);
+	};
 
-		// Subscribe to chat open state
-		chatOpenStore.subscribe((open) => (chatOpen = open));
+	// Show whatever was just opened: a conversation or the new group form.
+	const syncTab = (creating: boolean, partner: number | null) => {
+		tab = creating || partner ? 'conversation' : 'chats';
+	};
+
+	// A hidden tab can't keep its scroll position, so jump to the latest message
+	// whenever the conversation tab is shown.
+	const scrollToLatest = async () => {
+		if (isLookingAtOlderMessages) return;
+		await tick();
+		document.querySelector('#chat-window')?.scroll(0, 100000);
+	};
+
+	onMount(() => {
+		measureHeader();
+
+		chatOpenStore.subscribe((open) => {
+			chatOpen = open;
+			if (open) measureHeader();
+		});
 	});
+
+	$: syncTab(creatingGroup, $chatPartnerStore);
+	$: if (tab === 'conversation') scrollToLatest();
 
 	// Display purple notification circle whenever there is a message that hasn't been seen.
 	$: notification = $previewStore.some(
@@ -51,51 +84,108 @@
 	</title>
 </svelte:head>
 
+<svelte:window on:resize={measureHeader} />
+
 <div
-	bind:this={chatDiv}
 	class:invisible={!chatOpen}
-	class="bg-background dark:bg-darkbackground dark:text-darkmodeText fixed z-[50] w-[100vw] h-[100dvh] flex flex-col items-center"
+	class="fixed inset-x-0 bottom-0 z-[115] md:z-50 flex flex-col bg-background dark:bg-darkbackground dark:text-darkmodeText"
+	style:top={$isMobile ? '0px' : `${headerHeight}px`}
 >
-	<div class="w-full flex justify-between mr-6">
-		<Button
-			onClick={() => {
-				chatOpen = false;
-				chatOpenStore.set(false);
-				goto('/user/settings');
-			}}
-			Class="px-6 my-3 dark:bg-darkbackground hover:brightness-95 active:brightness-90"
-		>
-			<div
-				class={`top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white`}
+	<div
+		class="w-full max-w-[1200px] mx-auto flex items-center justify-between px-4 md:px-6 pt-3 pb-2"
+	>
+		<h2 class="text-xl font-semibold text-primary dark:text-secondary">
+			{$_('Chat')}
+		</h2>
+		<div class="flex items-center gap-1">
+			<button
+				type="button"
+				class={iconButtonClass}
+				title={$_('Chat settings')}
+				aria-label={$_('Chat settings')}
+				on:click={() => {
+					closeChat();
+					goto('/user/settings');
+				}}
 			>
 				<Fa icon={faCog} />
-			</div>
-		</Button>
-
-		<Button
-			Class="px-6 my-3 dark:bg-darkbackground hover:brightness-95 active:brightness-90"
-		/>
-		<CrossButton
-			action={() => {
-				chatOpen = false;
-				chatOpenStore.set(false);
-			}}
-		/>
+			</button>
+			<button
+				type="button"
+				class={iconButtonClass}
+				title={$_('Close chat')}
+				aria-label={$_('Close chat')}
+				on:click={closeChat}
+			>
+				<Fa icon={faXmark} class="text-lg" />
+			</button>
+		</div>
 	</div>
 
-	<div class="flex w-full gap-6 max-w-[1200px] h-[80dvh]">
-		<div class="bg-white w-[40%] flex-grow ml-6 dark:bg-darkobject p-2">
-			{#key creatingGroup}
-				<Preview bind:creatingGroup bind:groupMembers />
-			{/key}
+	{#if $isMobile}
+		<div
+			role="tablist"
+			aria-label={$_('Chat')}
+			class="mx-4 mb-3 grid grid-cols-2 gap-1 p-1 rounded-full bg-gray-200 dark:bg-darkobject"
+		>
+			<button
+				type="button"
+				role="tab"
+				aria-selected={tab === 'chats'}
+				class={tabClass(tab === 'chats')}
+				on:click={() => (tab = 'chats')}
+			>
+				{$_('Chats')}
+				{#if notification}
+					<span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
+				{/if}
+			</button>
+			<button
+				type="button"
+				role="tab"
+				aria-selected={tab === 'conversation'}
+				disabled={!creatingGroup && !$chatPartnerStore}
+				class={tabClass(tab === 'conversation')}
+				on:click={() => (tab = 'conversation')}
+			>
+				<span class="truncate">
+					{creatingGroup
+						? $_('New group')
+						: conversationTitle || $_('Conversation')}
+				</span>
+			</button>
 		</div>
-		<div class="bg-white w-[60%] flex-grow mr-6 dark:bg-darkobject p-2">
+	{/if}
+
+	<div
+		class="flex-1 min-h-0 w-full max-w-[1200px] mx-auto flex md:gap-6 md:px-6 md:pb-6"
+	>
+		<section
+			class="w-full md:w-80 md:shrink-0 min-h-0 flex flex-col bg-white dark:bg-darkobject md:rounded-2xl md:shadow"
+			class:hidden={$isMobile && tab !== 'chats'}
+		>
+			{#key creatingGroup}
+				<Preview
+					bind:creatingGroup
+					bind:groupMembers
+					onSelect={() => (tab = 'conversation')}
+				/>
+			{/key}
+		</section>
+		<section
+			class="flex-1 min-w-0 min-h-0 flex flex-col bg-white dark:bg-darkobject md:rounded-2xl md:shadow"
+			class:hidden={$isMobile && tab !== 'conversation'}
+		>
 			{#if creatingGroup}
 				<CreateChatGroup bind:creatingGroup bind:groupMembers />
 			{:else}
-				<ChatWindow bind:selectedPage bind:isLookingAtOlderMessages />
+				<ChatWindow
+					bind:selectedPage
+					bind:isLookingAtOlderMessages
+					bind:conversationTitle
+				/>
 			{/if}
-		</div>
+		</section>
 	</div>
 </div>
 
@@ -105,6 +195,7 @@
 		chatOpenStore.set(chatOpen);
 	}}
 	class:small-notification={notification}
+	class:hidden={chatOpen}
 	class="dark:text-white transition-all fixed z-[105] md:z-50 bg-white dark:bg-darkobject shadow-md border p-5 bottom-24 md:bottom-6 ml-5 rounded-full cursor-pointer hover:shadow-xl hover:border-gray-400 active:shadow-2xl active:p-6"
 >
 	<img

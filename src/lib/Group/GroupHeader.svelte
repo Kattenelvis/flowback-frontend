@@ -78,20 +78,20 @@
 		</div>
 
 		<img
-			class="h-36 w-36 absolute -bottom-12 left-[10%] md:left-[12%] profile rounded-full"
+			class="absolute -bottom-12 left-1/2 -translate-x-1/2 lg:left-[12%] lg:translate-x-0 profile rounded-full"
 			src={group.image ? `${env.PUBLIC_API_URL}${group.image}` : DefaultBanner}
 			alt="profile"
 		/>
 	</div>
 
-	<div class="dark:bg-darkobject dark:text-darkmodeText w-[55%] mx-auto py-4">
+	<div class="dark:bg-darkobject dark:text-darkmodeText w-full px-4 mx-auto pt-16 pb-4 lg:w-[55%] lg:px-0 lg:py-4">
 		<div class="">
 			<div
-				class="flex align-baseline items-baseline relative"
+				class="flex flex-wrap justify-center items-baseline relative lg:justify-start"
 				id="notifications-list-group"
 			>
 				<button
-					class="text-xl hover:text-gray-800 dark:hover:text-gray-400 cursor-pointer"
+					class="text-xl break-words min-w-0 hover:text-gray-800 dark:hover:text-gray-400 cursor-pointer"
 					id="group-header-title"
 					on:click={() => (selectedPage = 'flow')}
 				>

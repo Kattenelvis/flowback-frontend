@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { darkModeStore } from '$lib/Generic/DarkMode';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import TextArea from '$lib/Generic/TextArea.svelte';
+	import TextSend from '$lib/Generic/TextSend.svelte';
 	import { _ } from 'svelte-i18n';
 	import { page } from '$app/stores';
 	import type { Comment } from '../Poll/interface';
 	import type { proposal } from '../Poll/interface';
-	import FileUploads from '$lib/Generic/File/FileUploads.svelte';
 	import Fa from 'svelte-fa';
-	import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+	import { faPaperclip, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { commentsStore } from './commentStore';
 	import { getCommentDepth } from './functions';
@@ -23,12 +21,40 @@
 		replying = false,
 		api: 'poll' | 'thread' | 'delegate-history',
 		delegate_pool_id: number | null = null,
-		files: File[] = [];
+		files: File[] = [],
+		// Name of the author of the comment being replied to
+		replyingTo = '';
 
 	let show = false,
 		showMessage = '',
-		recentlyTappedButton = '',
-		filteredProposal: proposal | null = null;
+		filteredProposal: proposal | null = null,
+		textarea: HTMLTextAreaElement | null = null,
+		fileInput: HTMLInputElement;
+
+	$: showTagMenu =
+		api === 'poll' && proposals?.length > 0 && /(^|\s)#$/.test(message);
+
+	const tagProposal = (proposal: proposal) => {
+		message = `${message}${proposal.title.replaceAll(' ', '-')} `;
+		textarea?.focus();
+	};
+
+	const addFiles = (e: Event) => {
+		const input = e.currentTarget as HTMLInputElement;
+		files = [...files, ...Array.from(input.files ?? [])];
+		// Lets the same file be picked again after removing it
+		input.value = '';
+	};
+
+	const removeFile = (index: number) => {
+		files = files.filter((_, i) => i !== index);
+	};
+
+	const cancel = () => {
+		beingEdited = false;
+		replying = false;
+		files = [];
+	};
 
 	// Reactive subscription to the filtered proposal in the commentsStore
 	$: filteredProposal = $commentsStore.filterByProposal;
@@ -92,6 +118,7 @@
 			showMessage = 'Successfully posted comment';
 			show = true;
 			message = '';
+			files = [];
 			replying = false;
 
 			subscribeToReplies();
@@ -134,6 +161,7 @@
 		showMessage = 'Successfully posted comment';
 		show = true;
 		message = '';
+		files = [];
 		replying = false;
 
 		subscribeToReplies();
@@ -188,6 +216,7 @@
 				return { file: URL.createObjectURL(image) };
 			});
 		}
+		files = [];
 	};
 
 	//TODO: Optimize so that this doesn't fire every time a comment is made
@@ -202,74 +231,104 @@
 	};
 </script>
 
-<form
-	class="relative"
-	on:submit|preventDefault={() =>
-		beingEdited ? commentUpdate() : commentCreate()}
->
-	<!-- When # typed, show proposals to be tagged -->
-	<div
-		class="hidden absolute z-50 bg-white dark:bg-darkbackground shadow w-full top-full border-gray-300 rounded"
-		class:!block={recentlyTappedButton === '#'}
-	>
-		{#if proposals?.length > 0 && api === 'poll'}
-			<div class="max-h-30 overflow-y-auto">
-				<div
-					class="px-4 py-2 font-semibold text-sm text-gray-600 border-b border-gray-200"
-				>
-					{$_('All proposals')}
-				</div>
-				<ul class="divide-y divide-gray-200">
-					{#each proposals as proposal}
-						<li class="px-4 py-2">
-							<button
-								type="button"
-								class="w-full text-left hover:bg-gray-100 dark:hover:bg-darkbackground dark:hover:brightness-125 cursor-pointer"
-								on:click={() => {
-									message = `${message}${proposal.title.replaceAll(' ', '-')} `;
-									recentlyTappedButton = '';
-								}}
-							>
-								{proposal.title}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/if}
-	</div>
-	<div class="flex">
-		<div class="flex flex-grow">
-			<!-- TODO: Fix so there's dynamic sizing of the number of rows instead of fixed at 6 or 3 -->
-			<TextArea
-				label=""
-				bind:value={message}
-				bind:recentlyTappedButton
-				inputClass="bg-gray-100 border-0 placeholder-gray-600 pl-2 max-h-[15rem]"
-				Class="w-full"
-				placeholder={$_('Write a comment...')}
-				displayMax={false}
-				id="textarea-comment"
-				rows={beingEdited && message.length > 50 ? 6 : 3}
-			/>
-		</div>
-		<div class="flex gap-1 items-center ml-3 pt-1">
-			<FileUploads
-				bind:files
-				minimalist
-				disableCropping
-				Class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-			/>
+<div class="relative">
+	{#if beingEdited || replying}
+		<div
+			class="mb-1.5 flex items-center justify-between gap-2 px-1 text-xs text-gray-500 dark:text-gray-400"
+		>
+			<span class="truncate">
+				{#if beingEdited}
+					{$_('Editing comment')}
+				{:else}
+					{$_('Replying to')}
+					<span class="font-semibold text-gray-700 dark:text-darkmodeText"
+						>{replyingTo}</span
+					>
+				{/if}
+			</span>
 			<button
-				type="submit"
-				class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+				type="button"
+				class="shrink-0 rounded-full px-2 py-1 font-semibold hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white"
+				on:click={cancel}>{$_('Cancel')}</button
 			>
-				<Fa
-					icon={faPaperPlane}
-					color={$darkModeStore ? 'white' : 'black'}
-					class="text-lg"
-				/>
-			</button>
 		</div>
-	</div>
-</form>
+	{/if}
+
+	{#if files.length > 0}
+		<ul class="mb-2 flex flex-wrap gap-2">
+			{#each files as file, i}
+				<li
+					class="flex max-w-full items-center gap-2 rounded-full bg-gray-100 py-1 pl-3 pr-1 text-sm dark:bg-darkbackground"
+				>
+					<Fa icon={faPaperclip} class="shrink-0 text-xs text-gray-500" />
+					<span class="truncate">{file.name}</span>
+					<button
+						type="button"
+						class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white"
+						aria-label={`${$_('Remove')} ${file.name}`}
+						on:click={() => removeFile(i)}
+					>
+						<Fa icon={faXmark} class="text-xs" />
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+
+	<TextSend
+		bind:value={message}
+		bind:textarea
+		id={beingEdited || replying ? '' : 'textarea-comment'}
+		placeholder="Write a comment..."
+		sendLabel={beingEdited ? 'Save' : 'Send'}
+		allowEmpty={files.length > 0}
+		autofocus={beingEdited || replying}
+		onSend={() => (beingEdited ? commentUpdate() : commentCreate())}
+	>
+		<button
+			slot="before"
+			type="button"
+			class="ml-1 mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center self-end rounded-full text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+			title={$_('Attach file')}
+			aria-label={$_('Attach file')}
+			on:click={() => fileInput.click()}
+		>
+			<Fa icon={faPaperclip} />
+		</button>
+	</TextSend>
+	<input
+		bind:this={fileInput}
+		type="file"
+		multiple
+		accept=".jpg, .jpeg, .png, .pdf, .txt"
+		class="hidden"
+		on:change={addFiles}
+	/>
+
+	<!-- Typing # lists the proposals so one can be tagged in the comment -->
+	{#if showTagMenu}
+		<div
+			class="absolute left-0 right-12 top-full z-50 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-darkobject"
+		>
+			<p
+				class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400"
+			>
+				{$_('Tag a proposal')}
+			</p>
+			<ul class="max-h-48 overflow-y-auto pb-1">
+				{#each proposals as proposal}
+					<li>
+						<button
+							type="button"
+							class="flex w-full items-baseline gap-1 px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+							on:click={() => tagProposal(proposal)}
+						>
+							<span class="font-semibold text-primary dark:text-secondary">#</span>
+							<span class="min-w-0 break-words">{proposal.title}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
+</div>

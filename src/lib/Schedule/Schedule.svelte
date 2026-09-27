@@ -37,6 +37,7 @@
 		selectedWorkgroupId: number | null = $state(null),
 		selectedGroupId: number | null = $state(null),
 		calendar: Calendar,
+		lastDateTap: { dateStr: string; time: number } | null = null,
 		selectedStartDate: string = $state(''),
 		selectedEndDate: string = $state('');
 
@@ -240,6 +241,21 @@
 				selectedEvent = ScheduleItem2Default;
 				selectedStartDate = toDatetimeLocal(selectionInfo.start);
 				selectedEndDate = toDatetimeLocal(selectionInfo.end);
+			},
+			// On touch devices selecting a day requires a long press, so also allow double-tapping a day
+			dateClick: (info) => {
+				const now = Date.now();
+				const isDoubleTap =
+					lastDateTap?.dateStr === info.dateStr && now - lastDateTap.time < 400;
+				lastDateTap = isDoubleTap ? null : { dateStr: info.dateStr, time: now };
+				if (!isDoubleTap) return;
+
+				const end = new Date(info.date);
+				end.setDate(end.getDate() + 1);
+				open = true;
+				selectedEvent = ScheduleItem2Default;
+				selectedStartDate = toDatetimeLocal(info.date);
+				selectedEndDate = toDatetimeLocal(end);
 			},
 
 			customButtons: {

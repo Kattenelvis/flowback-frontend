@@ -18,7 +18,7 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { chatPartnerStore, chatOpenStore } from '$lib/Chat/functions';
-	import Select from '$lib/Generic/Select.svelte';
+	import FilterSelect from '$lib/Generic/FilterSelect.svelte';
 	import { getUserChannelId } from '$lib/Chat/functions';
 	import UserSearch from '$lib/Generic/UserSearch.svelte';
 	import type { Permissions } from './Permissions/interface';
@@ -61,10 +61,11 @@
 
 		if (adminFilter === 'Admin') query += '&is_admin=true';
 		else if (adminFilter === 'Member') query += '&is_admin=false';
+		if (roleFilter !== null) query += `&permission=${roleFilter}`;
 
 		const { json } = await fetchRequest(
 			'GET',
-			`group/${$page.params.groupId}/users?limit=${groupMembersLimit}&username__icontains=${username}`
+			`group/${$page.params.groupId}/users${query}`
 		);
 
 		searchedUsers = json?.results;
@@ -199,7 +200,9 @@
 	};
 
 	const resetFilter = () => {
-		sortOrder = 'a-z'; // Reset to default a-z sort instead of null
+		sortOrder = 'a-z';
+		adminFilter = 'All';
+		roleFilter = null;
 		searchUsers(searchUserQuery);
 	};
 
@@ -221,7 +224,10 @@
 		<div class="flex items-center gap-3 w-full">
 			<form
 				class="bg-white dark:bg-darkobject dark:text-darkmodeText shadow rounded p-4 flex flex-1 items-end gap-4"
-				on:input|preventDefault={() => searchUsers(searchUserQuery)}
+				on:input={(e) => {
+					// The dropdowns search on their own once their value has changed
+					if (e.target instanceof HTMLInputElement) searchUsers(searchUserQuery);
+				}}
 			>
 				<div class="flex-col w-full">
 					<TextInput
@@ -234,46 +240,38 @@
 						bind:value={searchUserQuery}
 					/>
 
-					<div class="flex flex-row items-center gap-1 pt-2">
-						<span>{$_('Sort')}: </span>
-						<Select
-							classInner="p-1"
+					<div class="flex flex-wrap items-center gap-2 pt-3">
+						<FilterSelect
+							label="Sort"
 							labels={[$_('A - Z'), $_('Z - A')]}
 							values={['a-z', 'z-a']}
 							bind:value={sortOrder}
-							onInput={() => searchUsers(searchUserQuery)}
+							onChange={() => searchUsers(searchUserQuery)}
 						/>
-
-						<span class="pl-4">{$_('Role')}: </span>
-						<Select
-							classInner="p-1"
+						<FilterSelect
+							label="Show"
 							labels={[$_('All'), $_('Admin'), $_('Member')]}
 							values={['All', 'Admin', 'Member']}
 							bind:value={adminFilter}
-							onInput={() => searchUsers(searchUserQuery)}
-							disableFirstChoice
+							onChange={() => searchUsers(searchUserQuery)}
 						/>
-
-						<span class="pl-4">{$_('Role')}: </span>
-						<Select
-							classInner="p-1"
+						<FilterSelect
+							label="Role"
 							labels={[
-								'All',
+								$_('All'),
 								...permissions.map((permission) => permission.role_name)
 							]}
 							values={[null, ...permissions.map((permission) => permission.id)]}
 							bind:value={roleFilter}
-							onInput={() => searchUsers(searchUserQuery)}
-							disableFirstChoice
+							onChange={() => searchUsers(searchUserQuery)}
 						/>
-
-						<div class="rounded-md p-1">
-							<Button
-								Class="!p-1 border-none text-red-600 cursor-pointer hover:underline"
-								buttonStyle="warning-light"
-								onClick={resetFilter}>{$_('Reset Filter')}</Button
+						{#if sortOrder !== 'a-z' || adminFilter !== 'All' || roleFilter !== null}
+							<button
+								type="button"
+								class="rounded-full px-3 py-1.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+								on:click={resetFilter}>{$_('Reset Filter')}</button
 							>
-						</div>
+						{/if}
 					</div>
 				</div>
 			</form>
@@ -383,7 +381,9 @@
 												chatOpenStore.set(true);
 												chatPartnerStore.set(channelId);
 											}}
-											Class="text-primary"
+											class="text-primary"
+											title={$_('Send message')}
+											aria-label={$_('Send message')}
 										>
 											<Fa icon={faPaperPlane} rotate="60" />
 										</button>
