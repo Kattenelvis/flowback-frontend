@@ -7,8 +7,11 @@
 		faPieChart,
 		faArrowLeft,
 		faInfo,
-		faWarning
+		faWarning,
+		faCircleInfo,
+		faEnvelope
 	} from '@fortawesome/free-solid-svg-icons';
+	import { env } from '$env/dynamic/public';
 	import { _ } from 'svelte-i18n';
 	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
@@ -42,21 +45,21 @@
 			icon: faUser,
 			text: 'User Profile'
 		},
-		{
-			page: 'notifications',
-			icon: faBell,
-			text: 'Notifications'
-		},
-		{
-			page: 'poll-process',
-			icon: faPieChart,
-			text: 'Poll Process'
-		},
-		{
-			page: 'info',
-			icon: faInfo,
-			text: 'Information'
-		},
+		// {
+		// 	page: 'notifications',
+		// 	icon: faBell,
+		// 	text: 'Notifications'
+		// },
+		// {
+		// 	page: 'poll-process',
+		// 	icon: faPieChart,
+		// 	text: 'Poll Process'
+		// },
+		// {
+		// 	page: 'info',
+		// 	icon: faInfo,
+		// 	text: 'Information'
+		// },
 		{
 			page: 'reports',
 			icon: faWarning,
@@ -110,7 +113,15 @@
 			post_description: '',
 			title: '',
 			admin_action: 'nothing'
-		};
+		},
+		// GDPR data access/erasure requests are handled manually via mail for now
+		privacyModalOpen = false,
+		privacyRequest: 'data' | 'delete' = 'data';
+
+	const openPrivacyModal = (request: 'data' | 'delete') => {
+		privacyRequest = request;
+		privacyModalOpen = true;
+	};
 
 	const userUpdate = async () => {
 		const { res, json } = await fetchRequest('POST', 'user/update', {
@@ -247,12 +258,20 @@
 						{/if}
 
 						<div class="pt-4 md:mt-auto">
-							<div class="cursor-pointer hover:underline">
+							<button
+								type="button"
+								class="block cursor-pointer hover:underline"
+								on:click={() => openPrivacyModal('data')}
+							>
 								{$_('Give me all my data')}
-							</div>
-							<div class="text-red-600 cursor-pointer hover:underline mt-2">
+							</button>
+							<button
+								type="button"
+								class="block text-red-600 cursor-pointer hover:underline mt-2"
+								on:click={() => openPrivacyModal('delete')}
+							>
 								{$_('Delete account')}
-							</div>
+							</button>
 						</div>
 					{:else if selectedPage === 'notifications' && userConfig?.notificationSettings}
 						{#each Object.entries(userConfig.notificationSettings) as [key1, settings]}
@@ -366,6 +385,44 @@
 		{/if}
 	</div>
 </Layout>
+
+<Modal bind:open={privacyModalOpen} Class="max-w-[480px]">
+	<div slot="header">
+		{privacyRequest === 'data' ? $_('Give me all my data') : $_('Delete account')}
+	</div>
+	<div slot="body" class="flex flex-col gap-4 text-left">
+		{#if env.PUBLIC_PRIVACY_MAIL}
+			<p>
+				{privacyRequest === 'data'
+					? $_('To get a copy of all personal data stored about you, send an email to:')
+					: $_('To delete your account and personal data, send an email to:')}
+			</p>
+			<a
+				href={`mailto:${env.PUBLIC_PRIVACY_MAIL}?subject=${encodeURIComponent(
+					privacyRequest === 'data'
+						? $_('Request for my personal data')
+						: $_('Request to delete my account')
+				)}`}
+				class="flex items-center gap-2 font-semibold text-primary dark:text-secondary hover:underline break-all"
+			>
+				<Fa icon={faEnvelope} />
+				{env.PUBLIC_PRIVACY_MAIL}
+			</a>
+			<div
+				class="flex gap-2 rounded-lg p-3 text-sm bg-blue-50 border border-blue-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+			>
+				<Fa icon={faCircleInfo} class="mt-0.5 shrink-0 text-primary dark:text-secondary" />
+				<span>
+					{$_(
+						"Send the email from the address connected to your account so we can verify that it's you. We will respond within one month."
+					)}
+				</span>
+			</div>
+		{:else}
+			<p>{$_('Contact the administrator of this Flowback instance to make this request.')}</p>
+		{/if}
+	</div>
+</Modal>
 
 <Modal bind:open Class="max-w-[520px]">
 	<div slot="header" class="flex items-center gap-2">
