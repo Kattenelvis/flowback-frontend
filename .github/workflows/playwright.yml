@@ -3,12 +3,14 @@ on:
   push:
     branches: [master]
   pull_request:
-    branches: [dev, master]
+    branches: [master]
 
 env:
   LINK: 'http://localhost:8085'
   TEST_PASS: TestPassword
   PUBLIC_POLL_VERSION: 2
+  # PR images get their own tag so unmerged code never becomes :latest (which prod pulls)
+  FRONTEND_TAG: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'latest' }}
 
 jobs:
   build:
@@ -48,7 +50,7 @@ jobs:
         with:
           repository: Kattenelvis/flowback-backend
           path: flowback-backend
-          ref: ${{ (github.ref == 'refs/heads/dev' || github.base_ref == 'dev' || github.head_ref == 'dev') && 'development' || 'master' }}
+          ref: master
 
       - uses: actions/download-artifact@v4
         with:
@@ -122,8 +124,9 @@ jobs:
 
   docker-publish:
     needs: frontend-tests
+    # Fork PRs get no secrets, so skip publishing instead of failing
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -139,8 +142,8 @@ jobs:
 
       - name: Publish frontend image
         run: |
-          docker tag flowback-frontend:ci ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:latest
+          docker tag flowback-frontend:ci ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:$FRONTEND_TAG
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/flowback-frontend:$FRONTEND_TAG
 
   publish-dev:
     needs: docker-publish
@@ -158,16 +161,17 @@ jobs:
           script: |
             sudo -n -iu flowback bash -se <<'EOF'
             cd /home/flowback/dev-flowback
+            export FRONTEND_TAG=${{ env.FRONTEND_TAG }}
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose build caddy
             docker compose up -d --no-build caddy
             EOF
 
-  # Production publishes only from development or master pushes.
+  # Production publishes only from master pushes.
   publish-prod:
     needs: publish-dev
-    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/development' || github.ref == 'refs/heads/master') }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
     environment: production
