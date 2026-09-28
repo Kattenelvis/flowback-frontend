@@ -7,17 +7,16 @@
 		faPieChart,
 		faArrowLeft,
 		faInfo,
-		faWarning
+		faCircleInfo,
+		faEnvelope
 	} from '@fortawesome/free-solid-svg-icons';
+	import { env } from '$env/dynamic/public';
 	import { _ } from 'svelte-i18n';
 	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { onMount } from 'svelte';
 	import { configToReadable } from '$lib/utils/configToReadable';
-	import type { report } from '$lib/Generic/interfaces';
-	import { linkToPost } from '$lib/Generic/GenericFunctions';
 	import Modal from '$lib/Generic/Modal.svelte';
-	import Button from '$lib/Generic/Button.svelte';
 	import { goto } from '$app/navigation';
 	import { isMobile } from '$lib/utils/isMobile';
 	import Toggle from '$lib/Generic/Toggle.svelte';
@@ -27,8 +26,7 @@
 		| 'profile'
 		| 'notifications'
 		| 'poll-process'
-		| 'info'
-		| 'reports';
+		| 'info';
 
 	interface SettingsPage {
 		page: PageType;
@@ -42,26 +40,21 @@
 			icon: faUser,
 			text: 'User Profile'
 		},
-		{
-			page: 'notifications',
-			icon: faBell,
-			text: 'Notifications'
-		},
-		{
-			page: 'poll-process',
-			icon: faPieChart,
-			text: 'Poll Process'
-		},
-		{
-			page: 'info',
-			icon: faInfo,
-			text: 'Information'
-		},
-		{
-			page: 'reports',
-			icon: faWarning,
-			text: 'Reports'
-		}
+		// {
+		// 	page: 'notifications',
+		// 	icon: faBell,
+		// 	text: 'Notifications'
+		// },
+		// {
+		// 	page: 'poll-process',
+		// 	icon: faPieChart,
+		// 	text: 'Poll Process'
+		// },
+		// {
+		// 	page: 'info',
+		// 	icon: faInfo,
+		// 	text: 'Information'
+		// }
 	];
 
 	// if mobile, default to null, otherwise default to profile
@@ -97,20 +90,16 @@
 				voting: false
 			}
 		},
-		reports: report[] = [],
 		serverConfig: any = {},
 		version = '77',
-		open = false,
-		selectedRepport: report = {
-			description: '',
-			group_id: 0,
-			post_id: 0,
-			post_type: 'poll',
-			post_title: '',
-			post_description: '',
-			title: '',
-			admin_action: 'nothing'
-		};
+		// GDPR data access/erasure requests are handled manually via mail for now
+		privacyModalOpen = false,
+		privacyRequest: 'data' | 'delete' = 'data';
+
+	const openPrivacyModal = (request: 'data' | 'delete') => {
+		privacyRequest = request;
+		privacyModalOpen = true;
+	};
 
 	const userUpdate = async () => {
 		const { res, json } = await fetchRequest('POST', 'user/update', {
@@ -138,14 +127,6 @@
 		});
 	};
 
-	const getReportList = async () => {
-		const { res, json } = await fetchRequest('GET', 'server/reports');
-
-		if (!res.ok) return;
-
-		reports = json?.results;
-	};
-
 	const a = (key1: string, key2 = '') => {
 		if (key2 === '') {
 			//@ts-ignore
@@ -158,7 +139,6 @@
 	onMount(() => {
 		getUserConfig();
 		getServerConfig();
-		getReportList();
 
 		window.addEventListener('popstate', () => {
 			selectedPage = null;
@@ -247,12 +227,20 @@
 						{/if}
 
 						<div class="pt-4 md:mt-auto">
-							<div class="cursor-pointer hover:underline">
+							<button
+								type="button"
+								class="block cursor-pointer hover:underline"
+								on:click={() => openPrivacyModal('data')}
+							>
 								{$_('Give me all my data')}
-							</div>
-							<div class="text-red-600 cursor-pointer hover:underline mt-2">
+							</button>
+							<button
+								type="button"
+								class="block text-red-600 cursor-pointer hover:underline mt-2"
+								on:click={() => openPrivacyModal('delete')}
+							>
 								{$_('Delete account')}
-							</div>
+							</button>
 						</div>
 					{:else if selectedPage === 'notifications' && userConfig?.notificationSettings}
 						{#each Object.entries(userConfig.notificationSettings) as [key1, settings]}
@@ -321,45 +309,6 @@
 					{:else if selectedPage === 'info'}
 						<div>{$_('Frontend version')}: {version}</div>
 						<div>{$_('Backend version')}: {serverConfig.VERSION}</div>
-					{:else if selectedPage === 'reports'}
-						<span
-							class="text-lg text-primary dark:text-secondary font-semibold mb-3"
-							>{$_('Reports')}</span
-						>
-						{#if reports?.length > 0}
-							<div class="flex flex-col gap-2 mt-2">
-								{#each reports as report}
-									<button
-										on:click={() => {
-											selectedRepport = report;
-											open = true;
-										}}
-										class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-left transition-colors w-full"
-									>
-										<Fa
-											icon={faWarning}
-											class="text-yellow-500 mt-0.5 flex-shrink-0"
-										/>
-										<div class="min-w-0">
-											<div
-												class="font-medium text-gray-800 dark:text-darkmodeText truncate"
-											>
-												{report?.title}
-											</div>
-											<div
-												class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1"
-											>
-												{report?.description}
-											</div>
-										</div>
-									</button>
-								{/each}
-							</div>
-						{:else}
-							<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-								{$_('There are currently no reports')}
-							</p>
-						{/if}
 					{/if}
 				</ul>
 			</div>
@@ -367,96 +316,40 @@
 	</div>
 </Layout>
 
-<Modal bind:open Class="max-w-[520px]">
-	<div slot="header" class="flex items-center gap-2">
-		<Fa icon={faWarning} class="text-yellow-500" />
-		<span>{$_('Report Details')}</span>
+<Modal bind:open={privacyModalOpen} Class="max-w-[480px]">
+	<div slot="header">
+		{privacyRequest === 'data' ? $_('Give me all my data') : $_('Delete account')}
 	</div>
 	<div slot="body" class="flex flex-col gap-4 text-left">
-		<!-- Report info -->
-		<div
-			class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800"
-		>
+		{#if env.PUBLIC_PRIVACY_MAIL}
+			<p>
+				{privacyRequest === 'data'
+					? $_('To get a copy of all personal data stored about you, send an email to:')
+					: $_('To delete your account and personal data, send an email to:')}
+			</p>
+			<a
+				href={`mailto:${env.PUBLIC_PRIVACY_MAIL}?subject=${encodeURIComponent(
+					privacyRequest === 'data'
+						? $_('Request for my personal data')
+						: $_('Request to delete my account')
+				)}`}
+				class="flex items-center gap-2 font-semibold text-primary dark:text-secondary hover:underline break-all"
+			>
+				<Fa icon={faEnvelope} />
+				{env.PUBLIC_PRIVACY_MAIL}
+			</a>
 			<div
-				class="text-xs font-semibold uppercase tracking-wide text-yellow-700 dark:text-yellow-400 mb-2"
+				class="flex gap-2 rounded-lg p-3 text-sm bg-blue-50 border border-blue-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
 			>
-				{$_('Report')}
+				<Fa icon={faCircleInfo} class="mt-0.5 shrink-0 text-primary dark:text-secondary" />
+				<span>
+					{$_(
+						"Send the email from the address connected to your account so we can verify that it's you. We will respond within one month."
+					)}
+				</span>
 			</div>
-			<div class="font-semibold text-gray-800 dark:text-darkmodeText">
-				{selectedRepport?.title || $_('No title')}
-			</div>
-			{#if selectedRepport?.description}
-				<div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-					{selectedRepport.description}
-				</div>
-			{/if}
-		</div>
-
-		<!-- Post type badge -->
-		<div class="flex items-center gap-2">
-			<span
-				class="px-2 py-0.5 text-xs rounded-full font-medium"
-				class:bg-blue-100={selectedRepport.post_type === 'poll'}
-				class:text-blue-700={selectedRepport.post_type === 'poll'}
-				class:bg-purple-100={selectedRepport.post_type === 'thread'}
-				class:text-purple-700={selectedRepport.post_type === 'thread'}
-			>
-				{selectedRepport.post_type === 'poll' ? $_('Poll') : $_('Thread')}
-			</span>
-		</div>
-
-		<div
-			class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
-		>
-			<div
-				class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2"
-			>
-				{$_('Admin Action')}
-			</div>
-			{selectedRepport.admin_action}
-		</div>
-		<!-- Reported post details -->
-		{#await fetchRequest('GET', selectedRepport.post_type === 'poll' ? `home/polls?group_ids=${selectedRepport.group_id}&id=${selectedRepport.post_id}` : `group/thread/list?group_ids=${selectedRepport.group_id}&id=${selectedRepport.post_id}`) then { res, json }}
-			{#if res.ok}
-				{@const post = json?.results[0]}
-				{#if post}
-					<div
-						class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
-					>
-						<div
-							class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2"
-						>
-							{$_('Reported Post')}
-						</div>
-						<div class="font-medium text-gray-800 dark:text-darkmodeText">
-							{post?.title}
-						</div>
-						{#if post?.description}
-							<div
-								class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-3"
-							>
-								{post.description}
-							</div>
-						{/if}
-					</div>
-				{/if}
-			{/if}
-		{/await}
-
-		<!-- View Post button -->
-		<Button
-			Class="w-full"
-			onClick={() =>
-				goto(
-					`${linkToPost(
-						selectedRepport.post_id,
-						selectedRepport.group_id,
-						selectedRepport.post_type
-					)}`
-				)}
-		>
-			{$_('View Post')}
-		</Button>
+		{:else}
+			<p>{$_('Contact the administrator of this Flowback instance to make this request.')}</p>
+		{/if}
 	</div>
 </Modal>
-
