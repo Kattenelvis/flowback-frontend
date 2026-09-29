@@ -8,11 +8,11 @@
 		faArrowLeft,
 		faInfo,
 		faCircleInfo,
-		faEnvelope
+		faEnvelope,
+		faFileContract
 	} from '@fortawesome/free-solid-svg-icons';
 	import { env } from '$env/dynamic/public';
 	import { _ } from 'svelte-i18n';
-	import RadioButtons2 from '$lib/Generic/RadioButtons2.svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import { onMount } from 'svelte';
 	import { configToReadable } from '$lib/utils/configToReadable';
@@ -21,12 +21,14 @@
 	import { isMobile } from '$lib/utils/isMobile';
 	import Toggle from '$lib/Generic/Toggle.svelte';
 	import { darkModeStore, toggleDarkMode } from '$lib/Generic/DarkMode';
+	import TermsOfService from '$lib/Login/TermsOfService.svelte';
 
 	type PageType =
 		| 'profile'
 		| 'notifications'
 		| 'poll-process'
-		| 'info';
+		| 'info'
+		| 'tos';
 
 	interface SettingsPage {
 		page: PageType;
@@ -39,6 +41,11 @@
 			page: 'profile',
 			icon: faUser,
 			text: 'User Profile'
+		},
+		{
+			page: 'tos',
+			icon: faFileContract,
+			text: 'Terms of Service'
 		},
 		// {
 		// 	page: 'notifications',
@@ -199,25 +206,6 @@
 						>
 							{$_('General')}
 						</li>
-						<RadioButtons2
-							Class="pb-4"
-							ClassInner="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-							name="radio1"
-							label="Who can see my profile"
-							labelClass="text-gray-600 dark:text-gray-400"
-							labels={['All', 'Only people in my groups', 'Only group admins']}
-							values={['1', '2', '3']}
-							radioSide="right"
-						/>
-						<RadioButtons2
-							ClassInner="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-							name="radio2"
-							label="Who can contact me in chat"
-							labelClass="text-gray-600 dark:text-gray-400"
-							labels={['All', 'Only people in my groups', 'Only group admins']}
-							values={['1', '2', '3']}
-							radioSide="right"
-						/>
 
 						{#if $isMobile}
 							<div class="flex items-center justify-between my-4">
@@ -309,6 +297,8 @@
 					{:else if selectedPage === 'info'}
 						<div>{$_('Frontend version')}: {version}</div>
 						<div>{$_('Backend version')}: {serverConfig.VERSION}</div>
+					{:else if selectedPage === 'tos'}
+						<TermsOfService Class="!border-none !p-0 leading-8" />
 					{/if}
 				</ul>
 			</div>

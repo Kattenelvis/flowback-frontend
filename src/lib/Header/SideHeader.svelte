@@ -2,15 +2,13 @@
 	import { _ } from 'svelte-i18n';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { onMount } from 'svelte';
-	import TermsOfService from '$lib/Login/TermsOfService.svelte';
 	import { goto } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
 	import { chatOpenStore } from '$lib/Chat/functions';
 
 	export let sideHeaderOpen = false;
 
-	let open_tos = false,
-		open_support = false,
+	let open_support = false,
 		open_tools = false;
 
 	const logOut = async () => {
@@ -52,7 +50,6 @@
 				goto('/user/settings');
 			}
 		},
-		{ title: 'TOS', action: () => (open_tos = true) },
 		{
 			title: 'Log Out',
 			action: () => {
@@ -126,12 +123,6 @@
 				>
 			</div>
 		</div>
-	</div>
-</Modal>
-
-<Modal bind:open={open_tos} Class="max-w-[600px] overflow-y-auto">
-	<div slot="body" class="">
-		<TermsOfService Class="!border-none !p-0 leading-8" />
 	</div>
 </Modal>
 
