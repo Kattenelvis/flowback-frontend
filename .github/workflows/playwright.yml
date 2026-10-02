@@ -107,7 +107,7 @@ jobs:
       - name: Run the rest of the tests
         working-directory: flowback-interface-testing
         run:
-          npx playwright test . --project chromium --retries 2 --workers 1 --reporter list
+          npx playwright test . --project chromium --retries 2 --workers 2 --reporter list
           --grep-invert "Smoke-Test"
 
       - name: Dump docker logs on failure
@@ -159,14 +159,12 @@ jobs:
           port: 22
           # The SSH user can't read the checkout; run the deploy as flowback
           script: |
-            sudo -n -iu flowback bash -se <<'EOF'
             cd /home/flowback/dev-flowback
             export FRONTEND_TAG=${{ env.FRONTEND_TAG }}
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose build caddy
             docker compose up -d --no-build caddy
-            EOF
 
   # Production publishes only from master pushes.
   publish-prod:
@@ -185,10 +183,8 @@ jobs:
           port: 22
           # The SSH user can't read the checkout; run the deploy as flowback
           script: |
-            sudo -n -iu flowback bash -se <<'EOF'
             cd /home/flowback/prod-flowback
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
             docker compose build caddy
             docker compose up -d --no-build caddy
-            EOF
