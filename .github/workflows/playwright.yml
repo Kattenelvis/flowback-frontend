@@ -150,14 +150,13 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - name: Execute remote SSH commands using password
+      - name: Execute remote SSH commands
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           port: 22
-          # The SSH user can't read the checkout; run the deploy as flowback
           script: |
             cd /home/flowback/dev-flowback
             export FRONTEND_TAG=${{ env.FRONTEND_TAG }}
@@ -174,14 +173,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Execute remote SSH commands using password
+      - name: Execute remote SSH commands
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           port: 22
-          # The SSH user can't read the checkout; run the deploy as flowback
           script: |
             cd /home/flowback/prod-flowback
             docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
