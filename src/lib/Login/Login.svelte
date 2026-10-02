@@ -1,16 +1,14 @@
 <script lang="ts">
-	import TextInput from '../Generic/TextInput.svelte';
+	import AuthInput from './AuthInput.svelte';
 	import { fetchRequest } from '../FetchRequest';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { _ } from 'svelte-i18n';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { goto } from '$app/navigation';
-	import Button from '$lib/Generic/Button.svelte';
-	import CheckboxButtons from '$lib/Generic/CheckboxButtons.svelte';
 	import { userStore } from '$lib/User/interfaces';
 
-	let username: string,
-		password: string,
+	let username = '',
+		password = '',
 		loading = false,
 		remainLoggedIn = false;
 
@@ -65,48 +63,30 @@
 </script>
 
 <Loader bind:loading>
-	<form
-		class="p-6 gap-6 flex flex-col items-center"
-		on:submit|preventDefault={logIn}
-	>
-		<TextInput
-			label={'Username'}
-			bind:value={username}
-			required
-			name="username"
-		/>
-		<div class="w-full">
-			<TextInput
-				label={'Password'}
+	<form class="flex flex-col gap-5" on:submit|preventDefault={logIn}>
+		<AuthInput label="Username" bind:value={username} name="username" autocomplete="username" required />
+		<div>
+			<AuthInput
+				label="Password"
 				bind:value={password}
-				type={'password'}
-				required
+				type="password"
 				name="password"
+				autocomplete="current-password"
+				required
 			/>
-			<div class="flex justify-between items-end">
-				<CheckboxButtons
-					Class="cursor-pointer"
-					label=""
-					labels={[{ label: 'Remain logged in', checked: false, id: 1 }]}
-					onChange={(e) => (remainLoggedIn = !remainLoggedIn)}
-				/>
-				<button
-					type="button"
-					class="cursor-pointer hover:underline text-gray-400"
-					on:click={() => (selectedPage = 'ForgotPassword')}
-				>
+			<div class="mt-3 flex items-center justify-between text-sm">
+				<label class="flex items-center gap-2 cursor-pointer text-gray-600 dark:text-gray-400">
+					<input type="checkbox" class="auth-check" bind:checked={remainLoggedIn} />
+					{$_('Remain logged in')}
+				</label>
+				<button type="button" class="auth-link" on:click={() => (selectedPage = 'ForgotPassword')}>
 					{$_('Forgot password?')}
 				</button>
 			</div>
 		</div>
 
-		<hr class="border-b-1 border-gray-300 w-full mt-6" />
-
-		<Button
-			type="submit"
-			buttonStyle="primary"
-			disabled={username === '' || password === ''}
-			Class="w-[250px]">{$_('Login')}</Button
-		>
+		<button type="submit" class="auth-button mt-2">
+			{$_('Login')}
+		</button>
 	</form>
 </Loader>

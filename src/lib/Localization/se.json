@@ -838,5 +838,22 @@
 	"Attachment to the comment": "Bilaga till kommentaren",
 	"Save": "Spara",
 	"Top": "Bästa",
-	"View File": "Visa fil"
+	"View File": "Visa fil",
+	"Welcome back": "Välkommen tillbaka",
+	"Log in to continue to your groups.": "Logga in för att fortsätta till dina grupper.",
+	"Create your account": "Skapa ditt konto",
+	"Enter your email and we'll send you a link to get started.": "Ange din e-post så skickar vi en länk för att komma igång.",
+	"Finish setting up": "Slutför registreringen",
+	"Pick a username and a password.": "Välj ett användarnamn och ett lösenord.",
+	"Check your inbox": "Kolla din inkorg",
+	"Reset your password": "Återställ ditt lösenord",
+	"We'll email you a link to choose a new one.": "Vi mejlar dig en länk för att välja ett nytt.",
+	"Choose a new password": "Välj ett nytt lösenord",
+	"Back to login": "Tillbaka till inloggningen",
+	"Hide": "Dölj",
+	"Yes, I accept the terms of service": "Ja, jag godkänner användarvillkoren",
+	"Send verification email": "Skicka verifieringsmejl",
+	"Send reset link": "Skicka återställningslänk",
+	"Update password": "Uppdatera lösenord",
+	"Email me notifications about activity in my groups": "Mejla mig notiser om aktivitet i mina grupper"
 }
