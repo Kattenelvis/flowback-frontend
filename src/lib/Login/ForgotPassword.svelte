@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { fetchRequest } from '$lib/FetchRequest';
-	import Button from '$lib/Generic/Button.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { statusMessageFormatter } from '$lib/Generic/StatusMessage';
-
-	import TextInput from '../Generic/TextInput.svelte';
+	import AuthInput from './AuthInput.svelte';
+	import { _ } from 'svelte-i18n';
 
 	export let selectedPage: string = "", email: string = "";
 
@@ -21,9 +20,11 @@
 </script>
 
 <Loader bind:loading>
-	<form class="gap-6 p-6 flex flex-col items-center" on:submit|preventDefault={sendCode}>
-		<TextInput label={'E-mail'} bind:value={email} required />
-		 
-		<Button type="submit" label="Send" />
+	<form class="flex flex-col gap-5" on:submit|preventDefault={sendCode}>
+		<AuthInput label="Email" type="email" bind:value={email} autocomplete="email" autofocus required />
+		<button type="submit" class="auth-button mt-1">{$_('Send reset link')}</button>
 	</form>
+	<button type="button" class="auth-link mt-6 text-sm" on:click={() => (selectedPage = 'Login')}>
+		← {$_('Back to login')}
+	</button>
 </Loader>

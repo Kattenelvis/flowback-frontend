@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { fetchRequest } from '$lib/FetchRequest';
-	import Button from '$lib/Generic/Button.svelte';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { _ } from 'svelte-i18n';
-	import TextInput from '../Generic/TextInput.svelte';
-	import RadioButtons from '$lib/Generic/RadioButtons.svelte';
+	import AuthInput from './AuthInput.svelte';
 	import { goto } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
 	// TODO: Blockchain
@@ -14,11 +12,11 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { userStore } from '$lib/User/interfaces';
 
-	let verification_code: string,
-		password: string,
+	let verification_code = '',
+		password = '',
 		loading = false,
 		acceptedEmailNotifications = false,
-		username: string;
+		username = '';
 
 	const validateUsername = () => {
 		if (!username) {
@@ -127,33 +125,32 @@
 </script>
 
 <Loader bind:loading>
-	<form
-		class="gap-6 p-6 mb-4 flex flex-col items-center"
-		on:submit|preventDefault={verifyAccount}
-	>
+	<form class="flex flex-col gap-5" on:submit|preventDefault={verifyAccount}>
 		{#if !$page.url.searchParams.get('verification_code')}
-			<TextInput
-				label={'Verification Code'}
+			<AuthInput
+				label="Verification Code"
 				bind:value={verification_code}
+				autocomplete="one-time-code"
 				required
 			/>
 		{/if}
 
-		<TextInput label={'Username'} bind:value={username} required />
-		<TextInput
-			label={'Choose a Password'}
+		<AuthInput label="Username" bind:value={username} autocomplete="username" required />
+		<AuthInput
+			label="Choose a Password"
 			bind:value={password}
-			type={'password'}
+			type="password"
+			autocomplete="new-password"
 			required
 		/>
-		<RadioButtons
-			label="Do you want to receive Email Notifications?"
-			centering={true}
-			bind:Yes={acceptedEmailNotifications}
-		/>
 
-		<Button type="submit">
+		<label class="flex items-start gap-3 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+			<input type="checkbox" class="auth-check mt-0.5 shrink-0" bind:checked={acceptedEmailNotifications} />
+			{$_('Email me notifications about activity in my groups')}
+		</label>
+
+		<button type="submit" class="auth-button mt-1">
 			{$_('Send')}
-		</Button>
+		</button>
 	</form>
 </Loader>
