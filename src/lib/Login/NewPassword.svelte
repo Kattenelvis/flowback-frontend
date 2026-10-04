@@ -3,9 +3,9 @@
 	import { page } from '$app/stores';
 	import { env } from '$env/dynamic/public';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import Button from '$lib/Generic/Button.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
-	import TextInput from '$lib/Generic/TextInput.svelte';
+	import AuthInput from './AuthInput.svelte';
+	import { _ } from 'svelte-i18n';
 	import { userStore } from '$lib/User/interfaces';
 
 	let password: string,
@@ -75,12 +75,12 @@
 	}
 </script>
 
-<form class="gap-6 p-6 flex flex-col items-center" on:submit|preventDefault={verifyAccount}>
-	<TextInput label={'New Password'} bind:value={password} type="password" required />
-	<TextInput label={'Confirm Password'} bind:value={password2} type="password" required />
+<form class="flex flex-col gap-5" on:submit|preventDefault={verifyAccount}>
+	<AuthInput label="New Password" bind:value={password} type="password" autocomplete="new-password" required />
+	<AuthInput label="Confirm Password" bind:value={password2} type="password" autocomplete="new-password" required />
 	{#if !(env.PUBLIC_EMAIL_REGISTRATION === 'TRUE')}
-		<TextInput label={'Verification Code'} bind:value={verification_code} required />
+		<AuthInput label="Verification Code" bind:value={verification_code} autocomplete="one-time-code" required />
 	{/if}
 
-	<Button type="submit" label="Send" />
+	<button type="submit" class="auth-button mt-1">{$_('Update password')}</button>
 </form>
