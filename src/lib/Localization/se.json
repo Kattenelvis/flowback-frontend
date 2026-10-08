@@ -855,5 +855,13 @@
 	"Send verification email": "Skicka verifieringsmejl",
 	"Send reset link": "Skicka återställningslänk",
 	"Update password": "Uppdatera lösenord",
-	"Email me notifications about activity in my groups": "Mejla mig notiser om aktivitet i mina grupper"
+	"Email me notifications about activity in my groups": "Mejla mig notiser om aktivitet i mina grupper",
+	"Your account, appearance and personal data": "Ditt konto, utseende och dina personuppgifter",
+	"The rules every Flowback user agrees to": "Reglerna som alla Flowback-användare godkänner",
+	"Appearance": "Utseende",
+	"Dark Mode": "Mörkt läge",
+	"Use a dark color theme": "Använd ett mörkt färgtema",
+	"Your data": "Dina uppgifter",
+	"Request a copy of the personal data stored about you": "Begär en kopia av personuppgifterna som finns lagrade om dig",
+	"Permanently delete your account and personal data": "Radera ditt konto och dina personuppgifter permanent"
 }

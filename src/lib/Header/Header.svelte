@@ -121,7 +121,6 @@
 			{/if}
 		</nav>
 
-		{#if !$isMobile}
 			<div class="flex gap-4 items-center float-right hover:bg-grey-800">
 				<div class="mr-5 flex gap-4 items-center">
 					<button
@@ -140,7 +139,6 @@
 				</div>
 				<SideHeaderIcon bind:sideHeaderOpen />
 			</div>
-		{/if}
 	</div>
 	<SideHeader bind:sideHeaderOpen />
 </header>
