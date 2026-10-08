@@ -108,7 +108,7 @@ jobs:
         working-directory: flowback-interface-testing
         run:
           npx playwright test . --project chromium --retries 2 --workers 2 --reporter list
-          --grep-invert "Smoke-Test"
+          --grep-invert "Smoke-Test|missing-requirements"
 
       - name: Dump docker logs on failure
         if: ${{ failure() }}

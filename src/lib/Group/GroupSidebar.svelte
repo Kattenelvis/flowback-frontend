@@ -34,17 +34,17 @@
 	import { chatOpenStore, chatPartnerStore } from '$lib/Chat/functions';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { isMobile } from '$lib/utils/isMobile';
 
 	export let selectedPage: SelectablePage = 'flow',
 		group: GroupDetails,
 		Class: string;
 
-	let innerWidth = 0,
-		menuOpen = false,
+	let menuOpen = false,
 		areYouSureModal = false;
 
 	// On phones the menu is a bottom sheet opened from a floating button
-	$: mobile = innerWidth < 700;
+	$: mobile = $isMobile;
 	$: if (!mobile) menuOpen = false;
 	$: cardClass = mobile
 		? 'rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col'
@@ -86,7 +86,6 @@
 	$: selectedPage = $page.url.searchParams.get('page') || 'flow';
 </script>
 
-<svelte:window bind:innerWidth />
 <!-- On document, not window: Modal's Escape listener stops propagation at document -->
 <svelte:document
 	on:keydown={(e) => {

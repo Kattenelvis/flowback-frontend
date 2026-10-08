@@ -16,12 +16,13 @@
 	import Button from '$lib/Generic/Button.svelte';
 	import ThreadVoting from '$lib/Thread/ThreadVoting.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
+	import Attachments from '$lib/Generic/File/Attachments.svelte';
 
 	let thread: Thread | undefined = $state(undefined),
 		reportModalShow = $state(false),
 		deleteModalShow = $state(false);
 
-	const source = new URLSearchParams(window.location.search).get('source');
+	const source = $derived($page.url.searchParams.get('source'));
 
 	// Fixes a bug where clicking between threads (because of links or in notification) doesn't update page properly
 	$effect(() => {
@@ -122,6 +123,12 @@
 					/>
 				</div>
 			{/if}
+
+			{#if thread.attachments?.length}
+				<div class="grid-area-attachments pt-4">
+					<Attachments attachments={thread.attachments} />
+				</div>
+			{/if}
 		</div>
 
 		{#key thread.id}
@@ -168,5 +175,9 @@
 
 	.grid-area-workgroup {
 		grid-area: 3 / 2 / 3 / 3;
+	}
+
+	.grid-area-attachments {
+		grid-area: 5 / 2 / 5 / 3;
 	}
 </style>

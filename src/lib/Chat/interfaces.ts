@@ -33,6 +33,7 @@ export interface Message1 {
   type: 'message' | 'info';
   updated_at: String;
   user: { id: number; username: string; profile_image: string; banner_image: string };
+  method?: 'message_update' | 'message_delete';
 }
 
 //Taken from the preview API
