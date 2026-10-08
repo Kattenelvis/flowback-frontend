@@ -97,7 +97,7 @@
 
 			next = json.next;
 			recentlyAdded = json.results.filter(
-				(post: Post) => !(post.id in $posts.map((p) => p.id))
+				(post: Post) => !$posts.some((p) => p.id === post.id)
 			);
 
 			$posts = [...$posts, ...recentlyAdded];
