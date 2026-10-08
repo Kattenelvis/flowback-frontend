@@ -134,25 +134,27 @@
 	};
 
 	const createThread = async () => {
-		let thread: {
-			title: string;
-			description?: string;
-			public?: boolean;
-			work_group_id?: number | null;
-		} = {
-			title
-		};
+		// Sent as form data so the attachments can be uploaded with the thread
+		const formData = new FormData();
 
-		if (description) thread.description = description;
+		formData.append('title', title);
 
-		if (workGroup) thread.work_group_id = workGroup;
+		if (description) formData.append('description', description);
 
-		if (isPublic) thread.public = isPublic;
+		if (workGroup) formData.append('work_group_id', workGroup.toString());
+
+		if (isPublic) formData.append('public', 'true');
+
+		images.forEach((image) => {
+			formData.append('attachments', image);
+		});
 
 		const { res, json } = await fetchRequest(
 			'POST',
 			`group/${$page.url.searchParams.get('id')}/thread/create`,
-			thread
+			formData,
+			true,
+			false
 		);
 		if (!res.ok) {
 			// poppup = { message: "Couldn't create Thread", success: false };

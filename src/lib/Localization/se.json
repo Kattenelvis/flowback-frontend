@@ -863,5 +863,10 @@
 	"Use a dark color theme": "Använd ett mörkt färgtema",
 	"Your data": "Dina uppgifter",
 	"Request a copy of the personal data stored about you": "Begär en kopia av personuppgifterna som finns lagrade om dig",
-	"Permanently delete your account and personal data": "Radera ditt konto och dina personuppgifter permanent"
+	"Permanently delete your account and personal data": "Radera ditt konto och dina personuppgifter permanent",
+	"Download": "Ladda ner",
+	"Open in new tab": "Öppna i ny flik",
+	"Previous": "Föregående",
+	"Next": "Nästa",
+	"File": "Fil"
 }

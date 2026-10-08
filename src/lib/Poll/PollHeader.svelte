@@ -17,6 +17,7 @@
 	} from './functions';
 	import { _ } from 'svelte-i18n';
 	import NewDescription from './NewDescription.svelte';
+	import Attachments from '$lib/Generic/File/Attachments.svelte';
 	import MultipleChoices from '$lib/Generic/MultipleChoices.svelte';
 	import ReportPostModal from './ReportPostModal.svelte';
 	import {
@@ -219,27 +220,13 @@
 			/>
 		</div>
 	{/if}
-</div>
 
-{#if poll?.attachments && poll?.attachments.length > 0}
-	<div>
-		<div class="grid-area-attachments">
-			{#each poll?.attachments as attachment}
-				<div class="attachment-item">
-					<a
-						href={`${env.PUBLIC_API_URL}/media/${attachment.file}`}
-						download
-						target="_blank"
-						rel="noopener noreferrer"
-						class="download-link text-blue-600 hover:underline"
-					>
-						{`${env.PUBLIC_API_URL}/media/${attachment.file}`}
-					</a>
-				</div>
-			{/each}
+	{#if poll?.attachments?.length}
+		<div class="grid-area-attachments mt-4">
+			<Attachments attachments={poll.attachments} />
 		</div>
-	</div>
-{/if}
+	{/if}
+</div>
 
 <DeletePostModal
 	bind:deleteModalShow={deletePollModalShow}
@@ -269,9 +256,14 @@
 		grid-area: 3 / 2 / 4 / 3;
 	}
 
+	.grid-area-attachments {
+		grid-area: 4 / 2 / 5 / 3;
+	}
+
 	@media (max-width: 760px) {
 		.grid-area-items,
-		.grid-area-description {
+		.grid-area-description,
+		.grid-area-attachments {
 			grid-column: 1 / -1;
 			padding-left: 1rem;
 			padding-right: 1rem;
