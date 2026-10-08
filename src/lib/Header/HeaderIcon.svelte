@@ -59,6 +59,7 @@
 		class:active-icon={selectedPage}
 		class={`relative w-14 ${Class} ${$darkModeStore ? 'text-white' : ''}`}
 		id={href}
+		aria-label={$_(text)}
 		{tabindex}
 	>
 		<div on:load={checkSelectedPage} class="flex flex-col items-center">

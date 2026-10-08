@@ -112,7 +112,8 @@
 
 	onMount(async () => {
 		const en = (await import('javascript-time-ago/locale/en')).default;
-		TimeAgo.addDefaultLocale(en);
+		// addDefaultLocale throws when called twice, which happens when the bell remounts between the mobile and desktop header
+		TimeAgo.addLocale(en);
 		timeAgo = new TimeAgo('en');
 
 		notificationList();
@@ -143,10 +144,7 @@
 <!-- Menu of notifications, that for now opens when clicking the notification bell in the header -->
 {#if notificationsOpen}
 	<ul
-		class="max-h-[90dvh] overflow-y-scroll absolute right-0 bg-white dark:bg-darkobject dark:text-darkmodeText select-none shadow z-[60]
-		{$isMobile
-			? 'slide-animation-mobile bottom-full'
-			: 'slide-animation bottom-auto top-full'}"
+		class="max-h-[calc(100dvh-5rem)] overflow-y-scroll absolute right-0 top-full bg-white dark:bg-darkobject dark:text-darkmodeText select-none shadow z-[60] slide-animation"
 		id="notifications-list"
 	>
 		<button
@@ -212,20 +210,6 @@
 		to {
 			top: 100%;
 		}
-	}
-
-	@keyframes slide-animation-mobile {
-		from {
-			bottom: 80%;
-		}
-		to {
-			bottom: 100%;
-		}
-	}
-
-	.slide-animation-mobile {
-		animation-name: slide-animation-mobile;
-		animation-duration: 300ms;
 	}
 
 	.slide-animation {
