@@ -5,6 +5,7 @@
 	import Loader from '$lib/Generic/Loader.svelte';
 	import GroupFiltering from '$lib/Group/GroupFiltering.svelte';
 	import GroupThumbnail from '$lib/Group/GroupThumbnail.svelte';
+	import NoSearchResults from '$lib/Generic/NoSearchResults.svelte';
 	import type { Group, GroupFilter } from '$lib/Group/interface';
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
@@ -16,7 +17,8 @@
 	let groupList: Group[] = [],
 		filter: GroupFilter = { joined: 'all', search: '' },
 		loading = false,
-		next: string | undefined | null;
+		next: string | undefined | null,
+		searchQuery = '';
 
 	onMount(() => {
 		if (
@@ -90,7 +92,15 @@
 				>
 			{/if}
 
-			<GroupFiltering bind:filter />
+			<GroupFiltering bind:filter bind:searchQuery />
+
+			{#if groupList.length === 0 && !loading && filter.search}
+				<NoSearchResults
+					Class="w-[90%] md:w-[40%]"
+					query={filter.search}
+					onClear={() => (searchQuery = '')}
+				/>
+			{/if}
 
 			{#each groupList as group}
 				<GroupThumbnail bind:group />

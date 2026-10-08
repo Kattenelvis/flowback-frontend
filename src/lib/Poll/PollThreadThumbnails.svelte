@@ -12,6 +12,7 @@
 	import PollThumbnail from './PollThumbnail.svelte';
 	import PollFiltering from './PollFiltering.svelte';
 	import Loader from '$lib/Generic/Loader.svelte';
+	import NoSearchResults from '$lib/Generic/NoSearchResults.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { posts } from './stores';
 	import ThreadThumbnail from '$lib/Thread/ThreadThumbnail.svelte';
@@ -185,7 +186,12 @@
 		<div class={`flex flex-col gap-6 w-full`} id="thumbnails">
 			<PollFiltering {infoToGet} bind:filter bind:showThreads bind:showPolls />
 
-			{#if $posts?.length === 0 && !loading}
+			{#if $posts?.length === 0 && !loading && filter.search}
+				<NoSearchResults
+					query={filter.search}
+					onClear={() => (filter = { ...filter, search: '' })}
+				/>
+			{:else if $posts?.length === 0 && !loading}
 				<div class="bg-white dark:bg-darkobject rounded shadow p-8 mt-4">
 					{$_('No posts currently here')}
 				</div>

@@ -868,5 +868,9 @@
 	"Open in new tab": "Öppna i ny flik",
 	"Previous": "Föregående",
 	"Next": "Nästa",
-	"File": "Fil"
+	"File": "Fil",
+	"No search results found": "Inga sökresultat hittades",
+	"Nothing matches": "Inget matchar",
+	"Check the spelling or try a broader search term": "Kontrollera stavningen eller prova ett bredare sökord",
+	"Clear search": "Rensa sökning"
 }
