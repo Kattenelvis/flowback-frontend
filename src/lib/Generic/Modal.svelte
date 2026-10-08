@@ -109,8 +109,9 @@
 			{#if buttons.length > 0}
 				<div class="flex justify-center gap-2 pt-1">
 					{#each buttons as button}
+						<!-- Closed modals stay in the DOM, so only claim the id while open to avoid duplicates -->
 						<Button
-							id={button.label}
+							id={open ? button.label : undefined}
 							buttonStyle={button.type}
 							Class={`flex-1 !rounded-full py-2.5 font-medium ${button.class || ''}`}
 							onClick={button.onClick}
