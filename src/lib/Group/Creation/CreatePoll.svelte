@@ -24,6 +24,8 @@
 	import Select from '$lib/Generic/Select.svelte';
 	import type { WorkGroup } from '../WorkingGroups/interface';
 	import { groupUserStore } from '$lib/Group/interface';
+	import type { Permissions } from '$lib/Group/Permissions/interface';
+	import { setUserGroupPermissionInfo } from '$lib/Group/functions';
 	import type { pollType } from './interface';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { POLL_TYPE } from '$lib/Poll/pollType';
@@ -43,7 +45,7 @@
 		tags: { id: number }[] = $state([]),
 		workGroups: WorkGroup[] = $state([]),
 		workGroup: number | null = $state(null),
-		permissions: any;
+		permissions: Permissions | null | undefined = $state(null);
 
 	const groupId = $page.url.searchParams.get('id');
 
@@ -193,6 +195,10 @@
 	});
 
 	$effect(() => {
+		setUserGroupPermissionInfo($groupUserStore).then((p) => (permissions = p));
+	});
+
+	$effect(() => {
 		times =
 			selectedPoll === 'Score Poll'
 				? new Array(6).fill(new Date())
@@ -265,7 +271,7 @@
 				<RadioButtons bind:Yes={isPublic} label="Public?" />
 			{/if}
 
-			{#if selectedPage === 'poll' && (permissions?.allow_fast_forward || $groupUserStore?.is_admin)}
+			{#if selectedPage === 'poll' && (permissions?.poll_fast_forward || $groupUserStore?.is_admin)}
 				<RadioButtons bind:Yes={isFF} label="Fast Forward?" />
 			{/if}
 
