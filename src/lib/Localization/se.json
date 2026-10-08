@@ -872,5 +872,11 @@
 	"No search results found": "Inga sökresultat hittades",
 	"Nothing matches": "Inget matchar",
 	"Check the spelling or try a broader search term": "Kontrollera stavningen eller prova ett bredare sökord",
-	"Clear search": "Rensa sökning"
+	"Clear search": "Rensa sökning",
+	"Edit message": "Redigera meddelande",
+	"Delete message": "Ta bort meddelande",
+	"(edited)": "(redigerat)",
+	"Are you sure you want to delete this message?": "Är du säker på att du vill ta bort det här meddelandet?",
+	"Could not edit message": "Kunde inte redigera meddelandet",
+	"Could not delete message": "Kunde inte ta bort meddelandet"
 }
