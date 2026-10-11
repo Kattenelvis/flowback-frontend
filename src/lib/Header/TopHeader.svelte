@@ -5,6 +5,7 @@
 	import SideHeaderIcon from './SideHeaderIcon.svelte';
 	import { onNavigate } from '$app/navigation';
 	import SideHeader from './SideHeader.svelte';
+	import Notifications from './Notifications.svelte';
 	import { onMount } from 'svelte';
 
 	const pageTitles: Record<string, string> = {
@@ -31,7 +32,7 @@
 </script>
 
 <div class="relative w-full pb-4 mb-6">
-  <div class="fixed top-0 left-0 right-0 z-[110] shadow-md bg-white dark:bg-gray-900 px-4 py-2 border-b border-gray-200 dark:border-gray-700 grid grid-cols-3 items-center">
+  <div id="top-header" class="fixed top-0 left-0 right-0 z-[110] shadow-md bg-white dark:bg-gray-900 px-4 py-2 border-b border-gray-200 dark:border-gray-700 grid grid-cols-3 items-center">
 		{#if selectedHref !== 'home'}
 			<button
 				class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
@@ -46,7 +47,8 @@
       {$_(pageTitles[selectedHref] || 'Flowback')}
     </h1>
 
-    <div class="justify-self-end">
+    <div class="justify-self-end flex items-center gap-4">
+      <Notifications />
       <SideHeaderIcon bind:sideHeaderOpen />
       <SideHeader bind:sideHeaderOpen />
     </div>

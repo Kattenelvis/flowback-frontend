@@ -19,7 +19,7 @@
 	import Structure from '$lib/Poll/NewDesign/Structure.svelte';
 	import Layout from '$lib/Generic/Layout.svelte';
 	import PredictionStatements from '$lib/Poll/PredictionStatements.svelte';
-	import { env } from '$env/dynamic/public';
+	import Attachments from '$lib/Generic/File/Attachments.svelte';
 	import NewDescription from '$lib/Poll/NewDescription.svelte';
 	import { formatDate } from '$lib/Generic/DateFormatter';
 	import { predictionStatementsStore } from '$lib/Poll/PredictionMarket/interfaces';
@@ -228,16 +228,7 @@
 									{selectedProposal.description}
 								</span>
 							</div>
-							{#if selectedProposal.attachments}
-								<div class="">
-									{#each selectedProposal.attachments as file}
-										<img
-											alt="attachment"
-											src={`${env.PUBLIC_API_URL}/media/${file.file}`}
-										/>
-									{/each}
-								</div>
-							{/if}
+							<Attachments attachments={selectedProposal.attachments} Class="p-2" />
 						{:else if displayForm}
 							<ProposalSubmition
 								Class="max-h-full overflow-y-auto"

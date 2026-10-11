@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import { type Permissions } from './Permissions/interface';
+import type { _File } from '$lib/Generic/File/File';
 
 export type SelectablePage =
 	| 'flow'
@@ -141,7 +142,7 @@ export interface Thread {
 	total_comments: number;
 	description: string;
 	pinned: boolean;
-	attachments: string[];
+	attachments: _File[] | null;
 	user_vote: null | boolean;
 	score: number;
 	created_at: string;

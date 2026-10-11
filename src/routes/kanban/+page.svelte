@@ -28,7 +28,7 @@
 			</Button>
 		{/if}
 		
-			<KanbanBoard Class=" flex-1 min-w-0" />
+			<KanbanBoard Class=" min-w-0 md:mr-[70px]" />
 		</div>
 	</div>
 </Layout>

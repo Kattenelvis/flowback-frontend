@@ -126,13 +126,26 @@ export const linkToPost = (postId: number, groupId: number, postType: 'poll' | '
   return `/groups/${groupId}/${_postType}/${postId}`;
 }
 
-export const lazyLoading = (getFunction = () => { }) => {
+// Scroll events fire many times per wheel tick, so a load must finish before the next one starts,
+// otherwise the same "next" page gets fetched and appended multiple times
+const lazyLoadingInFlight = new WeakSet<Function>();
+
+export const lazyLoading = async (getFunction: () => unknown = () => { }) => {
+  if (lazyLoadingInFlight.has(getFunction)) return;
+
   const el = document.scrollingElement || document.documentElement;
 
   const scrolledToBottom =
     el.scrollTop + window.innerHeight >= el.scrollHeight - 1;
 
-  if (scrolledToBottom) getFunction();
+  if (!scrolledToBottom) return;
+
+  lazyLoadingInFlight.add(getFunction);
+  try {
+    await getFunction();
+  } finally {
+    lazyLoadingInFlight.delete(getFunction);
+  }
 };
 
 export const formatDateToLocalTime = (date: Date): string => {

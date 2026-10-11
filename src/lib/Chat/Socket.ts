@@ -17,11 +17,19 @@ const createSocket = (userId: number) => {
   };
 
   socket.onmessage = (event) => {
-    // If user types a message, just set it.
     const parsedMessage = JSON.parse(event.data);
-    if (parsedMessage?.user?.id !== userId) {
-      messageStore.set(parsedMessage);
+
+    // Errors (e.g. editing someone else's message) are not chat messages
+    if (parsedMessage?.status === 'error') {
+      console.warn('[chat]', parsedMessage.method, parsedMessage.message);
+      return;
     }
+
+    // Includes our own messages, so the chat window can swap its temporary id for the real one
+    messageStore.set(parsedMessage);
+
+    // Edits and deletions should not show up as new messages in the previews
+    if (parsedMessage.method === 'message_update' || parsedMessage.method === 'message_delete') return;
 
     // When user recieves a messages, update the preview store to reflect the new message.
     previewStore.update((previews) => {
@@ -112,4 +120,24 @@ const sendMessage = async (
   }
 };
 
-export default { createSocket, subscribe: messageStore.subscribe, sendMessage };
+const send = (socket: WebSocket, data: object) => {
+  if (socket.readyState !== WebSocket.OPEN) return false;
+  socket.send(JSON.stringify(data));
+  return true;
+};
+
+const editMessage = (socket: WebSocket, message_id: number, message: string) => {
+  if (!message.trim()) return false;
+  return send(socket, { message_id, message, method: 'message_update' });
+};
+
+const deleteMessage = (socket: WebSocket, message_id: number) =>
+  send(socket, { message_id, method: 'message_delete' });
+
+export default {
+  createSocket,
+  subscribe: messageStore.subscribe,
+  sendMessage,
+  editMessage,
+  deleteMessage
+};

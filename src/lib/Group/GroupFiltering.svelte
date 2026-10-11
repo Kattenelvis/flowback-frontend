@@ -5,10 +5,10 @@
 	import type { GroupFilter } from './interface';
 	import Select from '$lib/Generic/Select.svelte';
 
-	export let filter: GroupFilter;
+	export let filter: GroupFilter,
+		searchQuery = filter.search || '';
 	//Aesthethics only, changes the UI when searching would lead to different results.
 	let searched = true;
-	let searchQuery = filter.search || '';
 
 	const handleChangeMember = (e: any) => {
 		filter.joined = e.target.value;

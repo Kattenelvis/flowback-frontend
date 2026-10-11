@@ -24,6 +24,8 @@
 	import Select from '$lib/Generic/Select.svelte';
 	import type { WorkGroup } from '../WorkingGroups/interface';
 	import { groupUserStore } from '$lib/Group/interface';
+	import type { Permissions } from '$lib/Group/Permissions/interface';
+	import { setUserGroupPermissionInfo } from '$lib/Group/functions';
 	import type { pollType } from './interface';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { POLL_TYPE } from '$lib/Poll/pollType';
@@ -43,7 +45,7 @@
 		tags: { id: number }[] = $state([]),
 		workGroups: WorkGroup[] = $state([]),
 		workGroup: number | null = $state(null),
-		permissions: any;
+		permissions: Permissions | null | undefined = $state(null);
 
 	const groupId = $page.url.searchParams.get('id');
 
@@ -134,25 +136,27 @@
 	};
 
 	const createThread = async () => {
-		let thread: {
-			title: string;
-			description?: string;
-			public?: boolean;
-			work_group_id?: number | null;
-		} = {
-			title
-		};
+		// Sent as form data so the attachments can be uploaded with the thread
+		const formData = new FormData();
 
-		if (description) thread.description = description;
+		formData.append('title', title);
 
-		if (workGroup) thread.work_group_id = workGroup;
+		if (description) formData.append('description', description);
 
-		if (isPublic) thread.public = isPublic;
+		if (workGroup) formData.append('work_group_id', workGroup.toString());
+
+		if (isPublic) formData.append('public', 'true');
+
+		images.forEach((image) => {
+			formData.append('attachments', image);
+		});
 
 		const { res, json } = await fetchRequest(
 			'POST',
 			`group/${$page.url.searchParams.get('id')}/thread/create`,
-			thread
+			formData,
+			true,
+			false
 		);
 		if (!res.ok) {
 			// poppup = { message: "Couldn't create Thread", success: false };
@@ -188,6 +192,10 @@
 		document.addEventListener('keydown', handleKeyDown);
 		getGroupTags();
 		getWorkGroupList();
+	});
+
+	$effect(() => {
+		setUserGroupPermissionInfo($groupUserStore).then((p) => (permissions = p));
 	});
 
 	$effect(() => {
@@ -263,7 +271,7 @@
 				<RadioButtons bind:Yes={isPublic} label="Public?" />
 			{/if}
 
-			{#if selectedPage === 'poll' && (permissions?.allow_fast_forward || $groupUserStore?.is_admin)}
+			{#if selectedPage === 'poll' && (permissions?.poll_fast_forward || $groupUserStore?.is_admin)}
 				<RadioButtons bind:Yes={isFF} label="Fast Forward?" />
 			{/if}
 

@@ -29,7 +29,7 @@ export const getPhase = (poll: poll): Phase => {
 };
 
 // TODO: REMOVE
-export const dateLabels = SCORE_POLL_PHASE_CONFIG.filter(p => p.endDateField !== null).map(p => p.label);
+export const dateLabels = ['Start Date', ...SCORE_POLL_PHASE_CONFIG.map(p => p.label)];
 
 // TODO: REMOVE
 export const getPhaseUserFriendlyName = (phase: Phase) =>
