@@ -39,9 +39,7 @@
 		selectedWorkgroupId: number | null = null,
 		selectedGroupId: number | null = null;
 
-	const createKanbanEntry = async () => {
-		loading = true;
-
+	const createEntry = async () => {
 		const formData = new FormData();
 
 		formData.append('title', title);
@@ -72,8 +70,6 @@
 			false // Formadata doesn't need to be JSON-fied
 		);
 
-		loading = false;
-
 		if (!res.ok) {
 			ErrorHandlerStore.set({
 				message: 'Failed to create kanban task',
@@ -99,6 +95,19 @@
 		selectedWorkgroupId = workGroups[0]?.id ?? null;
 
 		await getKanbanEntries();
+	};
+
+	// Blocks double submits (double click, repeated Enter) until the request is done.
+	// TODO: Also make the backend idempotent so duplicates from other sources
+	// (several tabs, retries) can't create two tasks.
+	const createKanbanEntry = async () => {
+		if (loading) return;
+		loading = true;
+		try {
+			await createEntry();
+		} finally {
+			loading = false;
+		}
 	};
 
 	const handleChangeAssignee = (e: any) => {
@@ -158,7 +167,7 @@
 	</div>
 	<div slot="body">
 		<Loader bind:loading>
-			<div on:submit|preventDefault={createKanbanEntry}>
+			<div>
 				<div class="pb-2">
 					<TextInput
 						id="create-kanban-text"
@@ -236,8 +245,11 @@
 	</div>
 
 	<div slot="footer" class="flex">
-		<Button Class="py-1 flex-1" buttonStyle="primary" type="submit"
-			>{$_('Confirm')}</Button
+		<Button
+			Class="py-1 flex-1"
+			buttonStyle="primary"
+			type="submit"
+			disabled={loading}>{$_('Confirm')}</Button
 		>
 		<Button
 			Class="py-1 flex-1"
