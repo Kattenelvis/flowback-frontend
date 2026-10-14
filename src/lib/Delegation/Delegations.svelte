@@ -7,7 +7,7 @@
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
-	import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
+	import { faClockRotateLeft, faLock } from '@fortawesome/free-solid-svg-icons';
 	import { userStore } from '$lib/User/interfaces';
 	import Loader from '$lib/Generic/Loader.svelte';
 
@@ -18,6 +18,8 @@
 		expandedSection: any = true,
 		delegateRelations: DelegateRelation[] = [],
 		loading = false,
+		// Saving a choice is shown on the row itself, so the list never dims or blinks
+		saving = false,
 		pendingCheck: Record<string, number | null> = {};
 
 	onMount(async () => {
@@ -169,87 +171,122 @@
 				tag.id,
 				'remove'
 			);
+			await getDelegateRelations();
 			delete pendingCheck[tag.name];
 			pendingCheck = pendingCheck;
-			groupDelegationSetup();
 		}
+	};
+
+	const selectDelegate = async (delegate: Delegate, tag: Tag) => {
+		if (saving) return;
+		saving = true;
+		pendingCheck[tag.name] = delegate.pool_id;
+		pendingCheck = pendingCheck;
+		await createDelegateRelation(delegate.pool_id);
+		await getDelegateRelations();
+		await updateDelgation(delegate, tag);
+		await notificationSubscribe(delegate.pool_id);
+		await getDelegateRelations();
+		delete pendingCheck[tag.name];
+		pendingCheck = pendingCheck;
+		saving = false;
 	};
 </script>
 
 <Loader bind:loading>
 	<div>
-		{#if delegates.length > 0}
-			{#each tags as tag, index}
-				{#if index === 0}
-					<div>
-						<span class="text-primary dark:text-secondary font-medium">{$_('Delegates')}</span>
+		{#if delegates.length > 0 && tags.length > 0}
+			{@const tag = tags[0]}
+			{@const isDelegate = delegates.some((d) => d.user.id === $userStore?.id)}
+			<div class="flex items-center justify-between mb-3">
+				<span
+					class="text-lg font-semibold text-primary dark:text-secondary"
+				>
+					{$_('Delegates')}
+				</span>
+				<span class="text-xs text-gray-400">{delegates.length}</span>
+			</div>
 
-						<div class="flex flex-col gap-2 mt-2">
-							{#each delegates as delegate}
-								{@const isChecked = tag.name in pendingCheck
-									? pendingCheck[tag.name] === delegate.pool_id
-									: delegateRelations
-										.find(r => r.delegate_pool_id === delegate.pool_id)
-										?.tags.find(_tag => _tag.id === tag.id) !== undefined}
-										
-								<label
-									class="flex items-center justify-between gap-2 p-3 rounded-xl border cursor-pointer transition-colors
-										{isChecked
-											? 'bg-primary/5 border-primary/30 dark:bg-primary/10 dark:border-primary/40'
-											: 'border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-darkbackground'}"
+			{#if isDelegate}
+				<div
+					class="flex items-start gap-3 p-3 mb-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 text-sm text-amber-800 dark:text-amber-300"
+				>
+					<Fa icon={faLock} class="mt-0.5 shrink-0" />
+					<p>
+						{$_(
+							'You are a delegate, so you can only delegate to yourself. Stop being a delegate to choose someone else.'
+						)}
+					</p>
+				</div>
+			{/if}
+
+			<div class="flex flex-col gap-2">
+				{#each delegates as delegate (delegate.pool_id)}
+					{@const isChecked = tag.name in pendingCheck
+						? pendingCheck[tag.name] === delegate.pool_id
+						: delegateRelations
+								.find((r) => r.delegate_pool_id === delegate.pool_id)
+								?.tags.find((_tag) => _tag.id === tag.id) !== undefined}
+					{@const isSelf = delegate.user.id === $userStore?.id}
+					{@const locked = isDelegate && !isSelf}
+
+					<label
+						class="flex items-center justify-between gap-2 p-3 rounded-xl border transition-colors duration-150
+							{locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+							{isChecked
+							? 'bg-primary/5 border-primary/40 dark:bg-primary/10 dark:border-primary/50'
+							: 'border-gray-100 dark:border-gray-700'}
+							{!isChecked && !locked ? 'hover:bg-gray-50 dark:hover:bg-darkbackground' : ''}"
+					>
+						<div class="min-w-0 flex items-center gap-2">
+							<div class="min-w-0 truncate">
+								<ProfilePicture
+									displayName
+									username={delegate.user.username}
+									userId={delegate.user.id}
+									profilePicture={delegate.user.profile_image}
+									href={`/user?id=${delegate.user.id}`}
+									Class="hover:opacity-80 hover:text-primary dark:hover:text-secondary transition-all duration-150"
+								/>
+							</div>
+							{#if isSelf}
+								<span
+									class="shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary dark:text-secondary"
 								>
-									<div class="min-w-0 truncate">
-									<ProfilePicture
-										displayName
-										username={delegate.user.username}
-										userId={delegate.user.id}
-										profilePicture={delegate.user.profile_image}
-                    href={`/user?id=${delegate.user.id}`}
-                    Class="hover:opacity-80 hover:text-primary dark:hover:text-secondary transition-all duration-150"
-									/>
-									</div>
-									<div class="flex items-center gap-3 shrink-0">
-										<a
-											href={`/user?id=${delegate.user.id}&delegate_id=${delegate.id}&group_id=${group.id}&is_admin=${delegate.is_admin}`}
-											class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary dark:hover:text-secondary transition-colors px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-											on:click|stopPropagation
-										>
-											<Fa icon={faClockRotateLeft} />
-											<span class="hidden sm:inline">{$_('History')}</span>
-										</a>
-										<input
-											disabled={delegates.find(d => d.user.id === $userStore?.id) && delegate.user.id !== $userStore?.id}
-											on:input={async () => {
-												pendingCheck[tag.name] = delegate.pool_id;
-												pendingCheck = pendingCheck;
-												loading = true;
-												await createDelegateRelation(delegate.pool_id);
-												await getDelegateRelations();
-												await updateDelgation(delegate, tag);
-												await notificationSubscribe(delegate.pool_id);
-												await getDelegateRelations();
-												delete pendingCheck[tag.name];
-												pendingCheck = pendingCheck;
-												loading = false;
-											}}
-											type="radio"
-											name={tag.name}
-											checked={isChecked}
-											class="accent-primary w-5 h-5 sm:w-4 sm:h-4"
-										/>
-									</div>
-								</label>
-							{/each}
+									{$_('You')}
+								</span>
+							{/if}
 						</div>
-						<button
-							class="text-xs text-red-400 hover:text-red-600 hover:underline transition-colors mt-2 py-1"
-							on:click={() => clearChoice(tag)}
-						>
-							{$_('Clear Choice')}
-						</button>
-					</div>
-				{/if}
-			{/each}
+						<div class="flex items-center gap-3 shrink-0">
+							<a
+								href={`/user?id=${delegate.user.id}&delegate_id=${delegate.id}&group_id=${group.id}&is_admin=${delegate.is_admin}`}
+								class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary dark:hover:text-secondary transition-colors px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+								on:click|stopPropagation
+							>
+								<Fa icon={faClockRotateLeft} />
+								<span class="hidden sm:inline">{$_('History')}</span>
+							</a>
+							{#if locked}
+								<Fa icon={faLock} class="w-5 sm:w-4 text-gray-400" />
+							{:else}
+								<input
+									on:input={() => selectDelegate(delegate, tag)}
+									type="radio"
+									name={tag.name}
+									checked={isChecked}
+									class="accent-primary w-5 h-5 sm:w-4 sm:h-4"
+								/>
+							{/if}
+						</div>
+					</label>
+				{/each}
+			</div>
+			<button
+				class="text-xs text-red-400 hover:text-red-600 hover:underline transition-colors mt-3 py-1"
+				on:click={() => clearChoice(tag)}
+			>
+				{$_('Clear Choice')}
+			</button>
 		{:else}
 			<span>{$_('There are currently no delegates for this group')}</span>
 		{/if}
