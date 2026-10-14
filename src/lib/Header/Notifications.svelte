@@ -144,39 +144,45 @@
 <!-- Menu of notifications, that for now opens when clicking the notification bell in the header -->
 {#if notificationsOpen}
 	<ul
-		class="max-h-[calc(100dvh-5rem)] overflow-y-scroll absolute right-0 top-full bg-white dark:bg-darkobject dark:text-darkmodeText select-none shadow z-[60] slide-animation"
+		class="absolute right-0 top-full z-[60] mt-3 max-h-[calc(100dvh-6rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl border border-gray-200 bg-white text-gray-900 shadow-xl dark:border-gray-700 dark:bg-darkobject dark:text-darkmodeText select-none slide-animation"
 		id="notifications-list"
 	>
-		<button
-			on:click={markAllAsRead}
-			class="w-full flex justify-end items-center cursor-pointer border-b border-gray-200 dark:border-gray-600 border hover:shadow hover:bg-blue-100 hover:border-l-2 hover:border-l-primary transition-all"
-		>
-			<span class="mr-4">{$_('Mark all as read')}</span>
-		</button>
+		<div class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-darkobject">
+			<h2 class="font-semibold">{$_('Notifications')}</h2>
+			<button on:click={markAllAsRead} class="rounded-lg px-2.5 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-secondary dark:hover:bg-gray-700">
+				{$_('Mark all as read')}
+			</button>
+		</div>
 		{#if notifications?.length > 0}
 			{#each notifications as notification}
 				<li
-					class="flex justify-between max-w-[25rem] border-gray-200 dark:border-gray-600 border hover:shadow transition-all dark:hover:bg-slate-700 hover:bg-blue-300 hover:border-l-2 hover:border-l-primary"
-					class:bg-green-300={!notification.read}
-					class:dark:bg-slate-600={!notification.read}
+					class="flex border-b border-gray-100 transition-colors last:border-b-0 dark:border-gray-700"
+					class:bg-blue-50={!notification.read}
+					class:dark:bg-gray-700={!notification.read}
 				>
 					<button
+						class="min-w-0 flex-1 px-4 py-3 text-left transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-gray-700/70"
 						on:click={async () => {
 							await gotoNotificationOrigin(notification);
 							await readNotification(notification.object_id);
 							notification.read = true;
 						}}
 					>
-						<div class="break-words pr-8 text-left pl-4 py-2">
-							<div>{$_(notification.message)}</div>
-							<div class="text-sm">
+						<div class="flex items-start gap-3 break-words">
+							<span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" class:bg-primary={!notification.read} class:bg-gray-300={notification.read} class:dark:bg-gray-500={notification.read} aria-hidden="true"></span>
+							<span class="min-w-0">
+								<span class="block">{$_(notification.message)}</span>
+								<span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
 								{timeAgo.format(new Date(notification.timestamp))}
-							</div>
+								</span>
+							</span>
 						</div>
 					</button>
 					<button
 						style="z-index: 1;"
-						class="pr-4"
+						class="shrink-0 px-3 text-xs font-medium text-gray-500 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:text-gray-400 dark:hover:text-secondary"
+						aria-label={$_('Mark as read')}
+						title={$_('Mark as read')}
 						on:click={async () => {
 							await readNotification(notification.object_id);
 							notification.read = true;
@@ -188,14 +194,12 @@
 							// hovered = hovered;
 						}}
 					>
-						<!-- <Fa icon={faX} class="text-gray-300" /> -->
+						{#if !notification.read}{$_('Mark as read')}{/if}
 					</button>
 				</li>
 			{/each}
 		{:else}
-			<div
-				class="pt-3 pb-3 pr-10 pl-6 border-b border-gray-200 border cursor-default"
-			>
+			<div class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400 cursor-default">
 				{$_('No notifications')}
 			</div>
 		{/if}

@@ -182,62 +182,41 @@
 
 	{#if notificationOpen && categories}
 		<div
-			class={`z-40 absolute mt-2 bg-white dark:bg-darkobject shadow-xl text-sm ${ClassOpen}`}
+			class={`z-40 absolute mt-2 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white text-sm text-gray-900 shadow-xl dark:border-gray-700 dark:bg-darkobject dark:text-darkmodeText ${ClassOpen}`}
 		>
-			<div class="text-xs p-2">{$_('Manage Subscriptions')}</div>
+			<div class="border-b border-gray-200 px-4 py-3 font-semibold dark:border-gray-700">{$_('Manage Subscriptions')}</div>
 			{#if type !== 'event'}
 				<button
+					type="button"
 					onclick={(e) => {
 						e.preventDefault();
 						subscribeToAll();
 					}}
-					class="text-xs p-2">{$_('Subscribe to All')}</button
+					class="w-full border-b border-gray-200 px-4 py-2.5 text-left text-sm font-medium text-primary transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:border-gray-700 dark:text-secondary dark:hover:bg-gray-700">{$_('Subscribe to All')}</button
 				>{/if}
 			{#each categories as category, i}
+				{@const isSubscribed = notifications?.some(
+					(notificationObject) => notificationObject.channel_category === category
+				)}
 				<button
-					class="bg-gray-200 dark:bg-gray-700 w-full p-2 px-5 flex justify-between items-center transition-all"
-					class:active:bg-gray-400={hoverEffect}
-					class:dark:active:bg-slate-700={hoverEffect}
-					class:dark:active:bg-slate-900={hoverEffect}
-					class:hover:bg-gray-300={hoverEffect}
-					class:hover:cursor-pointer={hoverEffect}
-					class:dark:hover:bg-slate-800={hoverEffect}
-					class:!bg-white={notifications?.find(
-						(notificationObject) =>
-							notificationObject.channel_category === category
-					)}
-					class:dark:!bg-slate-400={notifications?.find(
-						(notificationObject) =>
-							notificationObject.channel_category === category
-					)}
+					type="button"
+					aria-pressed={isSubscribed}
+					class="flex w-full items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:border-gray-700 dark:hover:bg-gray-700"
+					class:bg-blue-50={isSubscribed}
+					class:dark:bg-gray-700={isSubscribed}
 					onclick={(e) => {
 						e.preventDefault();
-						if (
-							!notifications.find(
-								(object) => object.channel_category === category
-							)
-						)
+						if (!isSubscribed)
 							notificationSubscription(category, 'add');
 						else notificationSubscription(category, 'remove');
 					}}
 				>
-					{$_(labels[i])}
+					<span>{$_(labels[i])}</span>
 					<Fa
-						class=""
-						color={notifications?.find(
-							(notificationObject) =>
-								notificationObject.channel_category === category
-						)
-							? 'black'
-							: 'white'}
+						class={isSubscribed ? 'text-primary dark:text-secondary' : 'text-gray-400 dark:text-gray-500'}
 						swapOpacity
-						icon={notifications?.find(
-							(notificationObject) =>
-								notificationObject.channel_category === category
-						)
-							? faBell
-							: faBellSlash}
-						size={'1.4x'}
+						icon={isSubscribed ? faBell : faBellSlash}
+						size={'1x'}
 					/>
 				</button>
 			{/each}
