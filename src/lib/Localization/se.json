@@ -886,5 +886,7 @@
 	"(edited)": "(redigerat)",
 	"Are you sure you want to delete this message?": "Är du säker på att du vill ta bort det här meddelandet?",
 	"Could not edit message": "Kunde inte redigera meddelandet",
-	"Could not delete message": "Kunde inte ta bort meddelandet"
+	"Could not delete message": "Kunde inte ta bort meddelandet",
+	"No proposal selected": "Inget förslag valt",
+	"Select a proposal to read it, or add your own to shape the outcome.": "Välj ett förslag för att läsa det, eller lägg till ett eget och påverka utfallet."
 }

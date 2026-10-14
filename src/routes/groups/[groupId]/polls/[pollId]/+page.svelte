@@ -233,6 +233,19 @@
 								bind:proposals
 								bind:displayForm
 							/>
+						{:else}
+							<div
+								class="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500 dark:text-gray-400"
+							>
+								<span class="text-lg font-semibold mb-1"
+									>{$_('No proposal selected')}</span
+								>
+								<span class="text-sm max-w-xs"
+									>{$_(
+										'Select a proposal to read it, or add your own to shape the outcome.'
+									)}</span
+								>
+							</div>
 						{/if}
 					</div>
 					<div slot="bottom">
