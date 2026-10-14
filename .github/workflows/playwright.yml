@@ -45,25 +45,27 @@ jobs:
           repository: Kattenelvis/flowback-docker
           path: flowback-docker
 
-      # Test against the backend branch with the same name (e.g. dev) so paired
-      # backend and frontend changes are tested together; otherwise use master
-      - name: Pick backend branch
-        id: backend-ref
+      # Test against the backend and interface-testing branches with the same name
+      # (e.g. dev) so paired changes are tested together; otherwise use master
+      - name: Pick branches
+        id: refs
         env:
           BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
-          if git ls-remote --exit-code --heads https://github.com/Kattenelvis/flowback-backend "$BRANCH" > /dev/null; then
-            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
-          else
-            echo "ref=master" >> "$GITHUB_OUTPUT"
-          fi
+          for repo in flowback-backend flowback-interface-testing; do
+            ref=master
+            if git ls-remote --exit-code --heads "https://github.com/Kattenelvis/$repo" "$BRANCH" > /dev/null; then
+              ref=$BRANCH
+            fi
+            echo "$repo=$ref" >> "$GITHUB_OUTPUT"
+          done
 
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
           repository: Kattenelvis/flowback-backend
           path: flowback-backend
-          ref: ${{ steps.backend-ref.outputs.ref }}
+          ref: ${{ steps.refs.outputs.flowback-backend }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -96,6 +98,7 @@ jobs:
         with:
           repository: Kattenelvis/flowback-interface-testing
           path: flowback-interface-testing
+          ref: ${{ steps.refs.outputs.flowback-interface-testing }}
 
       - uses: actions/setup-node@v4
         with:
