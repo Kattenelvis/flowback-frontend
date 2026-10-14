@@ -27,7 +27,10 @@
 		needsReload = 0,
 		commentFilterProposalId: number | null = null,
 		// What my delegate has voted on
-		delegateVoting: { score: number; proposal: number }[] = [];
+		delegateVoting: { score: number; proposal: number }[] = [],
+		// Every vote posts the whole ballot, so voting before one's own and one's
+		// delegate's votes have loaded would overwrite them with zeros
+		votesLoaded = false;
 
 	onMount(async () => {
 		await getProposals();
@@ -47,6 +50,7 @@
 			await getVotes();
 		}
 
+		votesLoaded = true;
 		// TODO: Remove "needsReload" while making sure things reload properly
 		needsReload++;
 	});
@@ -219,7 +223,7 @@
 							bind:filteredComments={comments}
 							{proposal}
 						>
-							{#if phase === 'delegate_vote' || phase === 'vote'}
+							{#if (phase === 'delegate_vote' || phase === 'vote') && votesLoaded}
 								{@const score = getScore(proposal)}
 								{@const disabled =
 									(phase === 'delegate_vote' &&

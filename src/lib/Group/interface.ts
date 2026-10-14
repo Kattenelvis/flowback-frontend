@@ -8,6 +8,7 @@ export type SelectablePage =
 	| 'documents'
 	| 'members'
 	| 'email'
+	| 'reports'
 	| 'statistics'
 	| 'delegation'
 	| 'tags'

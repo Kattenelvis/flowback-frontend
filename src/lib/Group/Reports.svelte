@@ -40,36 +40,38 @@
 </script>
 
 <Loader bind:loading>
-	<span class="block text-lg text-primary dark:text-secondary font-semibold mb-3"
-		>{$_('Reports')}</span
-	>
-	{#if reports.length > 0}
-		<div class="flex flex-col gap-2 mt-2">
-			{#each reports as report}
-				<button
-					onclick={() => {
-						selectedReport = report;
-						open = true;
-					}}
-					class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-left transition-colors w-full"
-				>
-					<Fa icon={faWarning} class="text-yellow-500 mt-0.5 flex-shrink-0" />
-					<div class="min-w-0">
-						<div class="font-medium text-gray-800 dark:text-darkmodeText truncate">
-							{report.title}
+	<div class="bg-white dark:bg-darkobject p-6 rounded shadow dark:text-darkmodeText">
+		<span class="block text-lg text-primary dark:text-secondary font-semibold mb-3"
+			>{$_('Reports')}</span
+		>
+		{#if reports.length > 0}
+			<div class="flex flex-col gap-2 mt-2">
+				{#each reports as report}
+					<button
+						onclick={() => {
+							selectedReport = report;
+							open = true;
+						}}
+						class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-left transition-colors w-full"
+					>
+						<Fa icon={faWarning} class="text-yellow-500 mt-0.5 flex-shrink-0" />
+						<div class="min-w-0">
+							<div class="font-medium text-gray-800 dark:text-darkmodeText truncate">
+								{report.title}
+							</div>
+							<div class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
+								{report.description}
+							</div>
 						</div>
-						<div class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
-							{report.description}
-						</div>
-					</div>
-				</button>
-			{/each}
-		</div>
-	{:else if !loading}
-		<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-			{$_('There are currently no reports')}
-		</p>
-	{/if}
+					</button>
+				{/each}
+			</div>
+		{:else if !loading}
+			<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+				{$_('There are currently no reports')}
+			</p>
+		{/if}
+	</div>
 </Loader>
 
 <Modal bind:open Class="max-w-[520px]" id="report-details-modal">

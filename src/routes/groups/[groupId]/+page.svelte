@@ -1,11 +1,16 @@
 <script lang="ts">
 	import GroupHeader from '$lib/Group/GroupHeader.svelte';
 	import Members from '$lib/Group/Members.svelte';
-	import { type GroupDetails, type SelectablePage } from '$lib/Group/interface';
+	import {
+		groupUserStore,
+		type GroupDetails,
+		type SelectablePage
+	} from '$lib/Group/interface';
 	import GroupSidebar from '$lib/Group/GroupSidebar.svelte';
 	import Layout from '$lib/Generic/Layout.svelte';
 	import About from '$lib/Group/About.svelte';
 	import SendEmail from '$lib/Group/SendEmail.svelte';
+	import Reports from '$lib/Group/Reports.svelte';
 	import Statistics from '$lib/Group/Statistics.svelte';
 	import { onMount } from 'svelte';
 	import { fetchRequest } from '$lib/FetchRequest';
@@ -115,6 +120,11 @@
 						<Statistics {memberCount} />
 					{:else if selectedPage === 'email'}
 						<SendEmail />
+					{:else if selectedPage === 'reports'}
+						<!-- Waits for this group's user to load so non-admins never request the reports -->
+						{#if $groupUserStore?.group_id === Number($page.params.groupId) && $groupUserStore?.is_admin}
+							<Reports />
+						{/if}
 					{:else if selectedPage === 'about'}
 						<About
 							description={group.description}

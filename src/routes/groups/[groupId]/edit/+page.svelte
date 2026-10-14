@@ -5,7 +5,6 @@
 	import Permissions from '$lib/Group/Permissions/Permissions.svelte';
 	import Tags from '$lib/Group/Tags.svelte';
 	import GroupKPIs from '$lib/Poll/KPI/GroupKPIs.svelte';
-	import Reports from '$lib/Group/Reports.svelte';
 	import { page } from '$app/state';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
@@ -14,16 +13,15 @@
 		faCog,
 		faTags,
 		faShieldAlt,
-		faChartLine,
-		faWarning
+		faChartLine
 	} from '@fortawesome/free-solid-svg-icons';
 	import { groupUserStore } from '$lib/Group/interface';
 	import { env } from '$env/dynamic/public';
 
-	type AdminPage = 'group' | 'areas' | 'perms' | 'blockchain' | 'kpis' | 'reports';
-	const adminPages: AdminPage[] = ['group', 'areas', 'perms', 'blockchain', 'kpis', 'reports'];
+	type AdminPage = 'group' | 'areas' | 'perms' | 'blockchain' | 'kpis';
+	const adminPages: AdminPage[] = ['group', 'areas', 'perms', 'blockchain', 'kpis'];
 
-	// The selected page is kept in the url (?page=reports) so admin pages can be linked to directly
+	// The selected page is kept in the url (?page=kpis) so admin pages can be linked to directly
 	const pageFromUrl = page.url.searchParams.get('page') as AdminPage | null;
 
 	let selectedPage: AdminPage =
@@ -106,16 +104,6 @@
 					>
 						<Fa icon={faChartLine} class="w-5 h-5" />{$_('KPIs')}
 					</button>
-					<button
-						on:click={() => selectPage('reports')}
-						class={`${optionsDesign}`}
-						class:bg-gray-100={selectedPage === 'reports'}
-						class:dark:bg-gray-700={selectedPage === 'reports'}
-						class:border-l-2={selectedPage === 'reports'}
-						class:border-primary={selectedPage === 'reports'}
-					>
-						<Fa icon={faWarning} class="w-5 h-5" />{$_('Reports')}
-					</button>
 					<!-- <ul>
 					<li
 						class={`cursor-pointer ${
@@ -140,8 +128,6 @@
 					<Permissions />
 				{:else if selectedPage === 'kpis'}
 					<GroupKPIs />
-				{:else if selectedPage === 'reports'}
-					<Reports />
 				{:else if selectedPage === 'blockchain'}
 					<!-- block -->
 				{/if}

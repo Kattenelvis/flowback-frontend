@@ -98,7 +98,11 @@
 		formData.append('public', isPublic.toString());
 		formData.append('pinned', 'false');
 		formData.append('version', '2');
-		formData.append('tag', tags[0]?.id?.toString() || '1');
+		// Tags are fetched on mount without awaiting, so a quick submit can get here
+		// before they arrive. Never fall back to a hardcoded id: tag 1 belongs to
+		// another group, which silently breaks tag-scoped delegation on this poll.
+		if (tags.length === 0) await getGroupTags();
+		if (tags[0]) formData.append('tag', tags[0].id.toString());
 
 		images.forEach((image) => {
 			formData.append('attachments', image);
