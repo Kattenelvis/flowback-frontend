@@ -88,11 +88,11 @@
 		voting = voting;
 	};
 
-	// Getting the vote from one's delegate
+	// Getting the vote from one's delegate (one's own delegate vote if one is a delegate)
 	const getDelegateVotes = async () => {
 		const { res, json } = await fetchRequest(
 			'GET',
-			`group/poll/pool/votes?group_id=${page.params.groupId}&poll_id=${page.params.pollId}`
+			`group/poll/${page.params.pollId}/proposal/vote/delegate`
 		);
 
 		if (!res.ok) {
@@ -103,20 +103,19 @@
 			return;
 		}
 
-		if (json?.results[0]?.vote?.length > 0) {
-			delegateVoting = json?.results[0]?.vote.map((vote: any) => ({
-				score: vote.raw_score,
-				proposal: vote.proposal_id
-			}));
+		if (!json?.vote?.length) return;
 
-			// Makes it so users vote matches their delegates vote
-			voting = json?.results[0]?.vote.map((vote: any) => ({
-				score: vote.raw_score,
-				proposal: vote.proposal_id
-			}));
-		}
-		voting = voting;
-		delegateVoting = delegateVoting;
+		// Merged into the full ballot so proposals the delegate didn't score keep a slot
+		const delegateScores = new Map<number, number>(
+			json.vote.map((vote: any) => [vote.proposal_id, vote.raw_score])
+		);
+
+		// Makes it so users vote matches their delegates vote
+		voting = voting.map((vote) => ({
+			...vote,
+			score: delegateScores.get(vote.proposal) ?? vote.score
+		}));
+		delegateVoting = voting.map((vote) => ({ ...vote }));
 	};
 
 	const handleSliderClick = async (pos: any, proposal: proposal) => {

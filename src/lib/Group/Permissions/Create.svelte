@@ -45,27 +45,7 @@
 		},
 		{ title: 'Delete Poll', description: 'Allows user to delete any poll' },
 		{ title: 'Force Delete Proposal', description: 'Allows user to delete any proposal' },
-		{ title: 'Delete Comment', description: 'Allows user to delete any comment' },
-		{
-			title: 'Create Consequence',
-			description: 'Allows user to create consequences in polls'
-		},
-		{
-			title: 'Delete Consequence',
-			description: 'Allows user to delete consequences in polls'
-		},
-		{
-			title: 'Create Consequence Probability',
-			description: 'Allows user to create consequence probabilities in polls'
-		},
-		{
-			title: 'Update Consequence Probability',
-			description: 'Allows user to modify consequence probabilities in polls'
-		},
-		{
-			title: 'Delete Consequence Probability',
-			description: 'Allows user to delete consequence probabilities in polls'
-		}
+		{ title: 'Delete Comment', description: 'Allows user to delete any comment' }
 	];
 
 	let loading = false,
@@ -90,12 +70,7 @@
 				delete_proposal: rolePerms[8],
 				force_delete_poll: rolePerms[9],
 				force_delete_proposal: rolePerms[10],
-				force_delete_comment: rolePerms[11],
-				prediction_statement_create: rolePerms[12],
-				prediction_statement_delete: rolePerms[13],
-				prediction_bet_create: rolePerms[14],
-				prediction_bet_update: rolePerms[15],
-				prediction_bet_delete: rolePerms[16]
+				force_delete_comment: rolePerms[11]
 			}
 		);
 
@@ -134,12 +109,7 @@
 				delete_proposal: rolePerms[8],
 				force_delete_poll: rolePerms[9],
 				force_delete_proposal: rolePerms[10],
-				force_delete_comment: rolePerms[11],
-				prediction_statement_create: rolePerms[12],
-				prediction_statement_delete: rolePerms[13],
-				prediction_bet_create: rolePerms[14],
-				prediction_bet_update: rolePerms[15],
-				prediction_bet_delete: rolePerms[16]
+				force_delete_comment: rolePerms[11]
 			}
 		);
 
@@ -169,11 +139,6 @@
 		rolePerms[9] = permissions.force_delete_poll;
 		rolePerms[10] = permissions.force_delete_proposal;
 		rolePerms[11] = permissions.force_delete_comment;
-		rolePerms[12] = permissions.prediction_statement_create;
-		rolePerms[13] = permissions.prediction_statement_delete;
-		rolePerms[14] = permissions.prediction_bet_create;
-		rolePerms[15] = permissions.prediction_bet_update;
-		rolePerms[16] = permissions.prediction_bet_delete;
 	};
 
 	onMount(() => {
