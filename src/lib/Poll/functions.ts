@@ -19,7 +19,9 @@ export const formatDate = (dateInput: string) => {
 
 // TODO: Fix this mess
 export const getPhase = (poll: poll): Phase => {
-  if (poll.phase === 'schedule') return 'proposal'
+  // The backend calls a poll that hasn't reached its start date "waiting"
+  if (poll.phase === 'waiting') return 'pre_start'
+  else if (poll.phase === 'schedule') return 'proposal'
   else if (poll.phase === 'area_vote') return 'proposal'
   else if (poll.phase === 'prediction_statement') return 'prediction_bet'
   else if (poll.phase === 'prediction_vote') return 'result'
@@ -40,6 +42,8 @@ export const getPhaseUserFriendlyNameWithNumber = (
   phase: Phase,
   poll_type: PollType = POLL_TYPE.SCORE
 ) => {
+  if (phase === 'pre_start') return 'Not started';
+
   if (isScorePoll(poll_type)) {
     const idx = SCORE_POLL_PHASE_CONFIG.findIndex(p => p.phase === phase);
     const label = SCORE_POLL_PHASE_CONFIG[idx]?.label ?? '';

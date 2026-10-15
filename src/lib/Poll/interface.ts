@@ -97,6 +97,7 @@ export interface Filter {
 
 export type Phase =
   | 'pre_start'
+  | 'waiting'
   | 'area_vote'
   | 'proposal'
   | 'prediction_statement'

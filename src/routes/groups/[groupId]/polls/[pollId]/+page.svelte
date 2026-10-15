@@ -158,15 +158,15 @@
 		{#if isScorePoll(pollType)}
 			<!-- PHASE 0: PRE-START -->
 			{#if phase === 'pre_start'}
-				<div
-					class="bg-white shadow rounded mt-6 p-6 dark:bg-darkobject dark:text-darkmodeText"
-				>
-					{$_('This poll will start at')}
-					{formatDate(poll.start_date)}
-				</div>
-				<div class="dark:bg-darkobject bg-white p-6 mt-6">
-					<Comments bind:proposals api={'poll'} />
-				</div>
+				<Structure bind:phase bind:poll>
+					<div slot="left" class="w-full">
+						{$_('This poll will start at')}
+						{formatDate(poll.start_date)}
+					</div>
+					<div slot="bottom">
+						<Comments bind:proposals api={'poll'} />
+					</div>
+				</Structure>
 
 				<!-- PHASE 1: AREA VOTE (TO BE DEPRICATED) -->
 			{:else if phase === 'area_vote'}
@@ -525,7 +525,14 @@
 
 			<!-- Date Poll -->
 		{:else if isSchedulePoll(pollType)}
-			{#if phase === 'result'}
+			{#if phase === 'pre_start'}
+				<Structure bind:phase bind:poll>
+					<div slot="left" class="w-full">
+						{$_('This poll will start at')}
+						{formatDate(poll.start_date)}
+					</div>
+				</Structure>
+			{:else if phase === 'result'}
 				<Structure bind:phase bind:poll showBoth>
 					<div slot="left" class="w-full">
 						<Results bind:poll {getPollData} {pollType} />
