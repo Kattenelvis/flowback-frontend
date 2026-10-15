@@ -41,6 +41,7 @@
 			return;
 		}
 
+		commentsStore.update((store) => ({ ...store, filterByProposal: proposal }));
 		filterByTags(proposals, [proposal.id], $page.params.pollId ?? '');
 		commentFilterProposalId = proposal.id;
 		// Scroll to the comments section
