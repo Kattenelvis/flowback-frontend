@@ -5,6 +5,7 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import type { Delegate } from './interfaces';
 	import type { GroupUser } from '$lib/Group/interface';
+	import Modal from '$lib/Generic/Modal.svelte';
 	import { onMount } from 'svelte';
 
 	export let groupUser: GroupUser,
@@ -14,7 +15,8 @@
 		Class = '',
 		tags: number[] = [];
 
-	let selfDelegated = false;
+	let selfDelegated = false,
+		confirmOpen = false;
 
 	const getSelfDelegationStatus = async () => {
 		if (!groupUser?.delegate_pool_id) {
@@ -45,6 +47,7 @@
 	}
 
 	const deleteDelegation = async () => {
+		confirmOpen = false;
 		await deleteDelegationPool();
 		await getDelegatePools();
 		groupUser.delegate_pool_id = null;
@@ -201,8 +204,28 @@
 				{$_('Remove your delegate status from this group')}
 			</p>
 		</div>
-		<Button onClick={deleteDelegation} buttonStyle="warning"
+		<Button onClick={() => (confirmOpen = true)} buttonStyle="warning"
 			>{$_('Leave')}</Button
 		>
 	</div>
 </div>
+
+<Modal
+	bind:open={confirmOpen}
+	buttons={[
+		{ label: 'Cancel', type: 'default', onClick: () => (confirmOpen = false) },
+		{ label: 'Stop being delegate', type: 'warning', onClick: deleteDelegation }
+	]}
+>
+	<span slot="header">{$_('Stop being delegate?')}</span>
+	<div slot="body" class="flex flex-col gap-3 text-sm">
+		<p>{$_('Are you sure you want to stop being a delegate in this group?')}</p>
+		<p
+			class="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300 font-medium"
+		>
+			{$_(
+				'You will lose everyone who currently delegates to you. They will have to choose a delegate again, and this cannot be undone.'
+			)}
+		</p>
+	</div>
+</Modal>

@@ -15,7 +15,8 @@
 		faCog,
 		faListCheck,
 		faPeopleCarryBox,
-		faPeopleArrows
+		faPeopleArrows,
+		faWarning
 	} from '@fortawesome/free-solid-svg-icons';
 	import { fetchRequest } from '$lib/FetchRequest';
 	import Modal from '$lib/Generic/Modal.svelte';
@@ -242,6 +243,12 @@
 				text="Send Email"
 				faIcon={faMailReplyAll}
 				isSelected={selectedPage === 'email'}
+			/>
+			<GroupSidebarButton
+				action={() => action('reports')}
+				text="Reports"
+				faIcon={faWarning}
+				isSelected={selectedPage === 'reports'}
 			/>
 			<GroupSidebarButton
 				action={() => goto(`/groups/${$page.params.groupId}/edit`)}

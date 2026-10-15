@@ -45,12 +45,27 @@ jobs:
           repository: Kattenelvis/flowback-docker
           path: flowback-docker
 
+      # Test against the backend and interface-testing branches with the same name
+      # (e.g. dev) so paired changes are tested together; otherwise use master
+      - name: Pick branches
+        id: refs
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          for repo in flowback-backend flowback-interface-testing; do
+            ref=master
+            if git ls-remote --exit-code --heads "https://github.com/Kattenelvis/$repo" "$BRANCH" > /dev/null; then
+              ref=$BRANCH
+            fi
+            echo "$repo=$ref" >> "$GITHUB_OUTPUT"
+          done
+
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
           repository: Kattenelvis/flowback-backend
           path: flowback-backend
-          ref: master
+          ref: ${{ steps.refs.outputs.flowback-backend }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -65,13 +80,14 @@ jobs:
         working-directory: flowback-docker
         run: docker tag flowback-frontend:ci "$(docker compose config --images | grep flowback-frontend)"
 
+      # The Celery services share the backend's image, so building it covers them
       - name: Build images
         working-directory: flowback-docker
-        run: docker compose build caddy flowback-backend flowback-celery-worker flowback-celery-beat
+        run: docker compose build flowback-backend
 
       - name: Pull published images
         working-directory: flowback-docker
-        run: docker compose pull flowback-postgresql flowback-redis
+        run: docker compose pull flowback-postgresql flowback-redis caddy
 
       # --pull never: fail instead of silently falling back to a published image
       - name: Start Flowback stack
@@ -82,6 +98,7 @@ jobs:
         with:
           repository: Kattenelvis/flowback-interface-testing
           path: flowback-interface-testing
+          ref: ${{ steps.refs.outputs.flowback-interface-testing }}
 
       - uses: actions/setup-node@v4
         with:
@@ -160,10 +177,7 @@ jobs:
           script: |
             cd /home/flowback/dev-flowback
             export FRONTEND_TAG=${{ env.FRONTEND_TAG }}
-            docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
-            docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
-            docker compose build caddy
-            docker compose up -d --no-build caddy
+            docker compose up -d --pull always
 
   # Production publishes only from master pushes.
   publish-prod:
@@ -182,7 +196,4 @@ jobs:
           port: 22
           script: |
             cd /home/flowback/prod-flowback
-            docker compose pull flowback-frontend flowback-backend flowback-postgresql flowback-redis
-            docker compose up -d --no-build flowback-frontend flowback-backend flowback-postgresql flowback-redis
-            docker compose build caddy
-            docker compose up -d --no-build caddy
+            docker compose up -d --pull always

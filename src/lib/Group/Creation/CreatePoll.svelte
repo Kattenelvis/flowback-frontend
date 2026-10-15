@@ -20,7 +20,7 @@
 		faCalendarAlt
 	} from '@fortawesome/free-solid-svg-icons';
 	import Fa from 'svelte-fa';
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import Select from '$lib/Generic/Select.svelte';
 	import type { WorkGroup } from '../WorkingGroups/interface';
 	import { groupUserStore } from '$lib/Group/interface';
@@ -60,8 +60,21 @@
 		if (res.ok) tags = json?.results;
 	};
 
-	const createPoll = async () => {
+	// Blocks double submits (double click, repeated Enter) until the request,
+	// and the navigation after it, has finished.
+	// TODO: Also make the backend idempotent so duplicates from other sources
+	// (several tabs, retries) can't create two posts.
+	const submit = async () => {
+		if (loading) return;
 		loading = true;
+		try {
+			await (selectedPage === 'poll' ? createPoll() : createThread());
+		} finally {
+			loading = false;
+		}
+	};
+
+	const createPoll = async () => {
 		const formData = new FormData();
 		let blockchain_id;
 
@@ -98,7 +111,11 @@
 		formData.append('public', isPublic.toString());
 		formData.append('pinned', 'false');
 		formData.append('version', '2');
-		formData.append('tag', tags[0]?.id?.toString() || '1');
+		// Tags are fetched on mount without awaiting, so a quick submit can get here
+		// before they arrive. Never fall back to a hardcoded id: tag 1 belongs to
+		// another group, which silently breaks tag-scoped delegation on this poll.
+		if (tags.length === 0) await getGroupTags();
+		if (tags[0]) formData.append('tag', tags[0].id.toString());
 
 		images.forEach((image) => {
 			formData.append('attachments', image);
@@ -115,8 +132,6 @@
 			false
 		);
 
-		loading = false;
-
 		if (!res.ok) {
 			ErrorHandlerStore.set({
 				message: 'Could not create Poll',
@@ -131,7 +146,7 @@
 		});
 
 		if (groupId) {
-			goto(`groups/${groupId}/polls/${json}?source=group`);
+			await goto(`groups/${groupId}/polls/${json}?source=group`);
 		}
 	};
 
@@ -163,7 +178,7 @@
 			return;
 		}
 
-		goto(
+		await goto(
 			`groups/${$page.url.searchParams.get('id')}/thread/${json}?source=create`
 		);
 	};
@@ -176,20 +191,7 @@
 		workGroups = workGroups.filter((workGroup) => workGroup.joined);
 	};
 
-	const handleKeyDown = (event: KeyboardEvent) => {
-		// Check for a specific key, e.g., the "k" key:
-		if (event.ctrlKey && event.key === 'Enter') {
-			selectedPage === 'poll' ? createPoll() : createThread();
-		}
-	};
-
-	onDestroy(() => {
-		//	TODO: Fix issue where reloading leads to 404 page
-		// 	document.removeEventListener('keydown', handleKeyDown);
-	});
-
 	onMount(async () => {
-		document.addEventListener('keydown', handleKeyDown);
 		getGroupTags();
 		getWorkGroupList();
 	});
@@ -209,7 +211,7 @@
 <form
 	onsubmitcapture={(e) => {
 		e.preventDefault();
-		selectedPage === 'poll' ? createPoll() : createThread();
+		submit();
 	}}
 	class="relative w-3/4 md:w-2/3 max-w-[800px] dark:text-darkmodeText my-6"
 >

@@ -57,7 +57,7 @@
 		<div class="flex flex-wrap items-center gap-2">
 			<FilterSelect
 				label="Sort"
-				values={['created_at_asc', 'created_at_desc', 'score_asc', 'score_desc', null]}
+				values={['created_at_desc', 'created_at_asc', 'score_asc', 'score_desc', null]}
 				labels={[
 					$_('Recent'),
 					$_('Oldest'),

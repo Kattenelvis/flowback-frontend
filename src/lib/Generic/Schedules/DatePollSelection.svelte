@@ -249,9 +249,7 @@
 
 <Loader bind:loading>
 	<div class="overflow-x-auto">
-		<div
-			class={`sticky z-20 ${results ? 'md:-top-[1rem]' : 'top-0 md:top-[5.5rem]'}`}
-		>
+		<div>
 			<div
 				class="dark:bg-darkobject dark:text-darkmodeText bg-white flex items-center justify-between mt-4 py-3 px-4 md:py-2"
 			>

@@ -417,5 +417,7 @@
     "(edited)": "(editado)",
     "Are you sure you want to delete this message?": "¿Seguro que quieres eliminar este mensaje?",
     "Could not edit message": "No se pudo editar el mensaje",
-    "Could not delete message": "No se pudo eliminar el mensaje"
+    "Could not delete message": "No se pudo eliminar el mensaje",
+    "No proposal selected": "Ninguna propuesta seleccionada",
+    "Select a proposal to read it, or add your own to shape the outcome.": "Selecciona una propuesta para leerla, o añade la tuya para influir en el resultado."
 }

@@ -50,6 +50,74 @@
 		kpiProbabilities = json.results ?? [];
 	};
 
+	const STEP = 5;
+
+	// Weight being dragged, shown live before it is submitted on release.
+	let drag: { kpiId: number; value: string; weight: number } | null = $state(null);
+
+	const savedWeight = (kpi: KPI, value: string) =>
+		kpiProbabilities.find((p) => p.kpi_id === kpi.id && p.value === value)?.weight ?? 0;
+
+	// The most this option can take: 100% minus what the other options already hold.
+	const maxWeight = (kpi: KPI, value: string) =>
+		Math.max(
+			0,
+			100 -
+				kpi.values
+					.filter((v) => v !== 'other' && v !== value)
+					.reduce((sum, v) => sum + savedWeight(kpi, v), 0)
+		);
+
+	const weightFromPointer = (e: PointerEvent, max: number) => {
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const percent = ((e.clientX - rect.left) / rect.width) * 100;
+		return Math.min(max, Math.max(0, Math.round(percent / STEP) * STEP));
+	};
+
+	const startDrag = (e: PointerEvent, kpi: KPI, value: string) => {
+		if (drag) return;
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+		drag = { kpiId: kpi.id, value, weight: weightFromPointer(e, maxWeight(kpi, value)) };
+	};
+
+	const moveDrag = (e: PointerEvent, kpi: KPI, value: string) => {
+		// Without capture the pointer is just hovering, e.g. while a save is pending.
+		if (
+			drag?.kpiId !== kpi.id ||
+			drag.value !== value ||
+			!(e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)
+		)
+			return;
+		drag.weight = weightFromPointer(e, maxWeight(kpi, value));
+	};
+
+	const endDrag = async (kpi: KPI, value: string) => {
+		if (drag?.kpiId !== kpi.id || drag.value !== value) return;
+		if (drag.weight === savedWeight(kpi, value)) {
+			drag = null;
+			return;
+		}
+		// Keep showing the dragged value until the saved one has been refetched.
+		await editProposalKPI(kpi, drag.weight, value);
+		drag = null;
+	};
+
+	const keyAdjust = (e: KeyboardEvent, kpi: KPI, value: string) => {
+		const delta =
+			e.key === 'ArrowRight' || e.key === 'ArrowUp'
+				? STEP
+				: e.key === 'ArrowLeft' || e.key === 'ArrowDown'
+					? -STEP
+					: 0;
+		if (!delta) return;
+		e.preventDefault();
+		const next = Math.min(
+			maxWeight(kpi, value),
+			Math.max(0, savedWeight(kpi, value) + delta)
+		);
+		if (next !== savedWeight(kpi, value)) editProposalKPI(kpi, next, value);
+	};
+
 	const editProposalKPI = async (kpi: KPI, value: number, selectedValue: string) => {
 		const weights = kpi.values.map((v) =>
 			v === 'other'
@@ -80,7 +148,7 @@
 			return;
 		}
 
-		getProposalKPIs();
+		await getProposalKPIs();
 	};
 
 	onMount(() => {
@@ -139,15 +207,18 @@
 						>
 					{/if}
 
+					<span class="text-xs text-purple-500/80 dark:text-purple-400/70 -mt-1">
+						{$_('Click or drag to split your vote between values, in steps of 5%.')}
+					</span>
 					<div class="flex flex-col gap-2">
 						{#each kpi.values.filter((v) => v !== 'other') as value, i}
+							{@const max = maxWeight(kpi, value)}
 							{@const weight =
-								kpiProbabilities.find(
-									(_kpi) => _kpi.kpi_id === kpi.id && _kpi.value === value
-								)?.weight ?? 0}
+								drag?.kpiId === kpi.id && drag.value === value
+									? drag.weight
+									: savedWeight(kpi, value)}
 							<div
-								aria-label="Set KPI probability for {value}"
-								class="group flex items-center gap-3 w-full cursor-pointer kpi-row"
+								class="flex items-center gap-3 w-full kpi-row"
 								style="animation-delay: {kpiIndex * 80 + i * 50}ms"
 							>
 								<span
@@ -155,28 +226,40 @@
 								>
 									{value}
 								</span>
-								<button
-									class="flex-1 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-lg overflow-hidden relative group-hover:bg-purple-200/80 dark:group-hover:bg-purple-900/60 transition-colors duration-150"
-									onclick={(e) => {
-										// Calculate click position as percentage of button width
-										const rect = e.currentTarget.getBoundingClientRect();
-										const xWithinElement = e.clientX - rect.left;
-										const fraction = (xWithinElement / rect.width) * 100;
-
-										const weight = Math.round(fraction / 5) * 5; // Round to nearest 5%
-										editProposalKPI(kpi, weight, value);
-									}}
+								<div
+									role="slider"
+									tabindex="0"
+									aria-label="Set KPI probability for {value}"
+									aria-valuemin={0}
+									aria-valuemax={max}
+									aria-valuenow={weight}
+									aria-valuetext="{weight}%"
+									class="kpi-track flex-1 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-lg overflow-hidden relative cursor-pointer select-none hover:bg-purple-200/80 dark:hover:bg-purple-900/60 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-purple-500"
+									onpointerdown={(e) => startDrag(e, kpi, value)}
+									onpointermove={(e) => moveDrag(e, kpi, value)}
+									onpointerup={() => endDrag(kpi, value)}
+									onpointercancel={() => (drag = null)}
+									onkeydown={(e) => keyAdjust(e, kpi, value)}
 								>
 									<div
-										class="h-full rounded-lg transition-all duration-300 ease-out
+										class="h-full rounded-lg {drag ? '' : 'transition-all duration-300 ease-out'}
 											{overAllocated
 											? 'bg-gradient-to-r from-red-400 to-red-500 dark:from-red-500 dark:to-red-400'
 											: 'bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-400'}"
 										style="width: {weight}%"
 									></div>
+									<!-- Not assignable: the rest of the vote is held by other options -->
+									{#if max < 100}
+										<div
+											class="kpi-unavailable absolute inset-y-0 right-0 pointer-events-none"
+											style="width: {100 - max}%"
+										></div>
+									{/if}
+									<!-- Gridlines every 5%, stronger every 25% -->
+									<div class="kpi-grid absolute inset-0 pointer-events-none"></div>
 									{#if weight > 0}
 										<span
-											class="absolute inset-0 flex items-center px-3 text-xs font-semibold tabular-nums {weight >
+											class="absolute inset-0 flex items-center px-3 text-xs font-semibold tabular-nums pointer-events-none {weight >
 											15
 												? 'text-white'
 												: 'text-purple-700 dark:text-purple-200'} transition-opacity duration-200"
@@ -187,7 +270,7 @@
 											{weight}%
 										</span>
 									{/if}
-								</button>
+								</div>
 							</div>
 						{/each}
 						<div
@@ -238,6 +321,38 @@
 </Loader>
 
 <style>
+	.kpi-track {
+		touch-action: pan-y;
+	}
+
+	.kpi-grid {
+		background-image:
+			repeating-linear-gradient(
+				to right,
+				transparent 0,
+				transparent calc(25% - 1px),
+				rgb(126 34 206 / 0.3) calc(25% - 1px),
+				rgb(126 34 206 / 0.3) 25%
+			),
+			repeating-linear-gradient(
+				to right,
+				transparent 0,
+				transparent calc(5% - 1px),
+				rgb(126 34 206 / 0.12) calc(5% - 1px),
+				rgb(126 34 206 / 0.12) 5%
+			);
+	}
+
+	.kpi-unavailable {
+		background: repeating-linear-gradient(
+			135deg,
+			rgb(0 0 0 / 0.1) 0,
+			rgb(0 0 0 / 0.1) 4px,
+			transparent 4px,
+			transparent 8px
+		);
+	}
+
 	.kpi-card {
 		animation: fadeSlideIn 0.35s ease-out both;
 	}
