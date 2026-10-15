@@ -1,16 +1,16 @@
 name: Playwright Tests
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
   pull_request:
-    branches: [master]
+    branches: [master, dev]
 
 env:
   LINK: 'http://localhost:8085'
   TEST_PASS: TestPassword
   PUBLIC_POLL_VERSION: 2
-  # PR images get their own tag so unmerged code never becomes :latest (which prod pulls)
-  FRONTEND_TAG: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'latest' }}
+  # Only two published tags: master -> :latest (which prod pulls), dev -> :dev
+  FRONTEND_TAG: ${{ github.ref_name == 'master' && 'latest' || 'dev' }}
 
 jobs:
   build:
@@ -141,8 +141,8 @@ jobs:
 
   docker-publish:
     needs: frontend-tests
-    # Fork PRs get no secrets, so skip publishing instead of failing
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    # PRs are only tested; images are published from pushes to master and dev
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -164,6 +164,8 @@ jobs:
 
   publish-dev:
     needs: docker-publish
+    # The dev server runs the :dev image
+    if: ${{ github.ref == 'refs/heads/dev' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -176,13 +178,13 @@ jobs:
           port: 22
           script: |
             cd /home/flowback/dev-flowback
-            export FRONTEND_TAG=${{ env.FRONTEND_TAG }}
+            export FRONTEND_TAG=dev BACKEND_TAG=dev
             docker compose up -d --pull always
 
   # Production publishes only from master pushes.
   publish-prod:
-    needs: publish-dev
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    needs: docker-publish
+    if: ${{ github.ref == 'refs/heads/master' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
     environment: production
