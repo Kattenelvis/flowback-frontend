@@ -4,5 +4,6 @@
     "channelJoin": "User {user} joined the channel",
     "chat": {
         "add":"Add Me!"
-    }
+    },
+    "channelLeave": "User {user} left the channel"
 }

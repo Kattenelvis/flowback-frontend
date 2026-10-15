@@ -10,7 +10,6 @@
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { userStore } from '$lib/User/interfaces';
 	import { workgroupStore } from '../Kanban/Kanban';
-	import { chatPartnerStore } from '$lib/Chat/functions';
 
 	export let workGroup: WorkGroup,
 		workGroups: WorkGroup[],
@@ -85,7 +84,6 @@
 		workGroup.joined = false;
 		workGroup.requested_access = false;
 		workgroupStore.set(workGroups);
-		chatPartnerStore.set(0);
 	};
 
 	const deleteWorkGroup = async () => {
@@ -107,7 +105,6 @@
 
 		handleRemoveGroup(workGroup.id);
 		showDeleteModal = false;
-		chatPartnerStore.set(0);
 	};
 </script>
 
