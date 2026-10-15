@@ -3,7 +3,7 @@ on:
   push:
     branches: [master, dev]
   pull_request:
-    branches: [master, dev]
+    branches: [master]
 
 env:
   LINK: 'http://localhost:8085'
