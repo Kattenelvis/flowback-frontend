@@ -445,6 +445,7 @@
 							onBlur={() => (currentlyEditing = null)}
 							label={'Name'}
 							bind:value={userEdit.username}
+							max={50}
 							Class="p-2 text-left"
 						/>
 

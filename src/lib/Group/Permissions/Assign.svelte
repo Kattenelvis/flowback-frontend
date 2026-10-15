@@ -54,20 +54,26 @@
 		users = users;
 	};
 
-	const makeAdmin = async (user: GroupUser) => {
-		const { json, res } = await fetchRequest('POST', `group/${$page.params.groupId}/user/update`, {
+	const setAdmin = async (user: GroupUser, is_admin: boolean) => {
+		const { res } = await fetchRequest('POST', `group/${$page.params.groupId}/user/update`, {
 			target_user_id: user.user.id,
-			is_admin: true
+			is_admin
 		});
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to make user admin', success: false });
+			ErrorHandlerStore.set({
+				message: is_admin ? 'Failed to make user admin' : 'Failed to remove user as admin',
+				success: false
+			});
 			return;
 		}
 
-		users.find((u) => u.user.id === user.user.id)!.is_admin = true;
+		users.find((u) => u.user.id === user.user.id)!.is_admin = is_admin;
 		users = users;
-		ErrorHandlerStore.set({ message: 'User is now admin', success: true });
+		ErrorHandlerStore.set({
+			message: is_admin ? 'User is now admin' : 'User is no longer admin',
+			success: true
+		});
 	};
 
 	onMount(() => {
@@ -109,8 +115,10 @@
 				>
 					<Fa icon={faPlus} size="lg" />
 				</button>
-				{#if !user.is_admin}
-					<Button onClick={() => makeAdmin(user)}>{$_('Make admin')}</Button>
+				{#if user.is_admin}
+					<Button onClick={() => setAdmin(user, false)}>{$_('Remove admin')}</Button>
+				{:else}
+					<Button onClick={() => setAdmin(user, true)}>{$_('Make admin')}</Button>
 				{/if}
 			</div>
 			<div

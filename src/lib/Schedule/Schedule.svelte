@@ -6,12 +6,13 @@
 		formatDate,
 		type DayHeaderContentArg,
 		type Duration,
-		type EventDropArg
+		type EventDropArg,
+		type ViewApi
 	} from '@fullcalendar/core';
 	import { _ } from 'svelte-i18n';
 	import { onDestroy, onMount } from 'svelte';
 	import dayGridPlugin from '@fullcalendar/daygrid';
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { fetchAllPages, fetchRequest } from '$lib/FetchRequest';
 	import timeGridPlugin from '@fullcalendar/timegrid';
 	import listPlugin from '@fullcalendar/list';
 	import multiMonthPlugin from '@fullcalendar/multimonth';
@@ -30,6 +31,7 @@
 	import Select from '$lib/Generic/Select.svelte';
 	import { deepCopy, toDatetimeLocal } from '$lib/Generic/GenericFunctions';
 	import GroupSelection from '$lib/Generic/GroupSelection.svelte';
+	import { expandOccurrences } from '$lib/Schedule/recurrence';
 
 	let open = $state(false),
 		events: ScheduleItem2[] = $state([]),
@@ -48,6 +50,13 @@
 		selectedEndDate: string = $state('');
 
 	const HOUR = 60 * 60 * 1000;
+	const DAY = 24 * HOUR;
+
+	// The dates on screen, and the dates events were last loaded for. Only the events in a window of time
+	// are loaded, and the occurrences of repeating events are worked out for the dates on screen
+	let visibleRange: { start: Date; end: Date } | null = null,
+		loadedRange: { start: Date; end: Date } | null = null,
+		latestLoad = 0;
 
 	// setDate keeps the wall-clock time across daylight saving changes
 	const addDays = (date: Date, days: number) => {
@@ -82,56 +91,80 @@
 	// The datetime-local inputs hold local time without a timezone, which the backend would read as UTC
 	const localToISO = (local: string) => (local ? new Date(local).toISOString() : null);
 
+	// The window events are loaded for is the dates on screen and a month to each side,
+	// which also has the next and previous month ready when the user gets there
+	const loadWindow = () => {
+		const now = new Date();
+		const { start, end } = visibleRange ?? {
+			start: new Date(now.getFullYear(), now.getMonth(), 1),
+			end: new Date(now.getFullYear(), now.getMonth() + 1, 1)
+		};
+
+		return {
+			start: new Date(start.getTime() - 31 * DAY),
+			end: new Date(end.getTime() + 31 * DAY)
+		};
+	};
+
 	const scheduleEventList = async () => {
-		let schedules: Schedule[] = [];
+		const load = ++latestLoad;
+		const range = loadWindow();
+
 		// Before getting events, we need to get all schedules for the user, groups and workgroups
 		// because events are tied to schedules.
+		const scheduleApis: string[] = [];
 
-		// Get user schedule
-		if (userChecked) {
-			let api = `schedule/list?limit=50&origin_name=user`;
+		if (userChecked) scheduleApis.push(`schedule/list?origin_name=user`);
 
-			const { res, json } = await fetchRequest('GET', api);
-			schedules.push(json.results ?? []);
-		}
+		if (groupIds.length > 0)
+			scheduleApis.push(`schedule/list?origin_ids=${groupIds.join(',')}&origin_name=group`);
 
-		// Get group schedules
-		if (groupIds.length > 0) {
-			let api = `schedule/list?limit=50&`;
-			api += `origin_ids=${groupIds.join(',')}&origin_name=group`;
-
-			const { res, json } = await fetchRequest('GET', api);
-			schedules.push(json.results ?? []);
-		}
-
-		// Get workgroup schedules
-		if (workgroupIds.length > 0) {
-			let api = `schedule/list?limit=50&origin_ids=${workgroupIds.join(',')}&origin_name=workgroup`;
-			const { res, json } = await fetchRequest('GET', api);
-			schedules.push(json.results ?? []);
-		}
-
-		if (schedules.length === 0) {
-			events = [];
-			return;
-		}
-		schedules = schedules.flat(1);
-
-		// Finally, get the events from every schedule
-		{
-			let api = `schedule/event/list?limit=50&schedule_ids=${schedules.map((s) => s.id).join(',')}`;
-			const { res, json } = await fetchRequest('GET', api);
-
-			events = json.results ?? [];
-			events = events.map((e) =>
-				e.schedule_origin_name === 'workgroup'
-					? {
-							...e,
-							workgroup_id: e.schedule_origin_id
-						}
-					: e
+		if (workgroupIds.length > 0)
+			scheduleApis.push(
+				`schedule/list?origin_ids=${workgroupIds.join(',')}&origin_name=workgroup`
 			);
-		}
+
+		const schedulePages = await Promise.all(
+			scheduleApis.map((api) => fetchAllPages<Schedule>(api))
+		);
+		const schedules = schedulePages.flatMap((page) => page.results);
+
+		// Finally, get the events in the window from every schedule
+		const eventPages =
+			schedules.length > 0
+				? await fetchAllPages<ScheduleItem2>(
+						`schedule/event/list?schedule_ids=${schedules.map((s) => s.id).join(',')}` +
+							`&window_start=${range.start.toISOString()}&window_end=${range.end.toISOString()}`
+					)
+				: null;
+
+		// The dates or filters have changed since this load started, and another load has been started for them
+		if (load !== latestLoad) return;
+
+		const pages = [...schedulePages, eventPages];
+		if (pages.some((page) => page && (!page.ok || page.truncated)))
+			ErrorHandlerStore.set({
+				message: 'Some events could not be loaded',
+				success: false
+			});
+
+		events = (eventPages?.results ?? []).map((e) =>
+			e.schedule_origin_name === 'workgroup'
+				? {
+						...e,
+						workgroup_id: e.schedule_origin_id
+					}
+				: e
+		);
+		loadedRange = range;
+	};
+
+	// Load events again when the calendar goes to dates outside of what has been loaded
+	const setVisibleDates = (start: Date, end: Date) => {
+		visibleRange = { start, end };
+
+		if (!loadedRange || start < loadedRange.start || end > loadedRange.end)
+			scheduleEventList();
 	};
 
 	const getAPI = (type = '') => {
@@ -154,6 +187,9 @@
 			start_date: localToISO(selectedStartDate),
 			end_date: localToISO(selectedEndDate),
 			repeat_frequency: editingEvent.repeat_frequency,
+			// A repeating event keeps its time of day in this timezone when the clocks change. It is set when
+			// the event is created, an edit by someone in another timezone then doesn't move the event
+			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 			meeting_link: editingEvent.meeting_link
 		});
 
@@ -363,8 +399,11 @@
 							)
 						)
 					: true,
-			// Events are fed per view, see showEvents
-			viewDidMount: ({ view }) => showEvents(view.type),
+			// Events are fed per view and dates, see showEvents
+			datesSet: ({ view }) => {
+				setVisibleDates(view.activeStart, view.activeEnd);
+				showEvents(view);
+			},
 			views: {
 				timeGridWeek: {
 					dayHeaderContent: timeGridDayHeader,
@@ -421,11 +460,10 @@
 				selectedEvent = events.find((e) => e.id.toString() === event.id) ?? selectedEvent;
 				editingEvent = deepCopy(selectedEvent);
 
-				// Take the stored times (of this occurrence), a month view bar only knows whole days
-				const dayOffset = event.extendedProps.dayOffset ?? 0;
-				const start = addDays(new Date(selectedEvent.start_date), dayOffset);
-				const end = selectedEvent.end_date
-					? addDays(new Date(selectedEvent.end_date), dayOffset)
+				// Take the times of this occurrence, a month view bar only knows whole days
+				const start = new Date(event.extendedProps.occurrenceStart);
+				const end = event.extendedProps.occurrenceEnd
+					? new Date(event.extendedProps.occurrenceEnd)
 					: start;
 				selectedStartDate = toDatetimeLocal(start);
 				selectedEndDate = toDatetimeLocal(end);
@@ -451,58 +489,59 @@
 		end > start &&
 		[start, end].every((date) => date.getHours() === 0 && date.getMinutes() === 0);
 
-	const distributeEvents = (asWholeDays: boolean) =>
+	// The occurrences of every event in the dates on screen, each as an event of its own for the calendar
+	const distributeEvents = (asWholeDays: boolean, rangeStart: Date, rangeEnd: Date) =>
 		events.flatMap((event) => {
-			const start = new Date(event.start_date);
-			const end = event.end_date ? new Date(event.end_date) : null;
-			const wholeDays = isWholeDays(start, end);
+			const firstDay = startOfDay(new Date(event.start_date));
 
-			// Daily events are shown six weeks ahead, weekly events six times
-			const [occurrences, daysBetween] =
-				event.repeat_frequency === 1 ? [42, 1] : event.repeat_frequency === 2 ? [6, 7] : [1, 0];
+			return expandOccurrences(event, rangeStart, rangeEnd).map(
+				({ start: occurrenceStart, end: occurrenceEnd }) => {
+					const wholeDays = isWholeDays(occurrenceStart, occurrenceEnd);
+					const end = occurrenceEnd ?? undefined;
+					// Whole days since the first occurrence, rounded as a day is 23 or 25 hours when the clocks change
+					const dayOffset = Math.round(
+						(startOfDay(occurrenceStart).getTime() - firstDay.getTime()) / DAY
+					);
 
-			return Array.from({ length: occurrences }, (_, i) => {
-				const dayOffset = i * daysBetween;
-				const occurrenceStart = addDays(start, dayOffset);
-				const occurrenceEnd = end ? addDays(end, dayOffset) : undefined;
-
-				return {
-					...event,
-					id: String(event.id),
-					dayOffset,
-					...(asWholeDays && !wholeDays
-						? {
-								// A bar over the days the event touches, labelled with its start time
-								allDay: true,
-								start: startOfDay(occurrenceStart),
-								end: occurrenceEnd && endOfDay(occurrenceEnd),
-								timeLabel: formatDate(occurrenceStart, {
-									hour: 'numeric',
-									minute: '2-digit',
-									omitZeroMinute: true,
-									meridiem: 'narrow'
-								})
-							}
-						: { allDay: wholeDays, start: occurrenceStart, end: occurrenceEnd })
-				};
-			});
+					return {
+						...event,
+						id: String(event.id),
+						dayOffset,
+						occurrenceStart: occurrenceStart.toISOString(),
+						occurrenceEnd: occurrenceEnd?.toISOString() ?? null,
+						...(asWholeDays && !wholeDays
+							? {
+									// A bar over the days the event touches, labelled with its start time
+									allDay: true,
+									start: startOfDay(occurrenceStart),
+									end: end && endOfDay(end),
+									timeLabel: formatDate(occurrenceStart, {
+										hour: 'numeric',
+										minute: '2-digit',
+										omitZeroMinute: true,
+										meridiem: 'narrow'
+									})
+								}
+							: { allDay: wholeDays, start: occurrenceStart, end })
+					};
+				}
+			);
 		});
 
 	// FullCalendar's month grid only lets all-day events be stretched over days, so the month view gets
 	// every event as a whole-day bar. The week and day views show events at their time
-	const showEvents = (viewType: string | undefined) => {
-		if (!calendar || !viewType) return;
+	const showEvents = (view: ViewApi | undefined) => {
+		if (!calendar || !view) return;
 		calendar.removeAllEventSources();
-		calendar.addEventSource(distributeEvents(viewType === 'dayGridMonth'));
+		calendar.addEventSource(
+			distributeEvents(view.type === 'dayGridMonth', view.activeStart, view.activeEnd)
+		);
 	};
 
 	onMount(async () => {
 		groupId =
 			Number(new URLSearchParams(document.location.search).get('groupId')) ??
 			null;
-		if (groupId) groupIds = [...groupIds, groupId];
-		else userChecked = true;
-
 		await scheduleEventList();
 		renderCalendar();
 	});
@@ -512,7 +551,7 @@
 
 	$effect(() => {
 		// Rerendering the calendar leads to issues with event changes changing the month one is one, instead we do this
-		if (events) showEvents(calendar?.view.type);
+		if (events) showEvents(calendar?.view);
 	});
 
 	$effect(() => {
@@ -534,7 +573,12 @@
 	>
 		<Fa icon={faArrowLeft} />
 	</button>
-	<AdvancedFiltering bind:groupIds bind:workgroupIds bind:userChecked />
+	<AdvancedFiltering
+		bind:groupIds
+		bind:workgroupIds
+		bind:userChecked
+		storageKey="schedule-filter"
+	/>
 </div>
 
 <div

@@ -365,7 +365,7 @@
 
 	{#if kanban.work_group && kanban.work_group.name}
 		<div class="text-xs dark:text-gray-500 text-gray-400 italic">
-			{$_('Work Group')}: {elipsis(kanban.work_group.name || '', 20)}
+			{$_('Team')}: {elipsis(kanban.work_group.name || '', 20)}
 		</div>
 	{/if}
 	<div
@@ -617,7 +617,7 @@
 							<p
 								class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1"
 							>
-								{$_('Work Group')}
+								{$_('Team')}
 							</p>
 							<p
 								class="text-sm font-medium text-gray-800 dark:text-darkmodeText"

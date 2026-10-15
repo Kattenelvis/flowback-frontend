@@ -53,6 +53,13 @@
 		});
 	};
 
+	// Clicking anywhere on the card opens the proposal, except on its own controls
+	const openProposal = (e: Event) => {
+		if ((e.target as HTMLElement).closest('button, a, input, select, textarea'))
+			return;
+		selectedProposal = proposal;
+	};
+
 	onMount(() => {
 		checkForLinks(proposal.description, `proposal-${proposal.id}-description`);
 		allComments = filteredComments;
@@ -60,13 +67,17 @@
 </script>
 
 <div
-	class={`dark:bg-darkobject bg-white w-full py-3 px-4 transition-all rounded-lg
+	class={`dark:bg-darkobject bg-white w-full py-3 px-4 transition-all rounded-lg cursor-pointer
 	 border border-gray-200 dark:border-gray-700 ${Class}`}
 	class:!bg-blue-100={selectedProposal === proposal && !$darkModeStore}
 	class:!bg-blue-950={selectedProposal === proposal && $darkModeStore}
 	class:border-l-4={selectedProposal === proposal}
 	class:border-primary={selectedProposal === proposal}
 	id={`${idfy(proposal.title)}`}
+	on:click={openProposal}
+	on:keydown={(e) => e.key === 'Enter' && openProposal(e)}
+	role="button"
+	tabindex="0"
 >
 	<div class="flex gap-2 items-center">
 		{#if phase === 'prediction_statement'}

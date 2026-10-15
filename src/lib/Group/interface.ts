@@ -156,6 +156,7 @@ export interface Thread {
 	group_image: string;
 	group_joined: boolean;
 	public: boolean;
+	can_delete: boolean;
 }
 
 export interface GroupFilter {

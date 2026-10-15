@@ -201,7 +201,7 @@
 		{#if groupId}
 			<div class="flex flex-row gap-2 items-center">
 				<label class="block text-md whitespace-nowrap" for="work-group">
-					{$_('Work Group')}:
+					{$_('Team')}:
 				</label>
 				<select
 					style="width:100%"

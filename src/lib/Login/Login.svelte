@@ -7,7 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { userStore } from '$lib/User/interfaces';
 
-	let username = '',
+	let email = '',
 		password = '',
 		loading = false,
 		remainLoggedIn = false;
@@ -19,7 +19,7 @@
 		const { json, res } = await fetchRequest(
 			'POST',
 			'login',
-			{ username, password },
+			{ email, password },
 			false,
 			true
 		);
@@ -64,7 +64,7 @@
 
 <Loader bind:loading>
 	<form class="flex flex-col gap-5" on:submit|preventDefault={logIn}>
-		<AuthInput label="Username" bind:value={username} name="username" autocomplete="username" required />
+		<AuthInput label="Email" type="email" bind:value={email} name="email" autocomplete="email" required />
 		<div>
 			<AuthInput
 				label="Password"

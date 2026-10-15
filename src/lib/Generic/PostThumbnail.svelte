@@ -120,12 +120,14 @@
 						<MultipleChoices
 							bind:choicesOpen
 							labels={[
-								$_('Delete Post'),
+								...((post as poll)?.can_delete ? [$_('Delete Post')] : []),
 								$_('Report Post'),
 								$_('Fast Forward')
 							]}
 							functions={[
-								() => (deleteModalShow = true),
+								...((post as poll)?.can_delete
+									? [() => (deleteModalShow = true)]
+									: []),
 								() => ((reportModalShow = true), (choicesOpen = false)),
 								() => fast_forward()
 							]}
@@ -135,11 +137,15 @@
 					{:else}
 						<MultipleChoices
 							bind:choicesOpen
-							labels={[$_('Delete Post'), $_('Report Post')]}
-							functions={[
-								() => (deleteModalShow = true),
-								() => ((reportModalShow = true), (choicesOpen = false))
-							]}
+							labels={(post as Thread)?.can_delete
+								? [$_('Delete Post'), $_('Report Post')]
+								: [$_('Report Post')]}
+							functions={(post as Thread)?.can_delete
+								? [
+										() => (deleteModalShow = true),
+										() => ((reportModalShow = true), (choicesOpen = false))
+									]
+								: [() => ((reportModalShow = true), (choicesOpen = false))]}
 							Class="text-black justify-self-center"
 							ClassInner="-translate-x-2/3 md:translate-x-0"
 						/>

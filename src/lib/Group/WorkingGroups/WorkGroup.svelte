@@ -97,12 +97,12 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message: 'Failed to delete workgroup',
+				message: 'Failed to delete team',
 				success: false
 			});
 			return;
 		} else {
-			ErrorHandlerStore.set({ message: 'Workgroup deleted', success: true });
+			ErrorHandlerStore.set({ message: 'Team deleted', success: true });
 		}
 
 		handleRemoveGroup(workGroup.id);
@@ -168,6 +168,6 @@
 >
 	<div slot="body">
 		<h2 class="text-xl font-semibold mb-4">{$_('Confirm Deletion')}</h2>
-		<p class="mb-6">{$_('Are you sure you want to delete this workgroup?')}</p>
+		<p class="mb-6">{$_('Are you sure you want to delete this team?')}</p>
 	</div>
 </Modal>

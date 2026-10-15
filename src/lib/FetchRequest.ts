@@ -58,3 +58,37 @@ export async function fetchRequest(
     return { res };
   }
 }
+
+
+// The most rows the backend lets a page have
+const PAGE_SIZE = 50;
+
+// Fetches every page of a paginated list. The first page tells how many rows there are,
+// so the rest of the pages are fetched at the same time. Rows on pages past maxPages, or on pages
+// that failed, are left out and `truncated` is set, instead of being dropped without telling
+export async function fetchAllPages<T = any>(api: string, maxPages = 20) {
+  const separator = api.includes('?') ? '&' : '?';
+  const fetchPage = (offset: number, limit: number) =>
+    fetchRequest('GET', `${api}${separator}limit=${limit}&offset=${offset}`);
+
+  const { res, json } = await fetchPage(0, PAGE_SIZE);
+  if (!res.ok) return { ok: false, results: [] as T[], truncated: false };
+
+  const results: T[] = json.results ?? [];
+  // The backend decides the page size, which might be less than what was asked for
+  const limit: number = json.limit || results.length;
+  if (!limit) return { ok: true, results, truncated: false };
+
+  const pages = Math.ceil(json.count / limit);
+  const others = await Promise.all(
+    Array.from({ length: Math.min(pages, maxPages) - 1 }, (_, i) => fetchPage((i + 1) * limit, limit))
+  );
+
+  let truncated = pages > maxPages;
+  for (const { res, json } of others) {
+    if (res.ok) results.push(...(json.results ?? []));
+    else truncated = true;
+  }
+
+  return { ok: true, results, truncated };
+}

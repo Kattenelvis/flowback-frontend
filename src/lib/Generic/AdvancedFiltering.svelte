@@ -21,13 +21,15 @@
 		workgroupIds: number[];
 		userChecked: boolean;
 		assigneeId?: number;
+		storageKey: string;
 	}
 
 	let {
 		groupIds = $bindable(),
 		workgroupIds = $bindable(),
 		userChecked = $bindable(),
-		assigneeId = $bindable()
+		assigneeId = $bindable(),
+		storageKey
 	}: Props = $props();
 
 	let openFilter = $state(false),
@@ -67,7 +69,7 @@
 		// If any of the workgroup fetches failed, we set an error message
 		if (hasError)
 			ErrorHandlerStore.set({
-				message: 'Failed to fetch atleast some workgroups',
+				message: 'Failed to fetch atleast some teams',
 				success: false
 			});
 
@@ -95,9 +97,43 @@
 			(assigneeId ? 1 : 0)
 	);
 
+	let restored = false;
+
+	// Everything is on by default; only what the user switched off is saved,
+	// so groups and teams created later also start out enabled
+	const restoreFilter = () => {
+		const saved = JSON.parse(localStorage.getItem(storageKey) ?? '{}');
+		const excludedGroups: number[] = saved.excludedGroupIds ?? [];
+		const excludedWorkgroups: number[] = saved.excludedWorkgroupIds ?? [];
+		userChecked = saved.userChecked ?? true;
+		assigneeId = saved.assigneeId ?? 0;
+		groupIds = groups
+			.map((g) => g.id)
+			.filter((id) => !excludedGroups.includes(id));
+		workgroupIds = workgroups
+			.map((w) => w.id)
+			.filter((id) => !excludedWorkgroups.includes(id));
+		restored = true;
+	};
+
+	$effect(() => {
+		const filter = {
+			userChecked,
+			assigneeId,
+			excludedGroupIds: groups
+				.map((g) => g.id)
+				.filter((id) => !groupIds.includes(id)),
+			excludedWorkgroupIds: workgroups
+				.map((w) => w.id)
+				.filter((id) => !workgroupIds.includes(id))
+		};
+		if (restored) localStorage.setItem(storageKey, JSON.stringify(filter));
+	});
+
 	onMount(async () => {
 		await getGroups();
 		await getWorkgroups();
+		restoreFilter();
 		await getUsers();
 	});
 </script>

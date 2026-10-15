@@ -182,7 +182,7 @@
 			{/if}
 
 			{#if poll?.work_group_id}
-				{$_('Workgroup')}: {poll.work_group_name}
+				{$_('Team')}: {poll.work_group_name}
 			{/if}
 
 			{#if poll?.interval_mean_absolute_correctness}

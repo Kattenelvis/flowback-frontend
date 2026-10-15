@@ -38,6 +38,10 @@ export interface ScheduleItem2 {
   // MONTHLY = 3, _("Monthly")  # If event start_date day is 29 or higher, skip months that has these dates
   // YEARLY = 4, _("Yearly")
   repeat_frequency: 1 | 2 | 3 | 4 | null;
+  // The last time a repeating event may start, null if it goes on forever
+  repeat_frequency_end_date: string | null;
+  // IANA name of the timezone a repeating event keeps its time of day in when the clocks change
+  timezone: string;
 
   tag_id: number;
   tag_name: string;
@@ -64,6 +68,8 @@ export const ScheduleItem2Default = {
   active: true,
   meeting_link: '',
   repeat_frequency: null,
+  repeat_frequency_end_date: null,
+  timezone: 'UTC',
   tag_id: 0,
   tag_name: '',
   origin_name: '',

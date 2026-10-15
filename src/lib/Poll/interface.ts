@@ -58,6 +58,7 @@ export interface poll {
   group_image?: string;
   joined: boolean;
   group_joined: boolean;
+  can_delete?: boolean;
   total_comments: number;
   total_proposals: number;
   total_predictions: number;
