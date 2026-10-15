@@ -66,6 +66,9 @@
 	});
 </script>
 
+<!-- The card click is a mouse shortcut only. Keyboard and screen reader users open the proposal
+with the "See more" button, so the card itself must not be a button (it contains buttons). -->
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
 	class={`dark:bg-darkobject bg-white w-full py-3 px-4 transition-all rounded-lg cursor-pointer
 	 border border-gray-200 dark:border-gray-700 ${Class}`}
@@ -74,10 +77,8 @@
 	class:border-l-4={selectedProposal === proposal}
 	class:border-primary={selectedProposal === proposal}
 	id={`${idfy(proposal.title)}`}
+	aria-current={selectedProposal === proposal ? 'true' : undefined}
 	on:click={openProposal}
-	on:keydown={(e) => e.key === 'Enter' && openProposal(e)}
-	role="button"
-	tabindex="0"
 >
 	<div class="flex gap-2 items-center">
 		{#if phase === 'prediction_statement'}
