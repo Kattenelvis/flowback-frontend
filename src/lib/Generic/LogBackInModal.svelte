@@ -19,7 +19,10 @@
 
 	const logOut = async () => {
 		open = false;
-		// await UsersApi.logout();
+		// Revoke the token on the server. If it already expired we still want to log out locally
+		try {
+			await UsersApi.logout();
+		} catch {}
 		localStorage.removeItem('token');
 		localStorage.removeItem('sessionExpirationTime');
 		goto('/login');

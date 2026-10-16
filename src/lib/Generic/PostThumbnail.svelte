@@ -4,7 +4,8 @@
 	import { page } from '$app/state';
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
 	import Fa from 'svelte-fa';
-	import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
+	import { faThumbTack, faBookmark } from '@fortawesome/free-solid-svg-icons';
+	import { faBookmark as faBookmarkOutline } from '@fortawesome/free-regular-svg-icons';
 	import { _ } from 'svelte-i18n';
 	import NewDescription from '$lib/Poll/NewDescription.svelte';
 	import { groupUserStore, type Thread } from '$lib/Group/interface';
@@ -56,6 +57,21 @@
 
 		_post.pinned = !_post?.pinned;
 		post = { ..._post };
+	};
+
+	const toggleBookmark = async () => {
+		const { res } = await fetchRequest(
+			'POST',
+			`user/bookmark/${post?.bookmarked ? 'delete' : 'create'}`,
+			{
+				object_id: post?.id,
+				content_type: api === 'poll' ? 'poll' : 'groupthread'
+			}
+		);
+
+		if (!res.ok) return;
+
+		post = { ...post, bookmarked: !post?.bookmarked };
 	};
 
 	onMount(() => {
@@ -115,6 +131,20 @@
 							/>
 						</button>
 					{/if}
+
+					<!-- Bookmark button -->
+					<button
+						class="cursor-pointer"
+						aria-label={$_('Bookmark')}
+						aria-pressed={!!post?.bookmarked}
+						onclick={toggleBookmark}
+					>
+						<Fa
+							size="1.2x"
+							icon={post?.bookmarked ? faBookmark : faBookmarkOutline}
+							color={post?.bookmarked ? '#999' : '#CCC'}
+						/>
+					</button>
 
 					{#if api === 'poll'}
 						<MultipleChoices

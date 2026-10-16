@@ -63,6 +63,7 @@ export interface poll {
   total_proposals: number;
   total_predictions: number;
   pinned: boolean;
+  bookmarked?: boolean;
   public: boolean;
   work_group_id?: number | null;
   work_group_name?: string | null;
@@ -93,6 +94,7 @@ export interface Filter {
   from: string;
   to: string;
   status: -1 | 0 | 1 | null;
+  bookmarked: boolean;
 }
 
 export type Phase =

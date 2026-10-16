@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
 	import { chatOpenStore } from '$lib/Chat/functions';
+	import { UsersApi } from '$lib/api/users';
 
 	export let sideHeaderOpen = false;
 
@@ -12,7 +13,10 @@
 		open_tools = false;
 
 	const logOut = async () => {
-		// await UsersApi.logout();
+		// Revoke the token on the server. If it already expired we still want to log out locally
+		try {
+			await UsersApi.logout();
+		} catch {}
 		localStorage.removeItem('token');
 		localStorage.removeItem('sessionExpirationTime');
 		goto('/login');

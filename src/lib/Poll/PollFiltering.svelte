@@ -11,6 +11,9 @@
 	import { type Tag } from '$lib/Group/interface';
 	import type { WorkGroup } from '$lib/Group/WorkingGroups/interface';
 	import { onMount } from 'svelte';
+	import Fa from 'svelte-fa';
+	import { faBookmark } from '@fortawesome/free-solid-svg-icons';
+	import { faBookmark as faBookmarkOutline } from '@fortawesome/free-regular-svg-icons';
 	import { _ } from 'svelte-i18n';
 	import { homePolls as homePollsLimit } from '../Generic/APILimits.json';
 	import { InfoToGet, type Filter } from './interface';
@@ -113,7 +116,8 @@
 			workgroup: null,
 			from: new Date(0).toISOString().slice(0, 16),
 			to: new Date(99999999999999).toISOString().slice(0, 16),
-			status: null
+			status: null,
+			bookmarked: false
 		};
 
 		// Reset content type checkboxes
@@ -197,6 +201,19 @@
 			onChange={handleContentTypeChange}
 			Class="flex items-center"
 		/>
+
+		<button
+			type="button"
+			class="cursor-pointer"
+			aria-label={$_('Bookmarked')}
+			aria-pressed={filter.bookmarked}
+			on:click={() => (filter = { ...filter, bookmarked: !filter.bookmarked })}
+		>
+			<Fa
+				icon={filter.bookmarked ? faBookmark : faBookmarkOutline}
+				color={filter.bookmarked ? '#999' : '#CCC'}
+			/>
+		</button>
 
 		{#if groupId}
 			<div class="flex flex-row gap-2 items-center">

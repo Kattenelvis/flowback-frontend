@@ -143,6 +143,7 @@ export interface Thread {
 	total_comments: number;
 	description: string;
 	pinned: boolean;
+	bookmarked?: boolean;
 	attachments: _File[] | null;
 	user_vote: null | boolean;
 	score: number;

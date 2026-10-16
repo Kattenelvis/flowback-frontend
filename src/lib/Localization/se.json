@@ -5,6 +5,7 @@
 	"Register": "Registrera",
 	"Flowback Groups": "Flowback grupper",
 	"Email": "Email",
+	"Please log in with your email address, not your username": "Logga in med din e-postadress, inte ditt användarnamn",
 	"Password": "Lösenord",
 	"Not Finished": "Igång",
 	"Forgot password?": "Glömt lösenordet?",
@@ -889,5 +890,13 @@
 	"Could not edit message": "Kunde inte redigera meddelandet",
 	"Could not delete message": "Kunde inte ta bort meddelandet",
 	"No proposal selected": "Inget förslag valt",
-	"Select a proposal to read it, or add your own to shape the outcome.": "Välj ett förslag för att läsa det, eller lägg till ett eget och påverka utfallet."
+	"Select a proposal to read it, or add your own to shape the outcome.": "Välj ett förslag för att läsa det, eller lägg till ett eget och påverka utfallet.",
+	"Move to group": "Flytta till grupp",
+	"Select group": "Välj grupp",
+	"Move": "Flytta",
+	"Failed to move kanban task to group": "Kunde inte flytta uppgiften till gruppen",
+	"All occurrences": "Alla tillfällen",
+	"Only this occurrence": "Bara detta tillfälle",
+	"Occurrence has already ended.": "Tillfället har redan tagit slut.",
+	"Event starts soon": "Eventet börjar snart"
 }

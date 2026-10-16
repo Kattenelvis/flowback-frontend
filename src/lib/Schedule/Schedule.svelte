@@ -247,6 +247,16 @@
 	};
 
 	// Dragging or resizing only changes when an event happens, so only its times are sent
+	// Events made by a date poll, in the group schedule or the poll's own, can't be changed
+	const isPollOrigin = (event: ScheduleItem2) =>
+		event.origin_name === 'poll' || event.schedule_origin_name === 'poll';
+	let isPollEvent = $derived(isPollOrigin(editingEvent));
+	// An opened event is shown read-only until Edit is pressed
+	let viewing = $state(false);
+	// Start of the occurrence of a repeating event that was opened
+	let selectedOccurrenceStart = $state('');
+	let readOnly = $derived(isPollEvent || viewing);
+
 	const scheduleEventMove = async (info: EventDropArg | EventResizeDoneArg) => {
 		const { event, oldEvent, revert } = info;
 		const stored = events.find((e) => e.id.toString() === event.id);
@@ -302,6 +312,7 @@
 		editingEvent = deepCopy(ScheduleItem2Default);
 		selectedStartDate = toDatetimeLocal(start);
 		selectedEndDate = toDatetimeLocal(end);
+		viewing = false;
 		open = true;
 	};
 
@@ -457,10 +468,12 @@
 
 			eventClick: ({ event }) => {
 				open = true;
+				viewing = true;
 				selectedEvent = events.find((e) => e.id.toString() === event.id) ?? selectedEvent;
 				editingEvent = deepCopy(selectedEvent);
 
 				// Take the times of this occurrence, a month view bar only knows whole days
+				selectedOccurrenceStart = event.extendedProps.occurrenceStart;
 				const start = new Date(event.extendedProps.occurrenceStart);
 				const end = event.extendedProps.occurrenceEnd
 					? new Date(event.extendedProps.occurrenceEnd)
@@ -506,6 +519,8 @@
 					return {
 						...event,
 						id: String(event.id),
+						// Events made by a date poll are set by the poll's result
+						editable: !isPollOrigin(event),
 						dayOffset,
 						occurrenceStart: occurrenceStart.toISOString(),
 						occurrenceEnd: occurrenceEnd?.toISOString() ?? null,
@@ -590,8 +605,10 @@
 <!-- Modal for displaying, creating and editing schedule events -->
 <Modal
 	bind:open
-	buttons={[
-		{
+	buttons={isPollEvent ? [] : [
+		...(viewing
+			? [{ label: 'Edit', onClick: () => (viewing = false), type: 'default' as const }]
+			: [{
 			label: 'Submit',
 			onClick: async () => {
 				selectedEvent.schedule_id === 0
@@ -599,9 +616,9 @@
 					: await scheduleEventUpdate();
 				scheduleEventList();
 			},
-			type: 'default',
+			type: 'default' as const,
 			submit: true
-		},
+		}]),
 		{
 			label: 'Delete',
 			onClick: () => ScheduleEventDelete(selectedEvent.id),
@@ -619,18 +636,25 @@
 		{#if editingEvent.schedule_id === 0}
 			<span>{$_('Create an Event')}</span>
 		{:else if editingEvent.schedule_id !== 0}
-			<span>{$_('Edit Event ')}{editingEvent.title}</span>
+			<span>{readOnly ? '' : $_('Edit Event ')}{editingEvent.title}</span>
 			<NotificationOptions
 				type="event"
 				id={editingEvent.id}
 				api={`schedule/${editingEvent.schedule_id}/event/subscribe`}
-				labels={['subsc']}
-				categories={['subsc']}
+				unsubscribeApi={`schedule/${editingEvent.schedule_id}/event/unsubscribe`}
+				occurrenceStart={selectedOccurrenceStart}
+				labels={editingEvent.repeat_frequency
+					? ['All occurrences', 'Only this occurrence']
+					: ['subsc']}
+				categories={editingEvent.repeat_frequency
+					? ['series', 'occurrence']
+					: ['subsc']}
 			/>
 		{/if}
 	</div>
 
 	<div slot="body">
+		<fieldset disabled={readOnly} class="contents">
 		<div role="form" class="schedule-form flex flex-col gap-3 text-left">
 			<TextInput label="Title" bind:value={editingEvent.title} />
 			<TextArea label="Description" bind:value={editingEvent.description} />
@@ -666,6 +690,7 @@
 			<TextInput label="Meeting Link" bind:value={editingEvent.meeting_link} />
 			<!-- <TextInput label="Tag" bind:value={selectedEvent.tag_name} /> -->
 		</div>
+		</fieldset>
 	</div>
 </Modal>
 
