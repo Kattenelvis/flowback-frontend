@@ -26,7 +26,7 @@ const config = {
         'img-src': ['self', 'data:', 'blob:', 'http:', 'https:'],
         'media-src': ['self', 'blob:', 'http:', 'https:'],
         'font-src': ['self', 'data:'],
-        'connect-src': ['self', 'http:', 'https:', 'ws:', 'wss:'],
+        'connect-src': ['self', 'blob:', 'http:', 'https:', 'ws:', 'wss:'],
         'worker-src': ['self', 'blob:'],
         'object-src': ['none'],
         'base-uri': ['self'],
