@@ -6,7 +6,7 @@
 	import type { GroupUser } from '../interface';
 	import Tag from '../Tag.svelte';
 	import Fa from 'svelte-fa';
-	import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
+	import { faChevronDown } from '@fortawesome/free-solid-svg-icons/faChevronDown';
 	import { onMount } from 'svelte';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { permissions as permissionsLimit } from '../../Generic/APILimits.json';
@@ -108,12 +108,21 @@
 					{/if}
 				</div>
 				<button
-					class:selected={selected === user.user.id}
-					class="faPlus ml-auto cursor-pointer"
+					type="button"
+					class="ml-auto mr-3 w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors cursor-pointer text-gray-600 dark:text-gray-200 {selected ===
+					user.user.id
+						? 'bg-gray-300 dark:bg-gray-500'
+						: 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500'}"
 					on:click={() => (selected === user.user.id ? (selected = -1) : (selected = user.user.id))}
+					aria-expanded={selected === user.user.id}
+					aria-label={$_('Change role')}
+					title={$_('Change role')}
 					id={`plus-${user.user.username}`}
 				>
-					<Fa icon={faPlus} size="lg" />
+					<Fa
+						icon={faChevronDown}
+						class="transition-transform duration-200 {selected === user.user.id ? 'rotate-180' : ''}"
+					/>
 				</button>
 				{#if user.is_admin}
 					<Button onClick={() => setAdmin(user, false)}>{$_('Remove admin')}</Button>
