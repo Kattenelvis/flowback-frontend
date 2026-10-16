@@ -26,8 +26,7 @@
 	import { TelInput, normalizedCountries } from 'svelte-tel-input';
 	import type { DetailedValue, CountryCode } from 'svelte-tel-input/types';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
-	import { chatOpenStore, chatPartnerStore } from '$lib/Chat/functions';
-	import { getUserChannelId } from '$lib/Chat/functions';
+	import { openDirectChat } from '$lib/Chat/store';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { userStore } from '$lib/User/interfaces';
 	import History from '../../lib/Delegation/History.svelte';
@@ -330,21 +329,16 @@
 					<h2 class="text-primary dark:text-secondary font-bold">
 						{$_('Contact Information')}
 					</h2>
-					{#await getUserChannelId(user.id) then channelId}
-						{#if channelId}
-							<button
-								on:click={() => {
-									chatOpenStore.set(true);
-									chatPartnerStore.set(channelId);
-								}}
-								class="text-primary dark:text-secondary p-2 -m-2"
-								aria-label={$_('Send message')}
-								title={$_('Send message')}
-							>
-								<Fa icon={faPaperPlane} rotate="60" />
-							</button>
-						{/if}
-					{/await}
+					{#if user.id && user.id !== $userStore?.id}
+						<button
+							on:click={() => openDirectChat(user.id)}
+							class="text-primary dark:text-secondary p-2 -m-2"
+							aria-label={$_('Send message')}
+							title={$_('Send message')}
+						>
+							<Fa icon={faPaperPlane} rotate="60" />
+						</button>
+					{/if}
 				</div>
 
 				<ul class="divide-y divide-gray-100 dark:divide-gray-700">

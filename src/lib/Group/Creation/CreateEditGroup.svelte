@@ -16,7 +16,6 @@
 	import { env } from '$env/dynamic/public';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import RadioButtons from '$lib/Generic/RadioButtons.svelte';
-	import { chatPartnerStore } from '$lib/Chat/functions';
 
 	let { Class = '' } = $props();
 
@@ -120,7 +119,6 @@
 		}
 
 		if (res.ok) goto('/groups');
-		chatPartnerStore.set(0);
 	};
 
 	const getGroupToEdit = async () => {
