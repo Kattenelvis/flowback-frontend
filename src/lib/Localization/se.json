@@ -898,5 +898,7 @@
 	"All occurrences": "Alla tillfällen",
 	"Only this occurrence": "Bara detta tillfälle",
 	"Occurrence has already ended.": "Tillfället har redan tagit slut.",
-	"Event starts soon": "Eventet börjar snart"
+	"Event starts soon": "Eventet börjar snart",
+	"Show archived": "Visa arkiverade",
+	"Archived": "Arkiverad"
 }

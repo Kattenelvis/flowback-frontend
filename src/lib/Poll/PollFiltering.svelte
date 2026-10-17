@@ -117,7 +117,8 @@
 			from: new Date(0).toISOString().slice(0, 16),
 			to: new Date(99999999999999).toISOString().slice(0, 16),
 			status: null,
-			bookmarked: false
+			bookmarked: false,
+			is_archived: false
 		};
 
 		// Reset content type checkboxes
@@ -201,6 +202,11 @@
 			onChange={handleContentTypeChange}
 			Class="flex items-center"
 		/>
+
+		<label class="flex items-center gap-1 cursor-pointer">
+			<input type="checkbox" class="cursor-pointer" bind:checked={filter.is_archived} />
+			{$_('Show archived')}
+		</label>
 
 		<button
 			type="button"

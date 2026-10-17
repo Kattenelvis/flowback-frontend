@@ -39,7 +39,8 @@
 			from: new Date(0).toISOString().slice(0, 16),
 			to: new Date(99999999999999).toISOString().slice(0, 16),
 			status: null,
-			bookmarked: false
+			bookmarked: false,
+			is_archived: false
 		},
 		showThreads = true,
 		showPolls = true;
@@ -55,6 +56,7 @@
 		if (filter.to) api_params += `&created_at__lt=${filter.to}`;
 		if (filter.status !== null) api_params += `&status=${filter.status}`;
 		if (filter.bookmarked) api_params += `&bookmarked=true`;
+		if (filter.is_archived) api_params += `&is_archived=true`;
 
 		return api_params;
 	};

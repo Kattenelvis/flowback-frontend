@@ -89,6 +89,7 @@
 >
 	<div class="flex justify-between items-center">
 		<div class="items-center flex w-full justify-between">
+			<div class="flex items-center gap-2 min-w-0">
 			<!-- Title. It is a button since this allows users to enter the Post -->
 			<button
 				class="pb-2 break-all cursor-pointer hover:underline text-primary dark:text-secondary text-xl text-left"
@@ -106,6 +107,14 @@
 						});
 				}}>{post?.title}</button
 			>
+			{#if post?.is_archived}
+				<span
+					class="shrink-0 rounded px-2 py-0.5 text-xs bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-100"
+				>
+					{$_('Archived')}
+				</span>
+			{/if}
+			</div>
 			{#if post?.group_joined}
 				<!-- Notification Options -->
 				<div class="inline-flex gap-4 items-baseline">

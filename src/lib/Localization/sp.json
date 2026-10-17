@@ -423,5 +423,7 @@
     "All occurrences": "Todas las repeticiones",
     "Only this occurrence": "Solo esta repetición",
     "Occurrence has already ended.": "Esta repetición ya ha terminado.",
-    "Event starts soon": "El evento empieza pronto"
+    "Event starts soon": "El evento empieza pronto",
+    "Show archived": "Mostrar archivados",
+    "Archived": "Archivado"
 }
