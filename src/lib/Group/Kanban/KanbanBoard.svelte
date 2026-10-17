@@ -109,12 +109,6 @@
 	};
 
 	onMount(async () => {
-		let groupId =
-			Number(new URLSearchParams(document.location.search).get('groupId')) ??
-			null;
-		if (groupId) groupIds.push(groupId);
-		else userChecked = true;
-
 		await getKanbanEntries();
 
 		interval = setInterval(() => {
@@ -147,6 +141,7 @@
 			bind:groupIds
 			bind:workgroupIds
 			bind:userChecked
+			storageKey="kanban-filter"
 		/>
 		<TextInput
 			Class="flex-1 placeholder-gray-600 rounded text-gray-500 bg-gray-100 dark:bg-darkobject dark:text-darkmodeText"

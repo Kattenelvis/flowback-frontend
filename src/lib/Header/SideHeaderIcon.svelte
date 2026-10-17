@@ -11,7 +11,7 @@
 <button
 	id="side-header-icon"
 	aria-label="Side Header Toggle"
-	class={Class}
+	class={`flex items-center gap-2 ${Class}`}
 	on:click|stopPropagation={() => (sideHeaderOpen = !sideHeaderOpen)}
 >
 	<img
@@ -22,4 +22,9 @@
 		alt="default pfp"
 		on:error={(e) => onThumbnailError(e, DefaultPFP)}
 	/>
+	{#if $userStore?.username}
+		<span class="hidden md:inline text-sm font-medium dark:text-white max-w-32 truncate">
+			{$userStore.username}
+		</span>
+	{/if}
 </button>

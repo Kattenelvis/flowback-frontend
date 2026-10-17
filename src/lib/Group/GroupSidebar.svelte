@@ -48,7 +48,7 @@
 	$: mobile = $isMobile;
 	$: if (!mobile) menuOpen = false;
 	$: cardClass = mobile
-		? 'rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col'
+		? 'rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col shrink-0'
 		: 'bg-white dark:bg-darkobject shadow rounded flex flex-col';
 
 	const leaveGroup = async () => {
@@ -96,7 +96,7 @@
 
 <!-- TODO: Make it easier to add a sidebarbutton -->
 {#snippet menuItems()}
-	<div class="w-full">
+	<div class="w-full shrink-0">
 		<GroupSidebarButton
 			action={() => {
 				if (
@@ -139,16 +139,6 @@
 			text="Delegation"
 			faIcon={faPeopleArrows}
 		/> -->
-		<GroupSidebarButton
-			action={() => action('working-groups')}
-			text={env.PUBLIC_LOGO === 'REFORUM'
-				? 'Work- and local Groups'
-				: 'Work Groups'}
-			isSelected={selectedPage === 'working-groups'}
-			faIcon={faPeopleCarryBox}
-		/>
-		<!-- svgIcon={workgroupsymbol} -->
-
 		<!-- <GroupSidebarButton
 			action={() => action('documents')}
 			isSelected={selectedPage === 'documents'}
@@ -177,6 +167,15 @@
 				faIcon={faCalendarAlt}
 			/>
 		{/if}
+		<GroupSidebarButton
+			action={() => action('working-groups')}
+			text={env.PUBLIC_LOGO === 'REFORUM'
+				? 'Work- and local Groups'
+				: 'Teams'}
+			isSelected={selectedPage === 'working-groups'}
+			faIcon={faPeopleCarryBox}
+		/>
+		<!-- svgIcon={workgroupsymbol} -->
 		<GroupSidebarButton
 			action={() => action('members')}
 			text="Members"
@@ -286,7 +285,7 @@
 		<nav
 			id="group-menu"
 			aria-label={$_('Group menu')}
-			class="fixed inset-x-0 bottom-0 z-[121] flex max-h-[85dvh] flex-col rounded-t-2xl bg-white shadow-2xl dark:bg-darkobject dark:text-darkmodeText"
+			class="fixed inset-x-0 bottom-0 z-[121] flex max-h-[85dvh] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl dark:bg-darkobject dark:text-darkmodeText"
 			transition:fly={{ y: 400, duration: 250, easing: cubicOut }}
 		>
 			<div
@@ -305,7 +304,7 @@
 				</button>
 			</div>
 			<div
-				class="flex flex-col gap-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+				class="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
 			>
 				{@render menuItems()}
 			</div>

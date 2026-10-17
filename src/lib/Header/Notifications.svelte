@@ -171,7 +171,11 @@
 						<div class="flex items-start gap-3 break-words">
 							<span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" class:bg-primary={!notification.read} class:bg-gray-300={notification.read} class:dark:bg-gray-500={notification.read} aria-hidden="true"></span>
 							<span class="min-w-0">
-								<span class="block">{$_(notification.message)}</span>
+								<span class="block">
+									{notification.reminder > 0
+										? `${$_('Event starts soon')}: ${notification.data.title}`
+										: $_(notification.message)}
+								</span>
 								<span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
 								{timeAgo.format(new Date(notification.timestamp))}
 								</span>

@@ -39,7 +39,7 @@
 <Select
 	disableFirstChoice
 	labels={[
-		'No Workgroup',
+		'No Team',
 		...$workgroupStore
 			.filter(
 				(w) =>
@@ -63,6 +63,6 @@
 			.map((w) => w.id)
 	]}
 	bind:value={selectedWorkgroupId}
-	label="WorkGroup"
+	label="Team"
 	classInner="rounded p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkobject"
 />

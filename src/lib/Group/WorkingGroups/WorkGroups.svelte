@@ -44,7 +44,7 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message: 'Could not fetch work groups',
+				message: 'Could not fetch teams',
 				success: false
 			});
 			return;
@@ -63,7 +63,7 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message: 'Failed to create work group',
+				message: 'Failed to create team',
 				success: false
 			});
 			return;
@@ -154,14 +154,14 @@
 	>
 		<span class="text-sm"
 			>{$_(
-				`Being a part of a work group means that you will join that work group's chat, have access to viewing and creating tasks, events, and posts assigned to that work group. Work groups have no individual pages.`
+				`Being a part of a team means that you will join that team's chat, have access to viewing and creating tasks, events, and posts assigned to that team. Teams have no individual pages.`
 			)}</span
 		>
 		<TextInput
 			label=""
 			max={null}
 			search={true}
-			placeholder={$_('Search work groups')}
+			placeholder={$_('Search teams')}
 			bind:value={search}
 			onInput={getWorkingGroupList}
 		/>
@@ -200,7 +200,7 @@
 		>
 			<span
 				class="text-primary dark:text-secondary w-[40%] font-semibold break-words"
-				>{$_('+ Add Workgroup')}</span
+				>{$_('+ Add Team')}</span
 			>
 		</button>
 	{/if}
@@ -227,7 +227,7 @@
 		{ label: 'Cancel', type: 'default', onClick: () => (open = false) }
 	]}
 >
-	<div slot="header" class="w-full"><span>{$_('Create work group')}</span></div>
+	<div slot="header" class="w-full"><span>{$_('Create team')}</span></div>
 	<form slot="body" class="w-full" on:submit|preventDefault={createWorkGroup}>
 		<TextInput label="Name" required bind:value={workGroupEdit.name} />
 

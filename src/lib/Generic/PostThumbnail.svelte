@@ -4,7 +4,8 @@
 	import { page } from '$app/state';
 	import NotificationOptions from '$lib/Generic/NotificationOptions.svelte';
 	import Fa from 'svelte-fa';
-	import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
+	import { faThumbTack, faBookmark } from '@fortawesome/free-solid-svg-icons';
+	import { faBookmark as faBookmarkOutline } from '@fortawesome/free-regular-svg-icons';
 	import { _ } from 'svelte-i18n';
 	import NewDescription from '$lib/Poll/NewDescription.svelte';
 	import { groupUserStore, type Thread } from '$lib/Group/interface';
@@ -58,6 +59,21 @@
 		post = { ..._post };
 	};
 
+	const toggleBookmark = async () => {
+		const { res } = await fetchRequest(
+			'POST',
+			`user/bookmark/${post?.bookmarked ? 'delete' : 'create'}`,
+			{
+				object_id: post?.id,
+				content_type: api === 'poll' ? 'poll' : 'groupthread'
+			}
+		);
+
+		if (!res.ok) return;
+
+		post = { ...post, bookmarked: !post?.bookmarked };
+	};
+
 	onMount(() => {
 		//@ts-ignore
 		if (post?.fast_forward)
@@ -73,6 +89,7 @@
 >
 	<div class="flex justify-between items-center">
 		<div class="items-center flex w-full justify-between">
+			<div class="flex items-center gap-2 min-w-0">
 			<!-- Title. It is a button since this allows users to enter the Post -->
 			<button
 				class="pb-2 break-all cursor-pointer hover:underline text-primary dark:text-secondary text-xl text-left"
@@ -90,6 +107,14 @@
 						});
 				}}>{post?.title}</button
 			>
+			{#if post?.is_archived}
+				<span
+					class="shrink-0 rounded px-2 py-0.5 text-xs bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-100"
+				>
+					{$_('Archived')}
+				</span>
+			{/if}
+			</div>
 			{#if post?.group_joined}
 				<!-- Notification Options -->
 				<div class="inline-flex gap-4 items-baseline">
@@ -116,16 +141,32 @@
 						</button>
 					{/if}
 
+					<!-- Bookmark button -->
+					<button
+						class="cursor-pointer"
+						aria-label={$_('Bookmark')}
+						aria-pressed={!!post?.bookmarked}
+						onclick={toggleBookmark}
+					>
+						<Fa
+							size="1.2x"
+							icon={post?.bookmarked ? faBookmark : faBookmarkOutline}
+							color={post?.bookmarked ? '#999' : '#CCC'}
+						/>
+					</button>
+
 					{#if api === 'poll'}
 						<MultipleChoices
 							bind:choicesOpen
 							labels={[
-								$_('Delete Post'),
+								...((post as poll)?.can_delete ? [$_('Delete Post')] : []),
 								$_('Report Post'),
 								$_('Fast Forward')
 							]}
 							functions={[
-								() => (deleteModalShow = true),
+								...((post as poll)?.can_delete
+									? [() => (deleteModalShow = true)]
+									: []),
 								() => ((reportModalShow = true), (choicesOpen = false)),
 								() => fast_forward()
 							]}
@@ -135,11 +176,15 @@
 					{:else}
 						<MultipleChoices
 							bind:choicesOpen
-							labels={[$_('Delete Post'), $_('Report Post')]}
-							functions={[
-								() => (deleteModalShow = true),
-								() => ((reportModalShow = true), (choicesOpen = false))
-							]}
+							labels={(post as Thread)?.can_delete
+								? [$_('Delete Post'), $_('Report Post')]
+								: [$_('Report Post')]}
+							functions={(post as Thread)?.can_delete
+								? [
+										() => (deleteModalShow = true),
+										() => ((reportModalShow = true), (choicesOpen = false))
+									]
+								: [() => ((reportModalShow = true), (choicesOpen = false))]}
 							Class="text-black justify-self-center"
 							ClassInner="-translate-x-2/3 md:translate-x-0"
 						/>

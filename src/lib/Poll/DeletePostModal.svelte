@@ -49,7 +49,10 @@
 		} else {
 			// If at a thread or poll page
 			posts.update((currentPosts) => {
-				return currentPosts.filter((post) => post.id !== postId);
+				// Polls and threads share the list and can have the same id
+				return currentPosts.filter(
+					(post) => !(post.id === postId && post.related_model === post_type)
+				);
 			});
 		}
 
