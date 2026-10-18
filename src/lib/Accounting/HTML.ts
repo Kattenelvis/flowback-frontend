@@ -1,7 +1,9 @@
 // Function to generate HTML file and serve it to the user
-export const generateAndDownloadHTML = (generateHTMLContent: () => BlobPart) => {
+export const generateAndDownloadHTML = async (
+	generateHTMLContent: () => BlobPart | Promise<BlobPart>
+) => {
 	// Generate HTML content
-	const htmlContent = generateHTMLContent();
+	const htmlContent = await generateHTMLContent();
 
 	// Create a Blob object containing the HTML content
 	const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -22,8 +24,8 @@ export const generateAndDownloadHTML = (generateHTMLContent: () => BlobPart) => 
 	document.body.appendChild(link);
 	link.click();
 
-	// Clean up by revoking the Blob URL
-	URL.revokeObjectURL(url);
+	// Clean up by revoking the Blob URL, once the browser has started the download
+	setTimeout(() => URL.revokeObjectURL(url), 1000);
 
 	// Remove the link element from the DOM
 	document.body.removeChild(link);

@@ -224,10 +224,10 @@
 				isSelected={false}
 			/>
 			{#if env.PUBLIC_FLOWBACK_LEDGER_MODULE === 'TRUE'}
-				<a class="text-inherit w-full" href={`/ledger`}>
+				<a class="text-inherit w-full" href={`/accounting`}>
 					<GroupSidebarButton
 						Class="w-full"
-						text="Group Ledger"
+						text="Accounting"
 						faIcon={faCoins}
 						isSelected={false}
 					/>
