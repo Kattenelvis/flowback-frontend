@@ -8,6 +8,23 @@ export const formatAmount = (amount: number | null | undefined) =>
 // The date inputs only allow dates until the end of the current year unless given a later max
 export const latestDate = new Date(new Date().getFullYear() + 20, 11, 31);
 
+// For display: thousands separators and at least two decimals, in the browser's locale
+export const formatMoney = (amount: number | null | undefined) =>
+	Number(Number(amount || 0).toFixed(5)).toLocaleString(undefined, {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 5
+	});
+
+export const balanceTone = (amount: number) =>
+	Math.abs(amount) < 0.000005 ? 'zero' : amount > 0 ? 'positive' : 'negative';
+
+export const toggleAccountFilter = (filter: Filter, id: number): Filter => ({
+	...filter,
+	account_ids: filter.account_ids.map((account) =>
+		account.id === id ? { ...account, checked: !account.checked } : account
+	)
+});
+
 export const escapeHTML = (text: string) =>
 	text.replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
 

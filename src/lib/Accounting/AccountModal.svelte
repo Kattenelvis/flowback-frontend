@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { fetchRequest } from '$lib/FetchRequest';
-	import Button from '$lib/Generic/Button.svelte';
 	import Modal from '$lib/Generic/Modal.svelte';
-	import TextInput from '$lib/Generic/TextInput.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import type { Account } from './interface';
 	import { errorMessage } from './functions';
@@ -46,13 +44,82 @@
 
 <Modal bind:open onSubmit={save}>
 	<div slot="header">{account ? $_('Edit account') : $_('Create account')}</div>
-	<div slot="body" class="text-left">
-		<TextInput label="Account name" bind:value={account_name} />
-		<div class="mt-3">
-			<TextInput label="Account number" max={20} bind:value={account_number} />
-		</div>
+	<div slot="body" class="form">
+		<label class="field">
+			<span class="caption">{$_('Account name')}</span>
+			<input type="text" maxlength="100" autocomplete="off" bind:value={account_name} />
+		</label>
+		<label class="field">
+			<span class="caption">{$_('Account number')}</span>
+			<input type="text" maxlength="20" autocomplete="off" bind:value={account_number} />
+		</label>
 	</div>
 	<div slot="footer">
-		<Button onClick={save}>{account ? $_('Save') : $_('Create account')}</Button>
+		<button type="button" class="save" on:click={save}>
+			{account ? $_('Save') : $_('Create account')}
+		</button>
 	</div>
 </Modal>
+
+<style>
+	.form {
+		display: grid;
+		gap: 1rem;
+		text-align: left;
+	}
+
+
+	.field input[type='text'] {
+		width: 100%;
+		height: 2.5rem;
+		padding: 0 0.8rem;
+		border-radius: 0.75rem;
+		border: 1px solid rgba(100, 100, 120, 0.3);
+		background: rgba(100, 100, 120, 0.05);
+		color: inherit;
+		transition:
+			border-color 0.15s,
+			box-shadow 0.15s;
+	}
+
+	.field input[type='text']:focus {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px rgba(1, 91, 192, 0.15);
+	}
+
+	:global(html.dark) .field input[type='text'] {
+		border-color: rgba(255, 255, 255, 0.16);
+		background: rgba(255, 255, 255, 0.04);
+	}
+
+	.caption {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-size: 0.68rem;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: rgb(105, 105, 120);
+	}
+
+	:global(html.dark) .caption {
+		color: rgb(160, 160, 175);
+	}
+
+	.save {
+		width: 100%;
+		min-height: 2.8rem;
+		border-radius: 0.9rem;
+		background: var(--primary);
+		color: #fff;
+		font-weight: 500;
+		cursor: pointer;
+		box-shadow: 0 8px 18px -10px rgba(1, 91, 192, 0.9);
+		transition: background-color 0.15s;
+	}
+
+	.save:hover {
+		background: #0150a8;
+	}
+</style>

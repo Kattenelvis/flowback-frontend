@@ -1,19 +1,16 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 	import { untrack } from 'svelte';
+	import Fa from 'svelte-fa';
+	import { faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import type { Filter } from './interface';
-	import { isFilterActive, latestDate } from './functions';
+	import { isFilterActive, latestDate, toggleAccountFilter } from './functions';
 	import DateInput from 'date-picker-svelte/DateInput.svelte';
-	import CheckboxButtons from '$lib/Generic/CheckboxButtons.svelte';
-	import Modal from '$lib/Generic/Modal.svelte';
-	import Button from '$lib/Generic/Button.svelte';
 
 	// Calls handleSearch whenever the filter has changed
 	export let filter: Filter, handleSearch: () => void;
 
-	let openFilterAccounts = false,
-		filterOn = false,
-		// The inputs have their own state, because binding them straight to the filter makes the date
+	let // The inputs have their own state, because binding them straight to the filter makes the date
 		// inputs and the filter update each other forever
 		dateAfter: Date | null = null,
 		dateBefore: Date | null = null,
@@ -22,6 +19,7 @@
 		clearCount = 0;
 
 	$: filterActive = isFilterActive(filter);
+	$: chosenAccounts = filter.account_ids.filter((account) => account.checked);
 
 	const applyInputs = (after: Date | null, before: Date | null, text: string) =>
 		untrack(() => {
@@ -39,13 +37,8 @@
 
 	$: applyInputs(dateAfter, dateBefore, description);
 
-	const changingCheckbox = (id: number) => {
-		filter = {
-			...filter,
-			account_ids: filter.account_ids.map((selected) =>
-				selected.id === id ? { ...selected, checked: !selected.checked } : selected
-			)
-		};
+	const removeAccount = (id: number) => {
+		filter = toggleAccountFilter(filter, id);
 		handleSearch();
 	};
 
@@ -64,45 +57,185 @@
 	};
 </script>
 
-{#if filterActive}
-	<Button onClick={clearFilter}>{$_('Clear Filter')}</Button>
-{/if}
-
-<form class="mt-6" on:submit|preventDefault>
-	{#if filterOn}
-		<Button onClick={() => (filterOn = false)}>{$_('Close Filter Options')}</Button>
-		<div class="mt-5">
-			<div class="mt-6">
-				<label class="block" for="accounting-search">{$_('Search')}</label>
-				<input
-					id="accounting-search"
-					type="text"
-					class="bg-gray-200 dark:bg-darkbackground outline outline-1 outline-gray-300 w-full"
-					bind:value={description}
-				/>
+<form class="toolbar" on:submit|preventDefault>
+	<label class="search">
+		<Fa icon={faMagnifyingGlass} />
+		<input
+			id="accounting-search"
+			type="text"
+			autocomplete="off"
+			placeholder={$_('Search descriptions')}
+			aria-label={$_('Search')}
+			bind:value={description}
+		/>
+	</label>
+	{#key clearCount}
+		<div class="dates">
+			<div class="date">
+				<span>{$_('Earliest Date')}</span>
+				<DateInput bind:value={dateAfter} format="yyyy-MM-dd" placeholder="YYYY-MM-DD" max={latestDate} />
 			</div>
-			{#key clearCount}
-				<div class="flex gap-2 mt-6">
-					<div>{$_('Earliest Date')}<DateInput bind:value={dateAfter} format="yyyy-MM-dd" max={latestDate} /></div>
-					<div>{$_('Last Date')}<DateInput bind:value={dateBefore} format="yyyy-MM-dd" max={latestDate} /></div>
-				</div>
-			{/key}
-			<div class="mt-8">
-				<Button onClick={() => (openFilterAccounts = true)}>{$_('Filter Accounts')}</Button>
+			<div class="date">
+				<span>{$_('Last Date')}</span>
+				<DateInput bind:value={dateBefore} format="yyyy-MM-dd" placeholder="YYYY-MM-DD" max={latestDate} />
 			</div>
 		</div>
-	{:else}
-		<Button onClick={() => (filterOn = true)}>{$_('Open Filter Options')}</Button>
+	{/key}
+	{#if filterActive}
+		<button type="button" class="clear" on:click={clearFilter}>{$_('Clear Filter')}</button>
 	{/if}
 </form>
-<Modal bind:open={openFilterAccounts}>
-	<div slot="header">{$_('Filter Accounts')}</div>
-	<div slot="body">
-		<CheckboxButtons
-			onChange={changingCheckbox}
-			label=""
-			labels={filter.account_ids}
-			Class={'flex flex-col text-left'}
-		/>
+
+{#if chosenAccounts.length > 0}
+	<div class="chips">
+		{#each chosenAccounts as account (account.id)}
+			<button
+				type="button"
+				class="chip"
+				aria-label={`${$_('Remove')} ${account.label}`}
+				on:click={() => removeAccount(account.id)}
+			>
+				{account.label}
+				<Fa icon={faXmark} />
+			</button>
+		{/each}
 	</div>
-</Modal>
+{/if}
+
+<style>
+	.toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 0.75rem 1rem;
+		padding: 1rem 1.25rem;
+	}
+
+	.search {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		flex: 1 1 14rem;
+		height: 2.5rem;
+		padding: 0 0.85rem;
+		border-radius: 0.75rem;
+		border: 1px solid rgba(100, 100, 120, 0.28);
+		color: rgb(110, 110, 125);
+		background: rgba(100, 100, 120, 0.05);
+		transition:
+			border-color 0.15s,
+			box-shadow 0.15s;
+	}
+
+	.search:focus-within {
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px rgba(1, 91, 192, 0.15);
+	}
+
+	.search input {
+		flex: 1;
+		min-width: 0;
+		background: transparent;
+		outline: none;
+		color: inherit;
+	}
+
+	.dates {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.date {
+		display: grid;
+		gap: 0.2rem;
+	}
+
+	.date span {
+		font-size: 0.68rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: rgb(110, 110, 125);
+	}
+
+	.date :global(.date-time-field input) {
+		width: 9.5rem;
+		height: 2.5rem;
+		padding: 0 0.75rem;
+		border-radius: 0.75rem;
+		border: 1px solid rgba(100, 100, 120, 0.28);
+		background: rgba(100, 100, 120, 0.05);
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		color: inherit;
+	}
+
+	.date :global(.date-time-field input:focus) {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px rgba(1, 91, 192, 0.15);
+	}
+
+	.clear {
+		height: 2.5rem;
+		padding: 0 0.9rem;
+		border-radius: 0.75rem;
+		font-weight: 500;
+		color: var(--primary);
+		cursor: pointer;
+		transition: background-color 0.15s;
+	}
+
+	.clear:hover {
+		background: rgba(1, 91, 192, 0.1);
+	}
+
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		padding: 0 1.25rem 1rem;
+	}
+
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.3rem 0.65rem 0.3rem 0.8rem;
+		border-radius: 999px;
+		font-size: 0.85rem;
+		background: rgba(1, 91, 192, 0.1);
+		color: var(--primary);
+		cursor: pointer;
+		transition: background-color 0.15s;
+	}
+
+	.chip:hover {
+		background: rgba(1, 91, 192, 0.18);
+	}
+
+	:global(html.dark) .search,
+	:global(html.dark) .date :global(.date-time-field input) {
+		border-color: rgba(255, 255, 255, 0.16);
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--darkmode-text-color);
+	}
+
+	:global(html.dark) .search {
+		color: rgb(160, 160, 175);
+	}
+
+	:global(html.dark) .date span {
+		color: rgb(160, 160, 175);
+	}
+
+	:global(html.dark) .clear,
+	:global(html.dark) .chip {
+		color: #8cbcff;
+	}
+
+	:global(html.dark) .chip {
+		background: rgba(120, 170, 255, 0.14);
+	}
+</style>
