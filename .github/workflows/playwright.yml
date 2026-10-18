@@ -39,6 +39,8 @@ jobs:
     env:
       LINK: http://localhost:8085
       TEST_PASS: TestPassword
+      # The accounting test needs the optional module on
+      FLOWBACK_LEDGER_MODULE: 'TRUE'
     steps:
       - name: Checkout flowback-docker
         uses: actions/checkout@v4
