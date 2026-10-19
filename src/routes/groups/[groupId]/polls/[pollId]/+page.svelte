@@ -23,7 +23,7 @@
 	import { formatDate } from '$lib/Generic/DateFormatter';
 	import { predictionStatementsStore } from '$lib/Poll/PredictionMarket/interfaces';
 	import Fa from 'svelte-fa';
-	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import KPIVoting from '$lib/Poll/KPI/KPIVoting.svelte';
 	import KPIEvaluation from '$lib/Poll/KPI/KPIEvaluation.svelte';
 	import CombinedKPIBet from '$lib/Poll/KPI/CombinedKPIBet.svelte';
@@ -199,14 +199,17 @@
 							/>
 						</div>
 						<Button
-							Class="w-full bottom-0 mt-auto"
+							Class="w-full bottom-0 mt-auto flex items-center justify-center gap-2"
 							buttonStyle="primary-light"
 							disabled={displayForm && !selectedProposal}
 							onClick={() => {
 								selectedProposal = null;
 								displayForm = true;
-							}}>{$_('Add Proposal')}</Button
+							}}
 						>
+							<Fa icon={faPlus} />
+							{$_('Add Proposal')}
+						</Button>
 					</div>
 					<div slot="right" class="relative h-full max-h-full overflow-y-auto">
 						{#if selectedProposal}
@@ -276,14 +279,17 @@
 							/>
 						</div>
 						<Button
-							Class="w-full mt-auto"
+							Class="w-full mt-auto flex items-center justify-center gap-2"
 							buttonStyle="primary-light"
 							disabled={proposalsToPredictionMarket.length === 0}
 							onClick={() => {
 								selectedProposal = null;
 								displayForm = true;
-							}}>{$_('Create Consequence')}</Button
+							}}
 						>
+							<Fa icon={faPlus} />
+							{$_('Create Consequence')}
+						</Button>
 					</div>
 					<div slot="right" class="relative h-full flex flex-col">
 						{#if selectedProposal}

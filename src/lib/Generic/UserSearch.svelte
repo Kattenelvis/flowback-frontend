@@ -5,6 +5,8 @@
 	import Modal from './Modal.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import TextInput from './TextInput.svelte';
+	import Fa from 'svelte-fa';
+	import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 	export let showUsers = false,
 		showSelf = false,
@@ -33,7 +35,12 @@
 	>
 		<button on:click={() => (showUsers = true)} class="flex items-center gap-4 w-full" type="button">
 			<ProfilePicture />
-			<div class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700">+ Invite user</div>
+			<div
+				class="bg-gray-300 px-2 py-0.5 rounded-lg dark:bg-gray-700 flex items-center gap-2"
+			>
+				<Fa icon={faPlus} />
+				Invite user
+			</div>
 		</button>
 	</div>
 {/if}

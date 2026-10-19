@@ -248,8 +248,11 @@
 						on:click={() => {
 							editedAccount = null;
 							openAccountModal = true;
-						}}>{$_('Create account')}</button
+						}}
 					>
+						<Fa icon={faPlus} />
+						{$_('Create account')}
+					</button>
 					<button
 						type="button"
 						class="btn ghost"
@@ -336,8 +339,11 @@
 							on:click={() => {
 								editedAccount = null;
 								openAccountModal = true;
-							}}>{$_('Create your first account')}</button
+							}}
 						>
+							<Fa icon={faPlus} />
+							{$_('Create your first account')}
+						</button>
 					</div>
 				{/if}
 			</section>

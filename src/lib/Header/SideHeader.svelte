@@ -6,6 +6,8 @@
 	import { env } from '$env/dynamic/public';
 	import { chatOpenStore } from '$lib/Chat/functions';
 	import { UsersApi } from '$lib/api/users';
+	import Fa from 'svelte-fa';
+	import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 	export let sideHeaderOpen = false;
 
@@ -122,9 +124,14 @@
 		</div>
 		<div class="grupper-card row g-2 clickable">
 			<div class="text-center my-2 noSelect">
-				<button on:keydown on:click={handleCoDocumentCreation}
-					>+ {$_('Create Co-Document')}</button
+				<button
+					class="inline-flex items-center gap-2"
+					on:keydown
+					on:click={handleCoDocumentCreation}
 				>
+					<Fa icon={faPlus} />
+					{$_('Create Co-Document')}
+				</button>
 			</div>
 		</div>
 	</div>

@@ -9,6 +9,9 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import { statusMessageFormatter } from '$lib/Generic/StatusMessage';
 	import { maxDatePickerYear } from '$lib/Generic/DateFormatter';
+	import Fa from 'svelte-fa';
+	import { _ } from 'svelte-i18n';
+	import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 	let start_date: Date | null, end_date: Date | null, loading = false;
 
@@ -62,6 +65,12 @@
 			max={maxDatePickerYear}
 		/>
 
-		<Button Class="mt-4" type="submit" label="Add" />
+		<Button
+			Class="mt-4 flex items-center justify-center gap-2"
+			type="submit"
+		>
+			<Fa icon={faPlus} />
+			{$_('Add')}
+		</Button>
 	</Loader>
 </form>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Fa from 'svelte-fa';
-	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import {
 		Calendar,
 		formatDate,
@@ -10,7 +10,7 @@
 		type ViewApi
 	} from '@fullcalendar/core';
 	import { _ } from 'svelte-i18n';
-	import { onDestroy, onMount } from 'svelte';
+	import { mount, onDestroy, onMount } from 'svelte';
 	import dayGridPlugin from '@fullcalendar/daygrid';
 	import { fetchAllPages, fetchRequest } from '$lib/FetchRequest';
 	import timeGridPlugin from '@fullcalendar/timegrid';
@@ -455,7 +455,7 @@
 
 			customButtons: {
 				addEventButton: {
-					text: isMobile ? '+' : `+ ${$_('Create Event')}`,
+					text: isMobile ? '' : $_('Create Event'),
 					hint: $_('Create Event'),
 					click: () => {
 						// Suggest the next full hour
@@ -493,6 +493,14 @@
 			eventDurationEditable: true
 		});
 		calendar.render();
+
+		// Custom buttons only take text, so the + is mounted into the rendered button
+		const addEventButton = calendarEl.querySelector('.fc-addEventButton-button');
+		if (addEventButton) {
+			const plus = document.createElement('span');
+			addEventButton.prepend(plus);
+			mount(Fa, { target: plus, props: { icon: faPlus } });
+		}
 	};
 
 	// Events have no all-day flag, so one running from midnight to midnight is shown as all-day
@@ -803,6 +811,10 @@
 		border-radius: 9999px;
 		padding: 0.35rem 1rem;
 		margin-left: 0.25rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		white-space: nowrap;
 	}
 
 	.schedule-card :global(.fc .fc-addEventButton-button:hover) {
