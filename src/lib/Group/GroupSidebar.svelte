@@ -32,7 +32,7 @@
 		groupUserPermissionStore
 	} from '$lib/Group/interface';
 	import { groupStore } from '$lib/Group/Kanban/Kanban';
-	import { chatOpenStore, chatPartnerStore } from '$lib/Chat/functions';
+	import { chatOpenStore } from '$lib/Chat/store';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { isMobile } from '$lib/utils/isMobile';
@@ -72,7 +72,6 @@
 			removeGroupMembership(Number($page.params.groupId));
 
 		groupStore.set($groupStore.filter((g) => g.id !== group.id));
-		chatPartnerStore.set(0);
 		goto('/home');
 	};
 
