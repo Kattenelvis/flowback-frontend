@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
-	import { chatOpenStore } from '$lib/Chat/functions';
+	import { chatOpenStore } from '$lib/Chat/store';
 	import { UsersApi } from '$lib/api/users';
 	import Fa from 'svelte-fa';
 	import { faPlus } from '@fortawesome/free-solid-svg-icons';
