@@ -15,6 +15,14 @@
 	export let selectedPage: string;
 
 	const logIn = async () => {
+		if (!email.includes('@')) {
+			ErrorHandlerStore.set({
+				message: $_('Please log in with your email address, not your username'),
+				success: false
+			});
+			return;
+		}
+
 		loading = true;
 		const { json, res } = await fetchRequest(
 			'POST',
@@ -63,7 +71,7 @@
 </script>
 
 <Loader bind:loading>
-	<form class="flex flex-col gap-5" on:submit|preventDefault={logIn}>
+	<form class="flex flex-col gap-5" novalidate on:submit|preventDefault={logIn}>
 		<AuthInput label="Email" type="email" bind:value={email} name="email" autocomplete="email" required />
 		<div>
 			<AuthInput

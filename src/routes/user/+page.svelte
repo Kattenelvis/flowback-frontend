@@ -125,9 +125,6 @@
 
 	const editUser = async () => {
 		loading = true;
-		const imageToSend = await blobifyImages(profileImagePreview);
-		const bannerImageToSend = await blobifyImages(bannerImagePreview);
-
 		const formData = new FormData();
 		formData.append('username', userEdit.username);
 		formData.append('bio', userEdit.bio === '' ? blankSymbol : userEdit.bio);
@@ -144,10 +141,14 @@
 			userEdit.contact_phone === '' ? `+4646464646` : userEdit.contact_phone
 		);
 
+		// Only the images the user picked are blobified, the placeholders are not real images
 		if (bannerImagePreview !== '')
-			formData.append('banner_image', bannerImageToSend);
+			formData.append('banner_image', await blobifyImages(bannerImagePreview));
 		if (profileImagePreview !== DefaultPFP)
-			formData.append('profile_image', imageToSend);
+			formData.append(
+				'profile_image',
+				await blobifyImages(profileImagePreview)
+			);
 
 		const { res, json } = await fetchRequest(
 			'POST',

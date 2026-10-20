@@ -9,6 +9,8 @@
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import TextArea from '$lib/Generic/TextArea.svelte';
 	import Toggle from '$lib/Generic/Toggle.svelte';
+	import Fa from 'svelte-fa';
+	import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 	interface KPI {
 		name: string;
@@ -140,10 +142,12 @@
 		<Button
 			disabled={loading}
 			type="submit"
-			Class="w-1/5 h-8 flex items-center justify-center"
+			Class="w-1/5 h-8 flex items-center justify-center gap-2"
 			buttonStyle="primary-light"
-			label="Add"
-		/>
+		>
+			<Fa icon={faPlus} />
+			{$_('Add')}
+		</Button>
 	</form>
 
 	<div class="flex flex-col justify-between gap-2 py-2">

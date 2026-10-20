@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Fa from 'svelte-fa';
-	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import {
 		Calendar,
 		formatDate,
@@ -10,7 +10,7 @@
 		type ViewApi
 	} from '@fullcalendar/core';
 	import { _ } from 'svelte-i18n';
-	import { onDestroy, onMount } from 'svelte';
+	import { mount, onDestroy, onMount } from 'svelte';
 	import dayGridPlugin from '@fullcalendar/daygrid';
 	import { fetchAllPages, fetchRequest } from '$lib/FetchRequest';
 	import timeGridPlugin from '@fullcalendar/timegrid';
@@ -247,6 +247,16 @@
 	};
 
 	// Dragging or resizing only changes when an event happens, so only its times are sent
+	// Events made by a date poll, in the group schedule or the poll's own, can't be changed
+	const isPollOrigin = (event: ScheduleItem2) =>
+		event.origin_name === 'poll' || event.schedule_origin_name === 'poll';
+	let isPollEvent = $derived(isPollOrigin(editingEvent));
+	// An opened event is shown read-only until Edit is pressed
+	let viewing = $state(false);
+	// Start of the occurrence of a repeating event that was opened
+	let selectedOccurrenceStart = $state('');
+	let readOnly = $derived(isPollEvent || viewing);
+
 	const scheduleEventMove = async (info: EventDropArg | EventResizeDoneArg) => {
 		const { event, oldEvent, revert } = info;
 		const stored = events.find((e) => e.id.toString() === event.id);
@@ -302,6 +312,7 @@
 		editingEvent = deepCopy(ScheduleItem2Default);
 		selectedStartDate = toDatetimeLocal(start);
 		selectedEndDate = toDatetimeLocal(end);
+		viewing = false;
 		open = true;
 	};
 
@@ -444,7 +455,7 @@
 
 			customButtons: {
 				addEventButton: {
-					text: isMobile ? '+' : `+ ${$_('Create Event')}`,
+					text: isMobile ? '' : $_('Create Event'),
 					hint: $_('Create Event'),
 					click: () => {
 						// Suggest the next full hour
@@ -457,10 +468,12 @@
 
 			eventClick: ({ event }) => {
 				open = true;
+				viewing = true;
 				selectedEvent = events.find((e) => e.id.toString() === event.id) ?? selectedEvent;
 				editingEvent = deepCopy(selectedEvent);
 
 				// Take the times of this occurrence, a month view bar only knows whole days
+				selectedOccurrenceStart = event.extendedProps.occurrenceStart;
 				const start = new Date(event.extendedProps.occurrenceStart);
 				const end = event.extendedProps.occurrenceEnd
 					? new Date(event.extendedProps.occurrenceEnd)
@@ -480,6 +493,14 @@
 			eventDurationEditable: true
 		});
 		calendar.render();
+
+		// Custom buttons only take text, so the + is mounted into the rendered button
+		const addEventButton = calendarEl.querySelector('.fc-addEventButton-button');
+		if (addEventButton) {
+			const plus = document.createElement('span');
+			addEventButton.prepend(plus);
+			mount(Fa, { target: plus, props: { icon: faPlus } });
+		}
 	};
 
 	// Events have no all-day flag, so one running from midnight to midnight is shown as all-day
@@ -506,6 +527,8 @@
 					return {
 						...event,
 						id: String(event.id),
+						// Events made by a date poll are set by the poll's result
+						editable: !isPollOrigin(event),
 						dayOffset,
 						occurrenceStart: occurrenceStart.toISOString(),
 						occurrenceEnd: occurrenceEnd?.toISOString() ?? null,
@@ -590,8 +613,10 @@
 <!-- Modal for displaying, creating and editing schedule events -->
 <Modal
 	bind:open
-	buttons={[
-		{
+	buttons={isPollEvent ? [] : [
+		...(viewing
+			? [{ label: 'Edit', onClick: () => (viewing = false), type: 'default' as const }]
+			: [{
 			label: 'Submit',
 			onClick: async () => {
 				selectedEvent.schedule_id === 0
@@ -599,9 +624,9 @@
 					: await scheduleEventUpdate();
 				scheduleEventList();
 			},
-			type: 'default',
+			type: 'default' as const,
 			submit: true
-		},
+		}]),
 		{
 			label: 'Delete',
 			onClick: () => ScheduleEventDelete(selectedEvent.id),
@@ -619,18 +644,25 @@
 		{#if editingEvent.schedule_id === 0}
 			<span>{$_('Create an Event')}</span>
 		{:else if editingEvent.schedule_id !== 0}
-			<span>{$_('Edit Event ')}{editingEvent.title}</span>
+			<span>{readOnly ? '' : $_('Edit Event ')}{editingEvent.title}</span>
 			<NotificationOptions
 				type="event"
 				id={editingEvent.id}
 				api={`schedule/${editingEvent.schedule_id}/event/subscribe`}
-				labels={['subsc']}
-				categories={['subsc']}
+				unsubscribeApi={`schedule/${editingEvent.schedule_id}/event/unsubscribe`}
+				occurrenceStart={selectedOccurrenceStart}
+				labels={editingEvent.repeat_frequency
+					? ['All occurrences', 'Only this occurrence']
+					: ['subsc']}
+				categories={editingEvent.repeat_frequency
+					? ['series', 'occurrence']
+					: ['subsc']}
 			/>
 		{/if}
 	</div>
 
 	<div slot="body">
+		<fieldset disabled={readOnly} class="contents">
 		<div role="form" class="schedule-form flex flex-col gap-3 text-left">
 			<TextInput label="Title" bind:value={editingEvent.title} />
 			<TextArea label="Description" bind:value={editingEvent.description} />
@@ -666,6 +698,7 @@
 			<TextInput label="Meeting Link" bind:value={editingEvent.meeting_link} />
 			<!-- <TextInput label="Tag" bind:value={selectedEvent.tag_name} /> -->
 		</div>
+		</fieldset>
 	</div>
 </Modal>
 
@@ -778,6 +811,10 @@
 		border-radius: 9999px;
 		padding: 0.35rem 1rem;
 		margin-left: 0.25rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		white-space: nowrap;
 	}
 
 	.schedule-card :global(.fc .fc-addEventButton-button:hover) {

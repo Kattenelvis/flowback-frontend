@@ -25,7 +25,8 @@
 		faCalendarAlt,
 		faSlash,
 		faGlobe,
-		faLock
+		faLock,
+		faPlus
 	} from '@fortawesome/free-solid-svg-icons';
 	import { goto } from '$app/navigation';
 	import Timeline from './NewDesign/Timeline.svelte';
@@ -267,15 +268,18 @@
 							)}>{$_('See Proposals')} ({poll?.total_proposals})</Button
 					>
 					<Button
-						Class="w-[47%]"
+						Class="w-[47%] flex items-center justify-center gap-2"
 						buttonStyle="primary-light"
 						onClick={() =>
 							goto(
 								`/groups/${poll?.group_id || page.params.groupId}/polls/${poll?.id}?display=1&source=${
 									page.params.groupId ? 'group' : 'home'
 								}`
-							)}>{$_('Create a Proposal')}</Button
+							)}
 					>
+						<Fa icon={faPlus} />
+						{$_('Create a Proposal')}
+					</Button>
 				</div>
 
 				<!-- PHASE 3: PREDICTION STATEMENT CREATION -->
@@ -292,15 +296,18 @@
 							)}>{$_('See Consequences')} ({poll?.total_predictions})</Button
 					>
 					<Button
-						Class="w-[47%]"
+						Class="w-[47%] flex items-center justify-center gap-2"
 						buttonStyle="primary-light"
 						onClick={() =>
 							goto(
 								`/groups/${poll?.group_id || page.params.groupId}/polls/${poll?.id}?display=1&source=${
 									page.params.groupId ? 'group' : 'home'
 								}`
-							)}>{$_('Create a Consequence')}</Button
+							)}
 					>
+						<Fa icon={faPlus} />
+						{$_('Create a Consequence')}
+					</Button>
 				</div>
 
 				<!-- PHASE 4: PREDICTION BETTING -->

@@ -14,6 +14,8 @@
 		labels,
 		type,
 		api,
+		unsubscribeApi,
+		occurrenceStart,
 		id,
 		Class = '',
 		ClassOpen = '',
@@ -24,6 +26,10 @@
 		labels: string[];
 		type: 'poll' | 'group' | 'thread' | 'delegation' | 'event';
 		api: string;
+		// Events are left through an endpoint of their own
+		unsubscribeApi?: string;
+		// Start of the occurrence of a repeating event that is open, for the choice of following only that one
+		occurrenceStart?: string;
 		id: number;
 		Class?: string;
 		ClassOpen?: string;
@@ -65,7 +71,85 @@
 		});
 	};
 
+	// Events are followed as a whole, or for a repeating event as the one occurrence that is open.
+	// Which one comes from the event itself, as a single occurrence has no subscription to list
+	const getEventSubscription = async () => {
+		const { res, json } = await fetchRequest(
+			'GET',
+			`schedule/event/list?ids=${id}`
+		);
+		if (!res.ok) return;
+
+		const event = json.results.find((e: any) => e.id === id);
+		const isThisOccurrence = () =>
+			!!occurrenceStart &&
+			new Date(event.subscribed_occurrence).getTime() ===
+				new Date(occurrenceStart).getTime();
+
+		let subscribedCategory: string | null = null;
+		if (event?.subscribed) {
+			if (!event.subscribed_occurrence) subscribedCategory = categories[0];
+			else if (isThisOccurrence()) subscribedCategory = 'occurrence';
+		}
+
+		notifications = subscribedCategory
+			? [
+					{
+						channel_category: subscribedCategory,
+						channel_sender_id: id,
+						channel_sender_type: type
+					}
+				]
+			: [];
+	};
+
+	const eventSubscription = async (category: string, subscribed: boolean) => {
+		const { res, json } = subscribed
+			? await fetchRequest('POST', unsubscribeApi!, {
+					event_ids: id.toString()
+				})
+			: await fetchRequest('POST', api, {
+					event_ids: id.toString(),
+					...(category === 'occurrence'
+						? { occurrence_start: occurrenceStart }
+						: {})
+				});
+
+		if (!res.ok) {
+			const shown = [
+				'Event is not active or has already ended.',
+				'Occurrence has already ended.'
+			];
+			ErrorHandlerStore.set({
+				message: subscribed
+					? 'Failed to unsubscribe'
+					: shown.includes(json.detail?.[0])
+						? json.detail[0]
+						: 'Failed to subscribe',
+				success: false
+			});
+			return;
+		}
+
+		// Following the series or one occurrence replaces whatever was followed before
+		notifications = subscribed
+			? []
+			: [
+					{
+						channel_category: category,
+						channel_sender_id: id,
+						channel_sender_type: type
+					}
+				];
+		ErrorHandlerStore.set({
+			message: subscribed ? 'Unsubscribed' : 'Subscribed',
+			success: true
+		});
+	};
+
 	const getNotifications = async () => {
+		if (type === 'event') return getEventSubscription();
+
 		const { res, json } = await fetchRequest(
 			'GET',
 			'notification/subscription'
@@ -103,21 +187,14 @@
 					(item) => item.channel_category !== category
 				));
 
-		let payload: any = {
+		const payload = {
 			tags: notifications.map((notification) => notification.channel_category)
 		};
-		if (type === 'event') payload['event_ids'] = id.toString();
 
-		const { res, json } = await fetchRequest('POST', `${api}`, payload);
+		const { res } = await fetchRequest('POST', `${api}`, payload);
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message: (() => {
-					if (method === 'add') {
-						const msg = json.detail[0];
-						if (msg === 'Event is not active or has already ended.') return msg;
-						else return 'Failed to subscribe';
-					} else return 'Failed to unsubscribe';
-				})(),
+				message: method === 'add' ? 'Failed to subscribe' : 'Failed to unsubscribe',
 				success: false
 			});
 			return;
@@ -206,8 +283,8 @@
 					class:dark:bg-gray-700={isSubscribed}
 					onclick={(e) => {
 						e.preventDefault();
-						if (!isSubscribed)
-							notificationSubscription(category, 'add');
+						if (type === 'event') eventSubscription(category, isSubscribed);
+						else if (!isSubscribed) notificationSubscription(category, 'add');
 						else notificationSubscription(category, 'remove');
 					}}
 				>

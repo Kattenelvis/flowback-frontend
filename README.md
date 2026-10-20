@@ -33,7 +33,7 @@ To get started, copy the `.env.dev.example` file and rename it to `.env` and adj
 | `PUBLIC_SUPPORT_MAIL`           | Email address for technical support                                                           |
 | `PUBLIC_SUPPORT_PHONE`          | Phone number for technical support                                                            |
 | `PUBLIC_FLOWBACK_AI_MODULE`     | Set to `TRUE` to enable the optional AI module                                                |
-| `PUBLIC_FLOWBACK_LEDGER_MODULE` | Set to `TRUE` to enable the optional ledger module                                            |
+| `PUBLIC_FLOWBACK_LEDGER_MODULE` | Set to `TRUE` to enable the optional accounting module (needs `FLOWBACK_LEDGER_MODULE=True` in the backend) |
 | `PUBLIC_WEBSOCKET_API`          | WebSocket API URL (e.g., `ws://127.0.0.1:8000`)                                               |
 
 Then the .env.example file will give you the information needed to connect it to a backend instance of flowback. Once that is done you can run it

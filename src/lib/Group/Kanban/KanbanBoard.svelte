@@ -230,7 +230,7 @@
 							lane = activeLane;
 						}}
 					>
-						<span class="text-base leading-none">+</span>
+						<Fa icon={faPlus} size="xs" />
 						<span>{$_('Add a task')}</span>
 					</button>
 				</div>
@@ -320,7 +320,7 @@
 								lane = i;
 							}}
 						>
-							<span class="text-base leading-none">+</span>
+							<Fa icon={faPlus} size="xs" />
 							<span>{$_('Add a task')}</span>
 						</button>
 					</div>
