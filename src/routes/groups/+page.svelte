@@ -13,6 +13,8 @@
 	import { env } from '$env/dynamic/public';
 	import { goto } from '$app/navigation';
 	import { lazyLoading } from '$lib/Generic/GenericFunctions';
+	import Fa from 'svelte-fa';
+	import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 	let groupList: Group[] = [],
 		filter: GroupFilter = { joined: 'all', search: '' },
@@ -87,9 +89,13 @@
 			class="max-w-[1000px] flex flex-col items-center mt-6 gap-6 mb-6 w-full"
 		>
 			{#if !(env.PUBLIC_DISABLE_GROUP_CREATION === 'TRUE')}
-				<Button href="creategroup" Class="w-[90%] md:w-[40%] rounded-2xl"
-					>{$_('Create Group')}</Button
+				<Button
+					href="creategroup"
+					Class="w-[90%] md:w-[40%] rounded-2xl flex items-center justify-center gap-2"
 				>
+					<Fa icon={faPlus} />
+					{$_('Create Group')}
+				</Button>
 			{/if}
 
 			<GroupFiltering bind:filter bind:searchQuery />

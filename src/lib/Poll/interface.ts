@@ -58,10 +58,13 @@ export interface poll {
   group_image?: string;
   joined: boolean;
   group_joined: boolean;
+  can_delete?: boolean;
   total_comments: number;
   total_proposals: number;
   total_predictions: number;
   pinned: boolean;
+  is_archived?: boolean;
+  bookmarked?: boolean;
   public: boolean;
   work_group_id?: number | null;
   work_group_name?: string | null;
@@ -92,10 +95,13 @@ export interface Filter {
   from: string;
   to: string;
   status: -1 | 0 | 1 | null;
+  bookmarked: boolean;
+  is_archived: boolean;
 }
 
 export type Phase =
   | 'pre_start'
+  | 'waiting'
   | 'area_vote'
   | 'proposal'
   | 'prediction_statement'
@@ -141,6 +147,7 @@ export interface Post {
   updated_at: string;
   user_vote: boolean | null;
   active: boolean;
+  is_archived?: boolean;
 }
 
 export interface CommentEdited { }

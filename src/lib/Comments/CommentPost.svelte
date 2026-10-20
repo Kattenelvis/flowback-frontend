@@ -59,6 +59,19 @@
 	// Reactive subscription to the filtered proposal in the commentsStore
 	$: filteredProposal = $commentsStore.filterByProposal;
 
+	const isTopLevelField = () => !beingEdited && !replying && !parent_id;
+	const tagOf = (p: proposal) => `#${p.title.replaceAll(' ', '-')} `;
+	let prefilledTag = '';
+
+	// Filtering comments by a proposal pre-fills its hashtag in the comment field
+	const prefillTag = (p: proposal | null) => {
+		if (api !== 'poll' || !isTopLevelField()) return;
+		if (prefilledTag && message === prefilledTag) message = '';
+		prefilledTag = p ? tagOf(p) : '';
+		if (p && message === '') message = prefilledTag;
+	};
+	$: prefillTag(filteredProposal);
+
 	const getId = () => {
 		if (api === 'poll') return `poll/${$page.params.pollId}`;
 		else if (api === 'thread') return `thread/${$page.params.threadId}`;
@@ -68,11 +81,6 @@
 
 	const commentCreate = async () => {
 		const formData = new FormData();
-
-		// Prepend the hashtag to the message if a proposal is filtered
-		if (filteredProposal) {
-			message = `#${filteredProposal.title.replaceAll(' ', '-')} ${message}`;
-		}
 
 		if (message !== '') formData.append('message', message);
 		if (parent_id) formData.append('parent_id', parent_id.toString());
@@ -120,6 +128,8 @@
 			message = '';
 			files = [];
 			replying = false;
+			prefilledTag = '';
+			prefillTag(filteredProposal);
 
 			subscribeToReplies();
 
@@ -163,6 +173,8 @@
 		message = '';
 		files = [];
 		replying = false;
+		prefilledTag = '';
+		prefillTag(filteredProposal);
 
 		subscribeToReplies();
 	};

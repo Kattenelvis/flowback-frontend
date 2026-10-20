@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Layout from '$lib/Generic/Layout.svelte';
+	import Button from '$lib/Generic/Button.svelte';
 	import EditGroup from '$lib/Group/Creation/CreateEditGroup.svelte';
 	import Permissions from '$lib/Group/Permissions/Permissions.svelte';
 	import Tags from '$lib/Group/Tags.svelte';
@@ -43,17 +44,23 @@
 
 <Layout centered>
 	{#if isAdmin}
-		<div class="flex mt-6 gap-6 max-w-[90%]">
+		<!-- Three columns with equal outer widths keep the two cards centered, the back arrow sits in the left one. Below xl there is no room for them, so the arrow goes above the cards -->
+		<div class="mt-6 w-full max-w-[90%] grid grid-cols-1 xl:grid-cols-[1fr_auto_1fr] gap-6 items-start">
+			<div class="flex justify-start xl:justify-end">
+				<Button
+					onClick={() => goto(`/groups/${page.params.groupId}`)}
+					Class="max-h-[3rem] p-3 transition-all bg-gray-200 dark:bg-darkobject hover:brightness-95 active:brightness-90"
+				>
+					<div class="text-gray-800 dark:text-gray-200">
+						<Fa icon={faArrowLeft} />
+					</div>
+				</Button>
+			</div>
+			<div class="flex flex-wrap justify-center gap-6 min-w-0">
 			<div
-				class="bg-white dark:bg-darkobject dark:text-darkmodeText w-[350px] p-6 rounded border shadow"
+				class="bg-white dark:bg-darkobject dark:text-darkmodeText w-[350px] max-w-full p-6 rounded border shadow"
 			>
 				<div class="flex items-center mb-4 gap-4">
-					<button
-						class="text-gray-600 hover:text-primary dark:text-secondary transition-colors"
-						on:click={() => goto(`/groups/${page.params.groupId}`)}
-					>
-						<Fa icon={faArrowLeft} />
-					</button>
 					<h1
 						class="text-xl font-semibold text-primary dark:text-secondary text-left break-word"
 					>
@@ -118,7 +125,7 @@
 				</div>
 			</div>
 			<div
-				class="bg-white dark:text-darkmodeText dark:bg-darkobject p-6 shadow rounded w-[600px] border"
+				class="bg-white dark:text-darkmodeText dark:bg-darkobject p-6 shadow rounded w-[600px] max-w-full border"
 			>
 				{#if selectedPage === 'group'}
 					<EditGroup />
@@ -131,6 +138,7 @@
 				{:else if selectedPage === 'blockchain'}
 					<!-- block -->
 				{/if}
+			</div>
 			</div>
 		</div>
 	{/if}

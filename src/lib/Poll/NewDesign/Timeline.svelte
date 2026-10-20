@@ -41,13 +41,17 @@
 			pollPhases = SCHEDULE_POLL_PHASE_CONFIG;
 		else return;
 
-		currentPhaseIndex = pollPhases.find((p) => p.phase === phase)?.id ?? 5;
+		// A poll that hasn't started has no completed or current phase
+		currentPhaseIndex =
+			phase === 'pre_start'
+				? -1
+				: (pollPhases.find((p) => p.phase === phase)?.id ?? 5);
 		dates = pollPhases.map((p) => new Date(poll[p.endDateField] as string));
 
 		if (dates.length === 0) return;
 
 		// Timeline isn't needed for polls with 1 phase, so this shouldn't be an issue
-		fraction = currentPhaseIndex / (pollPhases.length - 1);
+		fraction = Math.max(0, currentPhaseIndex) / (pollPhases.length - 1);
 
 		let totalTime = dates[dates.length - 1].getTime() - dates[0].getTime();
 
@@ -73,7 +77,9 @@
 				{$_('Current')}:
 			</span>
 			{$_('Phase')}
-			{pollPhases.find((p) => p.id === currentPhaseIndex)?.label}
+			{phase === 'pre_start'
+				? $_('Not started')
+				: pollPhases.find((p) => p.id === currentPhaseIndex)?.label}
 		</div>
 	{/if}
 

@@ -419,5 +419,11 @@
     "Could not edit message": "No se pudo editar el mensaje",
     "Could not delete message": "No se pudo eliminar el mensaje",
     "No proposal selected": "Ninguna propuesta seleccionada",
-    "Select a proposal to read it, or add your own to shape the outcome.": "Selecciona una propuesta para leerla, o añade la tuya para influir en el resultado."
+    "Select a proposal to read it, or add your own to shape the outcome.": "Selecciona una propuesta para leerla, o añade la tuya para influir en el resultado.",
+    "All occurrences": "Todas las repeticiones",
+    "Only this occurrence": "Solo esta repetición",
+    "Occurrence has already ended.": "Esta repetición ya ha terminado.",
+    "Event starts soon": "El evento empieza pronto",
+    "Show archived": "Mostrar archivados",
+    "Archived": "Archivado"
 }

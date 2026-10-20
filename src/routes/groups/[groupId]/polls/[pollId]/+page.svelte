@@ -23,7 +23,7 @@
 	import { formatDate } from '$lib/Generic/DateFormatter';
 	import { predictionStatementsStore } from '$lib/Poll/PredictionMarket/interfaces';
 	import Fa from 'svelte-fa';
-	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import KPIVoting from '$lib/Poll/KPI/KPIVoting.svelte';
 	import KPIEvaluation from '$lib/Poll/KPI/KPIEvaluation.svelte';
 	import CombinedKPIBet from '$lib/Poll/KPI/CombinedKPIBet.svelte';
@@ -158,15 +158,15 @@
 		{#if isScorePoll(pollType)}
 			<!-- PHASE 0: PRE-START -->
 			{#if phase === 'pre_start'}
-				<div
-					class="bg-white shadow rounded mt-6 p-6 dark:bg-darkobject dark:text-darkmodeText"
-				>
-					{$_('This poll will start at')}
-					{formatDate(poll.start_date)}
-				</div>
-				<div class="dark:bg-darkobject bg-white p-6 mt-6">
-					<Comments bind:proposals api={'poll'} />
-				</div>
+				<Structure bind:phase bind:poll>
+					<div slot="left" class="w-full">
+						{$_('This poll will start at')}
+						{formatDate(poll.start_date)}
+					</div>
+					<div slot="bottom">
+						<Comments bind:proposals api={'poll'} />
+					</div>
+				</Structure>
 
 				<!-- PHASE 1: AREA VOTE (TO BE DEPRICATED) -->
 			{:else if phase === 'area_vote'}
@@ -199,14 +199,17 @@
 							/>
 						</div>
 						<Button
-							Class="w-full bottom-0 mt-auto"
+							Class="w-full bottom-0 mt-auto flex items-center justify-center gap-2"
 							buttonStyle="primary-light"
 							disabled={displayForm && !selectedProposal}
 							onClick={() => {
 								selectedProposal = null;
 								displayForm = true;
-							}}>{$_('Add Proposal')}</Button
+							}}
 						>
+							<Fa icon={faPlus} />
+							{$_('Add Proposal')}
+						</Button>
 					</div>
 					<div slot="right" class="relative h-full max-h-full overflow-y-auto">
 						{#if selectedProposal}
@@ -276,14 +279,17 @@
 							/>
 						</div>
 						<Button
-							Class="w-full mt-auto"
+							Class="w-full mt-auto flex items-center justify-center gap-2"
 							buttonStyle="primary-light"
 							disabled={proposalsToPredictionMarket.length === 0}
 							onClick={() => {
 								selectedProposal = null;
 								displayForm = true;
-							}}>{$_('Create Consequence')}</Button
+							}}
 						>
+							<Fa icon={faPlus} />
+							{$_('Create Consequence')}
+						</Button>
 					</div>
 					<div slot="right" class="relative h-full flex flex-col">
 						{#if selectedProposal}
@@ -525,7 +531,14 @@
 
 			<!-- Date Poll -->
 		{:else if isSchedulePoll(pollType)}
-			{#if phase === 'result'}
+			{#if phase === 'pre_start'}
+				<Structure bind:phase bind:poll>
+					<div slot="left" class="w-full">
+						{$_('This poll will start at')}
+						{formatDate(poll.start_date)}
+					</div>
+				</Structure>
+			{:else if phase === 'result'}
 				<Structure bind:phase bind:poll showBoth>
 					<div slot="left" class="w-full">
 						<Results bind:poll {getPollData} {pollType} />

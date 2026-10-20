@@ -13,7 +13,7 @@
 		'groups': 'Groups',
 		'kanban': 'Tasks',
 		'schedule': 'Schedule',
-		'ledger': 'Ledger',
+		'accounting': 'Accounting',
 		'delegations': 'Delegation',
 		'user': 'User Profile',
 		'user/settings': 'Settings',

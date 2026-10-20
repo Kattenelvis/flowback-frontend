@@ -11,7 +11,7 @@
 	import { getTags } from './functions';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import Fa from 'svelte-fa';
-	import { faTrash } from '@fortawesome/free-solid-svg-icons';
+	import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import Toggle from '$lib/Generic/Toggle.svelte';
 	import TextArea from '$lib/Generic/TextArea.svelte';
 	import { idfy } from '$lib/Generic/GenericFunctions2';
@@ -94,10 +94,12 @@
 		<Button
 			disabled={loading}
 			type="submit"
-			Class="w-1/5 h-8 flex items-center justify-center"
+			Class="w-1/5 h-8 flex items-center justify-center gap-2"
 			buttonStyle="primary-light"
-			label="Add"
-		/>
+		>
+			<Fa icon={faPlus} />
+			{$_('Add')}
+		</Button>
 	</form>
 	<div class="flex flex-col justify-between gap-2 py-2">
 		{#each tags as tag}

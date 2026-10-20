@@ -41,6 +41,7 @@
 			return;
 		}
 
+		commentsStore.update((store) => ({ ...store, filterByProposal: proposal }));
 		filterByTags(proposals, [proposal.id], $page.params.pollId ?? '');
 		commentFilterProposalId = proposal.id;
 		// Scroll to the comments section
@@ -52,20 +53,32 @@
 		});
 	};
 
+	// Clicking anywhere on the card opens the proposal, except on its own controls
+	const openProposal = (e: Event) => {
+		if ((e.target as HTMLElement).closest('button, a, input, select, textarea'))
+			return;
+		selectedProposal = proposal;
+	};
+
 	onMount(() => {
 		checkForLinks(proposal.description, `proposal-${proposal.id}-description`);
 		allComments = filteredComments;
 	});
 </script>
 
+<!-- The card click is a mouse shortcut only. Keyboard and screen reader users open the proposal
+with the "See more" button, so the card itself must not be a button (it contains buttons). -->
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div
-	class={`dark:bg-darkobject bg-white w-full py-3 px-4 transition-all rounded-lg
+	class={`dark:bg-darkobject bg-white w-full py-3 px-4 transition-all rounded-lg cursor-pointer
 	 border border-gray-200 dark:border-gray-700 ${Class}`}
 	class:!bg-blue-100={selectedProposal === proposal && !$darkModeStore}
 	class:!bg-blue-950={selectedProposal === proposal && $darkModeStore}
 	class:border-l-4={selectedProposal === proposal}
 	class:border-primary={selectedProposal === proposal}
 	id={`${idfy(proposal.title)}`}
+	aria-current={selectedProposal === proposal ? 'true' : undefined}
+	on:click={openProposal}
 >
 	<div class="flex gap-2 items-center">
 		{#if phase === 'prediction_statement'}

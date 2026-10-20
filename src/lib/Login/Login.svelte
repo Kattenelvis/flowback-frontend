@@ -7,7 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { userStore } from '$lib/User/interfaces';
 
-	let username = '',
+	let email = '',
 		password = '',
 		loading = false,
 		remainLoggedIn = false;
@@ -15,11 +15,19 @@
 	export let selectedPage: string;
 
 	const logIn = async () => {
+		if (!email.includes('@')) {
+			ErrorHandlerStore.set({
+				message: $_('Please log in with your email address, not your username'),
+				success: false
+			});
+			return;
+		}
+
 		loading = true;
 		const { json, res } = await fetchRequest(
 			'POST',
 			'login',
-			{ username, password },
+			{ email, password },
 			false,
 			true
 		);
@@ -63,8 +71,8 @@
 </script>
 
 <Loader bind:loading>
-	<form class="flex flex-col gap-5" on:submit|preventDefault={logIn}>
-		<AuthInput label="Username" bind:value={username} name="username" autocomplete="username" required />
+	<form class="flex flex-col gap-5" novalidate on:submit|preventDefault={logIn}>
+		<AuthInput label="Email" type="email" bind:value={email} name="email" autocomplete="email" required />
 		<div>
 			<AuthInput
 				label="Password"

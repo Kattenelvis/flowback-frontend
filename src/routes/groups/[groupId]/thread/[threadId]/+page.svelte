@@ -20,7 +20,8 @@
 
 	let thread: Thread | undefined = $state(undefined),
 		reportModalShow = $state(false),
-		deleteModalShow = $state(false);
+		deleteModalShow = $state(false),
+		loading = $state(true);
 
 	const source = $derived($page.url.searchParams.get('source'));
 
@@ -31,10 +32,14 @@
 	});
 
 	const getThread = async () => {
+		loading = true;
+
 		const { json, res } = await fetchRequest(
 			'GET',
 			`group/thread/list?group_ids=${$page.params.groupId}&id=${$page.params.threadId}`
 		);
+
+		loading = false;
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
@@ -86,12 +91,13 @@
 				/>
 
 				<MultipleChoices
-					labels={[$_('Delete Thread'), $_('Report Thread')]}
+					labels={thread?.can_delete
+						? [$_('Delete Thread'), $_('Report Thread')]
+						: [$_('Report Thread')]}
 					Class="text-black justify-self-center"
-					functions={[
-						() => (deleteModalShow = true),
-						() => (reportModalShow = true)
-					]}
+					functions={thread?.can_delete
+						? [() => (deleteModalShow = true), () => (reportModalShow = true)]
+						: [() => (reportModalShow = true)]}
 					ClassInner="-translate-x-3/4"
 					id="poll-header-multiple-choices"
 				/>
@@ -137,7 +143,7 @@
 				Class="w-full max-w-[1000px] bg-white dark:bg-darkobject p-6 mt-6"
 			/>
 		{/key}
-	{:else}
+	{:else if !loading}
 		<div
 			class="p-4 bg-white dark:bg-darkobject dark:text-darkmodeText mt-4 rounded shadow"
 		>

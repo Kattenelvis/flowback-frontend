@@ -285,9 +285,9 @@
 				disabled={(selectedPage !== 'thread' && selectedPoll !== 'Date Poll') ||
 					isPublic}
 				classInner="border border-gray-300"
-				label={$_('Work Group')}
+				label={$_('Team')}
 				labels={[
-					'No workgroup selected',
+					'No team selected',
 					...workGroups.map((workGroup) => workGroup.name)
 				]}
 				values={[null, ...workGroups.map((workGroup) => workGroup.id)]}

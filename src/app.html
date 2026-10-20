@@ -7,20 +7,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 		<!-- Fixes issue where elements flash white on (hard) reload -->
-		<script>
-			(function () {
-				try {
-					let theme = localStorage.getItem('theme');
-					let prefersDark = window?.matchMedia('(prefers-color-scheme: dark)').matches;
-					let shouldDark = theme === 'dark' || (!theme && prefersDark);
-
-					if (shouldDark) document.documentElement.classList.add('dark');
-					else document.documentElement.classList.remove('dark');
-				} catch (e) {
-					/* ignore */
-				}
-			})();
-		</script>
+		<script src="%sveltekit.assets%/theme-init.js"></script>
 
 		<title>Flowback</title>
 		%sveltekit.head%

@@ -18,11 +18,15 @@ export interface notification {
 		work_group_name?: null | string;
 		thread_id?: null | string;
 		thread_title?: null | string;
+		// Of an event
+		title?: string;
 	};
 	id: number;
 	message: string;
 	object_id: number;
 	read: boolean;
+	// Seconds before the timestamp that a reminder is shown, 0 for the notification itself
+	reminder: number;
 	timestamp: string;
 	tag:
 		| 'poll'

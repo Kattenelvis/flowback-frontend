@@ -25,6 +25,7 @@
 		faCalendar
 	} from '@fortawesome/free-solid-svg-icons';
 	import Select from '$lib/Generic/Select.svelte';
+	import Button from '$lib/Generic/Button.svelte';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import FileUploads from '$lib/Generic/File/FileUploads.svelte';
 	import GroupSelection from '$lib/Generic/GroupSelection.svelte';
@@ -84,7 +85,8 @@
 		images: File[],
 		endDate: TimeAgo,
 		selectedWorkgroupId: null | number = null,
-		selectedGroupId: null | number = null;
+		selectedGroupId: null | number = null,
+		moveTargetGroupId: null | number = null;
 
 	// Helper function to format date for datetime-local input
 	function formatDateForInput(
@@ -231,6 +233,28 @@
 		openModal = false;
 	};
 
+	const changeKanbanGroup = async () => {
+		if (!moveTargetGroupId) return;
+
+		const { res } = await fetchRequest(
+			'POST',
+			`group/${kanban.origin_id}/kanban/entry/change_group`,
+			{ entry_id: kanban.id, target_group_id: moveTargetGroupId }
+		);
+
+		if (!res.ok) {
+			ErrorHandlerStore.set({
+				message: 'Failed to move kanban task to group',
+				success: false
+			});
+			return;
+		}
+
+		openModal = false;
+		moveTargetGroupId = null;
+		await getKanbanEntries();
+	};
+
 	const formatEndDate = async () => {
 		const en = (await import('javascript-time-ago/locale/en')).default;
 		endDate = new TimeAgo('en');
@@ -365,7 +389,7 @@
 
 	{#if kanban.work_group && kanban.work_group.name}
 		<div class="text-xs dark:text-gray-500 text-gray-400 italic">
-			{$_('Work Group')}: {elipsis(kanban.work_group.name || '', 20)}
+			{$_('Team')}: {elipsis(kanban.work_group.name || '', 20)}
 		</div>
 	{/if}
 	<div
@@ -617,7 +641,7 @@
 							<p
 								class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1"
 							>
-								{$_('Work Group')}
+								{$_('Team')}
 							</p>
 							<p
 								class="text-sm font-medium text-gray-800 dark:text-darkmodeText"
@@ -627,6 +651,39 @@
 						</div>
 					{/if}
 				</div>
+
+				{#if kanban.origin_type === 'group'}
+					<div class="mb-4 text-left">
+						<p
+							class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5"
+						>
+							{$_('Move to group')}
+						</p>
+						<div class="flex gap-2 items-center">
+							<Select
+								id="kanban-move-group"
+								Class="flex-1"
+								classInner="border bg-white border-gray-300 dark:border-gray-600 dark:bg-darkobject"
+								labels={$groupStore
+									.filter((g) => g.joined && g.id !== kanban.origin_id)
+									.map((g) => g.name)}
+								values={$groupStore
+									.filter((g) => g.joined && g.id !== kanban.origin_id)
+									.map((g) => g.id)}
+								bind:value={moveTargetGroupId}
+								innerLabel="Select group"
+								disableFirstChoice
+							/>
+							<Button
+								id="kanban-move-group-button"
+								buttonStyle="primary"
+								disabled={!moveTargetGroupId}
+								onClick={changeKanbanGroup}
+								label="Move"
+							/>
+						</div>
+					</div>
+				{/if}
 
 				<!-- Attachments -->
 				{#if kanbanEdited.attachments && kanbanEdited.attachments.length > 0}

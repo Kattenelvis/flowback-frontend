@@ -6,7 +6,7 @@
 	import type { GroupUser } from '../interface';
 	import Tag from '../Tag.svelte';
 	import Fa from 'svelte-fa';
-	import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
+	import { faChevronDown } from '@fortawesome/free-solid-svg-icons/faChevronDown';
 	import { onMount } from 'svelte';
 	import ProfilePicture from '$lib/Generic/ProfilePicture.svelte';
 	import { permissions as permissionsLimit } from '../../Generic/APILimits.json';
@@ -54,20 +54,26 @@
 		users = users;
 	};
 
-	const makeAdmin = async (user: GroupUser) => {
-		const { json, res } = await fetchRequest('POST', `group/${$page.params.groupId}/user/update`, {
+	const setAdmin = async (user: GroupUser, is_admin: boolean) => {
+		const { res } = await fetchRequest('POST', `group/${$page.params.groupId}/user/update`, {
 			target_user_id: user.user.id,
-			is_admin: true
+			is_admin
 		});
 
 		if (!res.ok) {
-			ErrorHandlerStore.set({ message: 'Failed to make user admin', success: false });
+			ErrorHandlerStore.set({
+				message: is_admin ? 'Failed to make user admin' : 'Failed to remove user as admin',
+				success: false
+			});
 			return;
 		}
 
-		users.find((u) => u.user.id === user.user.id)!.is_admin = true;
+		users.find((u) => u.user.id === user.user.id)!.is_admin = is_admin;
 		users = users;
-		ErrorHandlerStore.set({ message: 'User is now admin', success: true });
+		ErrorHandlerStore.set({
+			message: is_admin ? 'User is now admin' : 'User is no longer admin',
+			success: true
+		});
 	};
 
 	onMount(() => {
@@ -102,15 +108,26 @@
 					{/if}
 				</div>
 				<button
-					class:selected={selected === user.user.id}
-					class="faPlus ml-auto cursor-pointer"
+					type="button"
+					class="ml-auto mr-3 w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors cursor-pointer text-gray-600 dark:text-gray-200 {selected ===
+					user.user.id
+						? 'bg-gray-300 dark:bg-gray-500'
+						: 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500'}"
 					on:click={() => (selected === user.user.id ? (selected = -1) : (selected = user.user.id))}
+					aria-expanded={selected === user.user.id}
+					aria-label={$_('Change role')}
+					title={$_('Change role')}
 					id={`plus-${user.user.username}`}
 				>
-					<Fa icon={faPlus} size="lg" />
+					<Fa
+						icon={faChevronDown}
+						class="transition-transform duration-200 {selected === user.user.id ? 'rotate-180' : ''}"
+					/>
 				</button>
-				{#if !user.is_admin}
-					<Button onClick={() => makeAdmin(user)}>{$_('Make admin')}</Button>
+				{#if user.is_admin}
+					<Button onClick={() => setAdmin(user, false)}>{$_('Remove admin')}</Button>
+				{:else}
+					<Button onClick={() => setAdmin(user, true)}>{$_('Make admin')}</Button>
 				{/if}
 			</div>
 			<div

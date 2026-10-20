@@ -94,10 +94,8 @@
 				<HeaderIcon
 					disableTextOnHover
 					icon={faCoins}
-					text={!(env.PUBLIC_ONE_GROUP_FLOWBACK === 'TRUE')
-						? 'My Ledger'
-						: 'Group Ledger'}
-					href="ledger"
+					text="Accounting"
+					href="accounting"
 					bind:selectedHref
 				/>
 			{/if}
