@@ -47,8 +47,7 @@
 
 		if (!res.ok) {
 			const message =
-				json?.detail?.__all__[0].toString() ===
-				'Work group user join request with this Work group and Group user already exists.'
+				json?.code === 'unique_together'
 					? 'Already asked to join group'
 					: 'Failed to ask to join group';
 

@@ -18,7 +18,7 @@
 		faPeopleArrows,
 		faWarning
 	} from '@fortawesome/free-solid-svg-icons';
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { errorMessage, fetchRequest } from '$lib/FetchRequest';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { _ } from 'svelte-i18n';
 	import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
@@ -59,10 +59,11 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message:
-					json.detail[0] ||
-					json.detail ||
-					'An error occurred while leaving the group',
+				message: errorMessage(
+					res,
+					json,
+					'An error occurred while leaving the group'
+				),
 				success: false
 			});
 			return;

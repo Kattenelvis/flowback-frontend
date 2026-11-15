@@ -123,8 +123,8 @@
 			ErrorHandlerStore.set({
 				message: subscribed
 					? 'Failed to unsubscribe'
-					: shown.includes(json.detail?.[0])
-						? json.detail[0]
+					: shown.includes(json?.detail)
+						? json.detail
 						: 'Failed to subscribe',
 				success: false
 			});

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/Generic/Button.svelte';
 	import TextInput from '$lib/Generic/TextInput.svelte';
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { fetchRequest, type ApiFieldError } from '$lib/FetchRequest';
 	import FIleUpload from '$lib/Generic/File/FileUpload.svelte';
 	import TextArea from '$lib/Generic/TextArea.svelte';
 	import { page } from '$app/stores';
@@ -71,7 +71,12 @@
 
 		loading = false;
 		if (!res.ok) {
-			if (json.detail.name[0] === 'group with this name already exists.')
+			if (
+				json?.errors?.some(
+					(error: ApiFieldError) =>
+						error.field === 'name' && error.code === 'unique'
+				)
+			)
 				ErrorHandlerStore.set({
 					message: 'Group with this name already exists',
 					success: false

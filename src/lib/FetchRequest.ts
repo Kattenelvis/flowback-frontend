@@ -59,6 +59,29 @@ export async function fetchRequest(
   }
 }
 
+// Every backend error has this shape, see flowback-backend/flowback/common/exception_handlers.py
+export type ApiFieldError = { field: string | null; message: string; code: string };
+export type ApiError = {
+  // Readable, can be shown as is
+  detail: string;
+  // For branching on: not_found, permission_denied, required, unique, invalid, ...
+  code: string;
+  errors: ApiFieldError[];
+};
+
+// The message to show for a failed request. Answers that aren't JSON, such as Caddy's 502 or
+// Django's HTML 404 for a wrong URL, get the caller's fallback
+export const errorMessage = (
+  res: { ok: boolean; status?: number },
+  json: any,
+  fallback = 'Something went wrong'
+): string =>
+  typeof json?.detail === 'string'
+    ? json.detail
+    : (res.status ?? 0) >= 500
+      ? 'Server error, please try again later'
+      : fallback;
+
 
 // The most rows the backend lets a page have
 const PAGE_SIZE = 50;

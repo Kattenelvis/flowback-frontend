@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { errorMessage, fetchRequest } from '$lib/FetchRequest';
 	import type { User } from '$lib/User/interfaces';
 	import Layout from '$lib/Generic/Layout.svelte';
 	import DefaultPFP from '$lib/assets/abstract-user-flat-4.svg';
@@ -161,9 +161,7 @@
 		loading = false;
 
 		if (!res.ok) {
-			const message =
-				json.detail[Object.keys(json.detail)[0]][0] ||
-				'Could not update profile';
+			const message = errorMessage(res, json, 'Could not update profile');
 
 			ErrorHandlerStore.set({ message, success: false });
 			return;
