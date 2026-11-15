@@ -485,6 +485,9 @@
 			eventResize: scheduleEventMove,
 			// Show as many events as fit and put the rest behind "+ more", so every week row keeps the same height
 			dayMaxEventRows: true,
+			// The month view shows every event as a whole-day bar, which FullCalendar would otherwise order by
+			// title. Order by when the occurrence starts instead, earliest in the day on top
+			eventOrder: 'occurrenceStart,-duration,title',
 			eventInteractive: true,
 			eventClassNames: 'cursor-pointer',
 			editable: true,
