@@ -1,0 +1,24 @@
+name: Translations
+
+on: [push, pull_request]
+
+jobs:
+  swedish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      # Warns, without failing, about $_('...') strings missing from se.json.
+      # Keys built at runtime, like $_(label), and strings outside $_ aren't checked.
+      - name: Check Swedish translations
+        run: |
+          npx svelte-i18n extract --shallow 'src/**/*.svelte' used.json
+          jq -r --slurpfile se src/lib/Localization/se.json \
+            'keys - [$se[0] | paths(scalars) | join(".")] | .[] | "::warning::Missing Swedish translation: \(.)"' \
+            used.json
