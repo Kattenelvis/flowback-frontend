@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { fetchRequest } from '$lib/FetchRequest';
+	import {
+		errorMessage,
+		fetchRequest,
+		type ApiFieldError
+	} from '$lib/FetchRequest';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { _ } from 'svelte-i18n';
 	import AuthInput from './AuthInput.svelte';
@@ -46,32 +50,19 @@
 		loading = false;
 
 		if (!res.ok) {
-			if (
-				json?.detail?.verification_code ||
-				json?.detail[0] === 'Not found.' ||
-				json?.detail[0] === 'Verification code has already been used.'
-			)
-				ErrorHandlerStore.set({
-					message: 'Wrong verification code',
-					success: false
-				});
-			else if (json?.detail?.non_field_errors)
-				ErrorHandlerStore.set({
-					message: json?.detail?.non_field_errors[0],
-					success: false
-				});
-			else if (json?.detail?.username)
-				ErrorHandlerStore.set({
-					message: json?.detail?.username[0],
-					success: false
-				});
-			else if (json?.detail[0] === 'Email already registered')
-				ErrorHandlerStore.set({ message: json?.detail[0], success: false });
-			else
-				ErrorHandlerStore.set({
-					message: 'Something went wrong',
-					success: false
-				});
+			const wrongCode =
+				json?.code === 'not_found' ||
+				json?.detail === 'Verification code has already been used.' ||
+				json?.errors?.some(
+					(error: ApiFieldError) => error.field === 'verification_code'
+				);
+
+			ErrorHandlerStore.set({
+				message: wrongCode
+					? 'Wrong verification code'
+					: errorMessage(res, json),
+				success: false
+			});
 
 			return;
 		}

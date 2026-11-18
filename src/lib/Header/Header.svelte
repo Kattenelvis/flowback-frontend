@@ -18,7 +18,7 @@
 	import Sun from './Sun.svelte';
 	import { env } from '$env/dynamic/public';
 	import Fa from 'svelte-fa';
-	import { chatOpenStore } from '$lib/Chat/functions';
+	import { chatOpenStore } from '$lib/Chat/store';
 	import { isMobile } from '$lib/utils/isMobile';
 	import { onNavigate } from '$app/navigation';
 	import SideHeaderIcon from './SideHeaderIcon.svelte';

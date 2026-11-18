@@ -17,9 +17,8 @@
 	import { goto } from '$app/navigation';
 	import Button from '$lib/Generic/Button.svelte';
 	import Modal from '$lib/Generic/Modal.svelte';
-	import { chatPartnerStore, chatOpenStore } from '$lib/Chat/functions';
+	import { openDirectChat } from '$lib/Chat/store';
 	import FilterSelect from '$lib/Generic/FilterSelect.svelte';
-	import { getUserChannelId } from '$lib/Chat/functions';
 	import UserSearch from '$lib/Generic/UserSearch.svelte';
 	import type { Permissions } from './Permissions/interface';
 
@@ -374,21 +373,16 @@
 								{user.permission_name}
 							</div>
 							<div class="flex gap-2 right-6 absolute">
-								{#await getUserChannelId(user.user.id) then channelId}
-									{#if channelId}
-										<button
-											on:click={() => {
-												chatOpenStore.set(true);
-												chatPartnerStore.set(channelId);
-											}}
-											class="text-primary"
-											title={$_('Send message')}
-											aria-label={$_('Send message')}
-										>
-											<Fa icon={faPaperPlane} rotate="60" />
-										</button>
-									{/if}
-								{/await}
+								{#if user.user.id !== $userStore?.id}
+									<button
+										on:click={() => openDirectChat(user.user.id)}
+										class="text-primary"
+										title={$_('Send message')}
+										aria-label={$_('Send message')}
+									>
+										<Fa icon={faPaperPlane} rotate="60" />
+									</button>
+								{/if}
 								{#if $groupUserStore?.is_admin && user.user.id !== ($userStore?.id || -1)}
 									<Button
 										Class="w-10 h-10 flex items-center justify-center pl-6 bg-transparent"

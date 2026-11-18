@@ -1,29 +1,34 @@
 <script lang="ts">
-	import ChatWindow from './ChatWindow.svelte';
-	import Preview from './Preview.svelte';
-	import { onMount, tick } from 'svelte';
-	import type { GroupMembers } from './interfaces';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import Fa from 'svelte-fa';
 	import { faCog, faXmark } from '@fortawesome/free-solid-svg-icons';
+	import { goto } from '$app/navigation';
 	import ChatIcon from '$lib/assets/Chat_fill.svg';
 	import { darkModeStore, getIconFilter } from '$lib/Generic/DarkMode';
-	import { chatOpenStore, chatPartnerStore, previewStore } from './functions';
-	import { goto } from '$app/navigation';
-	import CreateChatGroup from '$lib/Chat/CreateChatGroup.svelte';
 	import { isMobile } from '$lib/utils/isMobile';
+	import { userStore } from '$lib/User/interfaces';
+	import ChannelList from './ChannelList.svelte';
+	import ChannelView from './ChannelView.svelte';
+	import CreateGroupChat from './CreateGroupChat.svelte';
+	import { channelTitle } from './format';
+	import {
+		chatOpenStore,
+		chatState,
+		closeChat,
+		hasUnread,
+		openChat,
+		selectedChannel,
+		startChat,
+		stopChat
+	} from './store';
 
-	let chatOpen = false,
-		selectedPage: 'direct' | 'group' = 'direct',
-		isLookingAtOlderMessages = false,
-		creatingGroup = false,
-		groupMembers: GroupMembers[] = [],
-		notification = false,
-		headerHeight = 0,
-		conversationTitle = '',
+	let creatingGroup = $state(false),
+		headerHeight = $state(0),
 		// On small screens the chat list and the open conversation are tabs
 		// instead of two columns side by side.
-		tab: 'chats' | 'conversation' = 'chats';
+		tab: 'chats' | 'conversation' = $state('chats'),
+		startedForUserId: number | null = null;
 
 	const iconButtonClass =
 		'w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-colors';
@@ -42,52 +47,44 @@
 			document.querySelector('#header')?.getBoundingClientRect().height ?? 0;
 	};
 
-	const closeChat = () => {
-		chatOpen = false;
-		chatOpenStore.set(false);
-	};
-
-	// Show whatever was just opened: a conversation or the new group form.
-	const syncTab = (creating: boolean, partner: number | null) => {
-		tab = creating || partner ? 'conversation' : 'chats';
-	};
-
-	// A hidden tab can't keep its scroll position, so jump to the latest message
-	// whenever the conversation tab is shown.
-	const scrollToLatest = async () => {
-		if (isLookingAtOlderMessages) return;
-		await tick();
-		document.querySelector('#chat-window')?.scroll(0, 100000);
-	};
-
-	onMount(() => {
-		measureHeader();
-
-		chatOpenStore.subscribe((open) => {
-			chatOpen = open;
-			if (open) measureHeader();
+	// The layout refreshes the user on every navigation, so only (re)connect
+	// when a different user logs in.
+	$effect(() => {
+		const userId = $userStore?.id ?? null;
+		if (!userId || userId === startedForUserId) return;
+		startedForUserId = userId;
+		untrack(() => {
+			stopChat();
+			startChat();
 		});
 	});
 
-	$: syncTab(creatingGroup, $chatPartnerStore);
-	$: if (tab === 'conversation') scrollToLatest();
+	onMount(measureHeader);
+	onDestroy(stopChat);
 
-	// Display purple notification circle whenever there is a message that hasn't been seen.
-	$: notification = $previewStore.some(
-		(p) => p.recent_message?.notified === false
-	);
+	// Only changes when another chat is picked, not on every new message
+	let selectedId = $derived($chatState.selectedId);
+
+	// Show whatever was just opened: a conversation or the new group form.
+	$effect(() => {
+		tab = creatingGroup || selectedId ? 'conversation' : 'chats';
+	});
+
+	$effect(() => {
+		if ($chatOpenStore) measureHeader();
+	});
 </script>
 
 <svelte:head>
 	<title>
-		{`${notification ? '🟣' : ''}`}
+		{$hasUnread ? '🟣' : ''}
 	</title>
 </svelte:head>
 
-<svelte:window on:resize={measureHeader} />
+<svelte:window onresize={measureHeader} />
 
 <div
-	class:invisible={!chatOpen}
+	class:invisible={!$chatOpenStore}
 	class="fixed inset-x-0 bottom-0 z-[115] md:z-50 flex flex-col bg-background dark:bg-darkbackground dark:text-darkmodeText"
 	style:top={$isMobile ? '0px' : `${headerHeight}px`}
 >
@@ -103,7 +100,7 @@
 				class={iconButtonClass}
 				title={$_('Chat settings')}
 				aria-label={$_('Chat settings')}
-				on:click={() => {
+				onclick={() => {
 					closeChat();
 					goto('/user/settings');
 				}}
@@ -115,7 +112,7 @@
 				class={iconButtonClass}
 				title={$_('Close chat')}
 				aria-label={$_('Close chat')}
-				on:click={closeChat}
+				onclick={closeChat}
 			>
 				<Fa icon={faXmark} class="text-lg" />
 			</button>
@@ -133,10 +130,10 @@
 				role="tab"
 				aria-selected={tab === 'chats'}
 				class={tabClass(tab === 'chats')}
-				on:click={() => (tab = 'chats')}
+				onclick={() => (tab = 'chats')}
 			>
 				{$_('Chats')}
-				{#if notification}
+				{#if $hasUnread}
 					<span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
 				{/if}
 			</button>
@@ -144,14 +141,16 @@
 				type="button"
 				role="tab"
 				aria-selected={tab === 'conversation'}
-				disabled={!creatingGroup && !$chatPartnerStore}
+				disabled={!creatingGroup && !$selectedChannel}
 				class={tabClass(tab === 'conversation')}
-				on:click={() => (tab = 'conversation')}
+				onclick={() => (tab = 'conversation')}
 			>
 				<span class="truncate">
 					{creatingGroup
 						? $_('New group')
-						: conversationTitle || $_('Conversation')}
+						: $selectedChannel
+						? channelTitle($selectedChannel)
+						: $_('Conversation')}
 				</span>
 			</button>
 		</div>
@@ -164,45 +163,35 @@
 			class="w-full md:w-80 md:shrink-0 min-h-0 flex flex-col bg-white dark:bg-darkobject md:rounded-2xl md:shadow"
 			class:hidden={$isMobile && tab !== 'chats'}
 		>
-			{#key creatingGroup}
-				<Preview
-					bind:creatingGroup
-					bind:groupMembers
-					onSelect={() => (tab = 'conversation')}
-				/>
-			{/key}
+			<ChannelList
+				bind:creatingGroup
+				onSelect={() => (tab = 'conversation')}
+			/>
 		</section>
 		<section
 			class="flex-1 min-w-0 min-h-0 flex flex-col bg-white dark:bg-darkobject md:rounded-2xl md:shadow"
 			class:hidden={$isMobile && tab !== 'conversation'}
 		>
 			{#if creatingGroup}
-				<CreateChatGroup bind:creatingGroup bind:groupMembers />
+				<CreateGroupChat bind:creatingGroup />
 			{:else}
-				<ChatWindow
-					bind:selectedPage
-					bind:isLookingAtOlderMessages
-					bind:conversationTitle
-				/>
+				<ChannelView visible={$chatOpenStore && (!$isMobile || tab === 'conversation')} />
 			{/if}
 		</section>
 	</div>
 </div>
 
 <button
-	on:click={() => {
-		chatOpen = !chatOpen;
-		chatOpenStore.set(chatOpen);
-	}}
-	class:small-notification={notification}
-	class:hidden={chatOpen}
+	onclick={() => openChat()}
+	class:small-notification={$hasUnread}
+	class:hidden={$chatOpenStore}
 	class="dark:text-white transition-all fixed z-[105] md:z-50 bg-white dark:bg-darkobject shadow-md border p-5 bottom-24 md:bottom-6 ml-5 rounded-full cursor-pointer hover:shadow-xl hover:border-gray-400 active:shadow-2xl active:p-6"
 >
 	<img
 		src={ChatIcon}
 		class="text-white"
 		style="filter: {getIconFilter(true, 'white', $darkModeStore)}"
-		alt={chatOpen ? 'close chat' : 'open chat'}
+		alt="open chat"
 	/>
 </button>
 

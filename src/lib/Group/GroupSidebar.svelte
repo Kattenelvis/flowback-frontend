@@ -18,7 +18,7 @@
 		faPeopleArrows,
 		faWarning
 	} from '@fortawesome/free-solid-svg-icons';
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { errorMessage, fetchRequest } from '$lib/FetchRequest';
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { _ } from 'svelte-i18n';
 	import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons/faCalendarAlt';
@@ -32,7 +32,7 @@
 		groupUserPermissionStore
 	} from '$lib/Group/interface';
 	import { groupStore } from '$lib/Group/Kanban/Kanban';
-	import { chatOpenStore, chatPartnerStore } from '$lib/Chat/functions';
+	import { chatOpenStore } from '$lib/Chat/store';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { isMobile } from '$lib/utils/isMobile';
@@ -59,10 +59,11 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message:
-					json.detail[0] ||
-					json.detail ||
-					'An error occurred while leaving the group',
+				message: errorMessage(
+					res,
+					json,
+					'An error occurred while leaving the group'
+				),
 				success: false
 			});
 			return;
@@ -72,7 +73,6 @@
 			removeGroupMembership(Number($page.params.groupId));
 
 		groupStore.set($groupStore.filter((g) => g.id !== group.id));
-		chatPartnerStore.set(0);
 		goto('/home');
 	};
 

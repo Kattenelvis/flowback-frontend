@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { errorMessage, fetchRequest } from '$lib/FetchRequest';
 	import { ErrorHandlerStore } from '$lib/Generic/ErrorHandlerStore';
 	import Loader from '$lib/Generic/Loader.svelte';
 	import { _ } from 'svelte-i18n';
@@ -40,11 +40,7 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message:
-					(json?.detail?.email && json?.detail?.email[0]) ??
-					(json?.detail && json?.detail[0]) ??
-					json ??
-					'Something went wrong',
+				message: errorMessage(res, json),
 				success: false
 			});
 			return;

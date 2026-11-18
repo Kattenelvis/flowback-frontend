@@ -8,7 +8,7 @@
 	import { page } from '$app/state';
 	import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { darkModeStore, getIconFilter } from '$lib/Generic/DarkMode';
-	import { chatOpenStore } from '$lib/Chat/functions';
+	import { chatOpenStore } from '$lib/Chat/store';
 	import { goto } from '$app/navigation';
 	import { isMobile } from '$lib/utils/isMobile'
 

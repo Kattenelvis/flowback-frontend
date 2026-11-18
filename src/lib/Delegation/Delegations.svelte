@@ -287,7 +287,7 @@
 			>
 				{$_('Clear Choice')}
 			</button>
-		{:else}
+		{:else if !loading}
 			<span>{$_('There are currently no delegates for this group')}</span>
 		{/if}
 	</div>

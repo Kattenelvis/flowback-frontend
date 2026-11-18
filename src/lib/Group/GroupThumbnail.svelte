@@ -4,7 +4,7 @@
 		becomeMemberOfGroup,
 		removeGroupMembership
 	} from '$lib/Blockchain_v1_Ethereum/javascript/rightToVote';
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { errorMessage, fetchRequest } from '$lib/FetchRequest';
 	import Button from '$lib/Generic/Button.svelte';
 	import type { Group } from './interface';
 	import { _ } from 'svelte-i18n';
@@ -15,7 +15,6 @@
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { idfy } from '$lib/Generic/GenericFunctions2';
 	import { groupStore } from './Kanban/Kanban';
-	import { chatPartnerStore } from '$lib/Chat/functions';
 
 	let { group = $bindable() }: { group: Group } = $props();
 
@@ -57,10 +56,11 @@
 
 		if (!res.ok) {
 			ErrorHandlerStore.set({
-				message:
-					json.detail[0] ||
-					json.detail ||
-					'An error occurred while leaving the group',
+				message: errorMessage(
+					res,
+					json,
+					'An error occurred while leaving the group'
+				),
 				success: false
 			});
 			return;
@@ -72,7 +72,6 @@
 		group.joined = false;
 		group.pending_join = false;
 		groupStore.set($groupStore.filter((g) => g.id !== group.id));
-		chatPartnerStore.set(0);
 	};
 </script>
 

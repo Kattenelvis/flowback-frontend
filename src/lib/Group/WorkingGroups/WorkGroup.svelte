@@ -10,7 +10,6 @@
 	import Modal from '$lib/Generic/Modal.svelte';
 	import { userStore } from '$lib/User/interfaces';
 	import { workgroupStore } from '../Kanban/Kanban';
-	import { chatPartnerStore } from '$lib/Chat/functions';
 
 	export let workGroup: WorkGroup,
 		workGroups: WorkGroup[],
@@ -48,8 +47,7 @@
 
 		if (!res.ok) {
 			const message =
-				json?.detail?.__all__[0].toString() ===
-				'Work group user join request with this Work group and Group user already exists.'
+				json?.code === 'unique_together'
 					? 'Already asked to join group'
 					: 'Failed to ask to join group';
 
@@ -85,7 +83,6 @@
 		workGroup.joined = false;
 		workGroup.requested_access = false;
 		workgroupStore.set(workGroups);
-		chatPartnerStore.set(0);
 	};
 
 	const deleteWorkGroup = async () => {
@@ -107,7 +104,6 @@
 
 		handleRemoveGroup(workGroup.id);
 		showDeleteModal = false;
-		chatPartnerStore.set(0);
 	};
 </script>
 

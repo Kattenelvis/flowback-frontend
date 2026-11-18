@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fetchRequest } from '$lib/FetchRequest';
+	import { errorMessage, fetchRequest } from '$lib/FetchRequest';
 	import Button from '$lib/Generic/Button.svelte';
 	import TextInput from '$lib/Generic/TextInput.svelte';
 	import { page } from '$app/stores';
@@ -22,9 +22,11 @@
 
 		if (res.ok) {
 			ErrorHandlerStore.set({ message: 'Skickade Mail', success: true });
-		} else if (json.detail) {
-			const errorMessage = json.detail[Object.keys(json.detail)[0]][0];
-			if (errorMessage) ErrorHandlerStore.set({ message: errorMessage, success: false });
+		} else {
+			ErrorHandlerStore.set({
+				message: errorMessage(res, json),
+				success: false
+			});
 		}
 		loading = false;
 	};
