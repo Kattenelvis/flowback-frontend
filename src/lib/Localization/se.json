@@ -968,5 +968,12 @@
 	"Event starts soon": "Eventet börjar snart",
 	"Show archived": "Visa arkiverade",
 	"Archived": "Arkiverad",
-	"No KPIs found for this group. A moderator has to add KPIs in group edit.": "Inga KPI:er hittades för den här gruppen. En moderator måste lägga till KPI:er under Redigera grupp."
+	"No KPIs found for this group. A moderator has to add KPIs in group edit.": "Inga KPI:er hittades för den här gruppen. En moderator måste lägga till KPI:er under Redigera grupp.",
+	"Create Kanban Entry": "Skapa uppgift",
+	"Not set": "Ej angivet",
+	"Successfully created kanban task": "Uppgiften har skapats",
+	"Failed to create kanban task": "Kunde inte skapa uppgiften",
+	"Failed to update kanban task": "Kunde inte uppdatera uppgiften",
+	"Failed to delete kanban task": "Kunde inte ta bort uppgiften",
+	"Failed to update kanban lane": "Kunde inte uppdatera kolumnen"
 }
