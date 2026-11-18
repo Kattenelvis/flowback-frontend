@@ -967,5 +967,6 @@
 	"Occurrence has already ended.": "Tillfället har redan tagit slut.",
 	"Event starts soon": "Eventet börjar snart",
 	"Show archived": "Visa arkiverade",
-	"Archived": "Arkiverad"
+	"Archived": "Arkiverad",
+	"No KPIs found for this group. A moderator has to add KPIs in group edit.": "Inga KPI:er hittades för den här gruppen. En moderator måste lägga till KPI:er under Redigera grupp."
 }
